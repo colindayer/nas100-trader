@@ -81,6 +81,19 @@ helps when the added component has *positive* expectancy. Lesson: an edge is
 instrument-specific until proven otherwise — don't assume it generalizes. The edge
 lives in QQQ (and likely SPY/large-cap-tech), not the broad ETF universe.
 
+### SPX/VIX divergence strategy — REJECTED
+"SPY down + VIX down = bullish reversal" tested long-only on QQQ, net of costs:
+bull-divergence +0.1%/yr (OOS −0.5%); its INVERSE did *better* in-sample (+1.1%).
+That means the divergence isn't the driver — both are just "buy the dip" (long
+market beta) that worked 2019–21 and failed 2022. No alpha. The VIX adds nothing.
+
+### Volume Profile strategy (LAT concept) — REJECTED (on available data)
+Long below Value-Area-Low → target POC, rolling 10-day profile, net of costs:
+−0.6%/yr (OOS −1.1%); inverse also negative. No mean-reversion edge.
+**Caveat:** built on *hourly* bars (~16/day = a coarse 50-bin profile). Real volume
+profile wants minute/tick data — this is a data limitation, not a definitive death.
+Not pursued further without finer data.
+
 ### Short Interest boost (Asquith 2005) — REJECTED
 Added as a log-only conviction note. Never gated trades, never validated,
 added a fragile yfinance `.info` call. Removed for simplicity.
