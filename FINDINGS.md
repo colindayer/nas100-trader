@@ -87,12 +87,23 @@ bull-divergence +0.1%/yr (OOS −0.5%); its INVERSE did *better* in-sample (+1.1
 That means the divergence isn't the driver — both are just "buy the dip" (long
 market beta) that worked 2019–21 and failed 2022. No alpha. The VIX adds nothing.
 
-### Volume Profile strategy (LAT concept) — REJECTED (on available data)
-Long below Value-Area-Low → target POC, rolling 10-day profile, net of costs:
-−0.6%/yr (OOS −1.1%); inverse also negative. No mean-reversion edge.
-**Caveat:** built on *hourly* bars (~16/day = a coarse 50-bin profile). Real volume
-profile wants minute/tick data — this is a data limitation, not a definitive death.
-Not pursued further without finer data.
+### Volume Profile strategy (LAT concept) — REJECTED (definitively)
+Long below Value-Area-Low → target POC, rolling 10-day profile, net of costs.
+
+**Round 1 (hourly bars, 50 bins):** −0.6%/yr in-sample, −1.1%/yr OOS. Caveat noted:
+coarse 50-bin profile from ~7 bars/day might miss real structure.
+
+**Round 2 (1-minute bars via `qqq_1min_7y.csv`, 200 bins):** Re-run 2019–2023 with
+same signal logic and parameters, no tuning — only finer data:
+
+| Variant | 2019 | 2020 | 2021 | 2022 | 2023 | avg | IN | OUT |
+|---------|------|------|------|------|------|-----|----|-----|
+| VP mean-revert (below VAL) | −0.3% | +0.2% | −1.0% | −0.1% | −0.1% | −0.3% | −0.4% | −0.1% |
+| Inverse (above VAH) | −2.1% | −0.8% | −2.0% | +0.0% | −1.3% | −1.3% | −1.7% | −0.7% |
+
+**Verdict: definitively REJECTED.** Adding 50× more resolution (390 bars/day vs 7)
+produced the same null result. The data-limitation caveat is closed: volume profile
+mean-reversion on QQQ has no intraday edge at any bar frequency tested. Do not revisit.
 
 ### NQ futures port — VALIDATED ✅ (the prop-firm path)
 Ran the QQQ Asian-Sweep + ORB on NQ=F (Nasdaq-100 futures), 2024-2026 data
