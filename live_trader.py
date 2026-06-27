@@ -37,11 +37,13 @@ RISK_S2 = 0.0050
 RISK_S3 = 0.0040
 RISK_S4 = 0.0040
 RISK_S5 = 0.0075
+RISK_S6 = 0.0050
 STOP_S1 = 0.015; RR_S1 = 3.0
 STOP_S2 = 0.015; RR_S2 = 3.0
 STOP_S3 = 0.020; HOLD_S3 = 5
 STOP_S4 = 0.015; RR_S4 = 3.0
 STOP_S5 = 0.010; RR_S5 = 3.0
+STOP_S6 = 0.012; RR_S6 = 2.5
 
 eastern = pytz.timezone("US/Eastern")
 trading = TradingClient(API_KEY, SECRET_KEY, paper=True)
@@ -199,6 +201,68 @@ def get_gex_levels(symbol="QQQ"):
         return None, None, None, None
 
 
+def get_iv_skew(symbol="QQQ"):
+    """
+    IV Skew = OTM put IV - ATM call IV  (Xing, Zhang & Zhao 2010)
+    Steep negative skew (high put IV relative to calls) = market fear = bad for longs.
+    Near-zero or positive skew = calm market = good for longs.
+    Returns: skew value, is_extreme (True = fear, skip long trades)
+    """
+    try:
+        ticker = yf.Ticker(symbol)
+        spot = float(ticker.fast_info["lastPrice"])
+        exps = ticker.options
+        if not exps:
+            return None, False
+
+        # Use nearest expiry with >7 DTE
+        from datetime import datetime as dt
+        today = date.today()
+        exp = next((e for e in exps
+                    if (dt.strptime(e, "%Y-%m-%d").date() - today).days > 7), exps[0])
+        chain = ticker.option_chain(exp)
+
+        calls = chain.calls.dropna(subset=["strike","impliedVolatility"])
+        puts  = chain.puts.dropna(subset=["strike","impliedVolatility"])
+
+        # ATM call IV: closest strike to spot
+        atm_call = calls.iloc[(calls["strike"] - spot).abs().argsort()[:1]]
+        atm_iv   = float(atm_call["impliedVolatility"].iloc[0])
+
+        # OTM put IV: ~5% below spot
+        otm_target = spot * 0.95
+        otm_put  = puts.iloc[(puts["strike"] - otm_target).abs().argsort()[:1]]
+        otm_iv   = float(otm_put["impliedVolatility"].iloc[0])
+
+        skew = otm_iv - atm_iv
+        # Extreme skew: put IV > call IV by >0.10 (10 vol points) = fear
+        is_extreme = skew > 0.10
+        print(f"  IV Skew ({symbol}): OTM put={otm_iv:.2f} ATM call={atm_iv:.2f} → skew={skew:+.3f} {'⚠️ EXTREME' if is_extreme else '✓ normal'}")
+        return skew, is_extreme
+    except Exception as e:
+        print(f"  IV skew calc failed: {e}")
+        return None, False
+
+
+def get_short_interest(symbol="QQQ"):
+    """
+    Short Interest Ratio (days to cover) from yfinance.
+    High short interest + sweep signal = short squeeze setup = high conviction.
+    Returns: short_ratio (float), is_high (True if > 2.0 days to cover)
+    """
+    try:
+        info = yf.Ticker(symbol).info
+        short_ratio = info.get("shortRatio", None)
+        if short_ratio is None:
+            return None, False
+        is_high = short_ratio > 2.0
+        print(f"  Short interest ({symbol}): {short_ratio:.1f} days to cover {'🔥 HIGH' if is_high else '—'}")
+        return short_ratio, is_high
+    except Exception as e:
+        print(f"  Short interest lookup failed: {e}")
+        return None, False
+
+
 def get_regime():
     end = str(date.today())
     vix = yf.download("^VIX", start=str(date.today()-timedelta(days=60)),
@@ -277,6 +341,11 @@ def run_s1(equity, open_syms, vix_ma21, spy_bull, vix_mult):
         ~data["HighVol"] & data["AsianLow"].notna()
     )
 
+    # IV Skew filter (Xing et al. 2010) — skip if put fear is extreme
+    skew, skew_extreme = get_iv_skew("QQQ")
+    # Short interest (Asquith et al. 2005) — boost conviction if shorts are trapped
+    short_ratio, high_si = get_short_interest("QQQ")
+
     # Check last 3 hours for a signal
     recent = data.tail(3)
     if signal_cond[recent.index].any():
@@ -284,13 +353,21 @@ def run_s1(equity, open_syms, vix_ma21, spy_bull, vix_mult):
 
         # GEX confidence check
         if not neg_gex:
-            print(f"  ⚠️  GEX POSITIVE (${net_gex/1e9:.1f}B) — dealers pin price, sweeps less reliable. Skipping.")
+            print(f"  ⚠️  GEX POSITIVE (${net_gex/1e9:.1f}B) — dealers pin price. Skipping.")
             return
 
-        # Boost signal confidence if sweep broke below put wall
-        gex_boost = ""
+        # IV skew extreme = market pricing in crash = fade the sweep
+        if skew_extreme:
+            print(f"  ⚠️  IV SKEW EXTREME ({skew:+.3f}) — put fear too high, sweep likely fails. Skipping.")
+            return
+
+        # Build confidence notes
+        notes = []
         if put_wall and price < put_wall:
-            gex_boost = f" | BELOW PUT WALL ({put_wall}) — high conviction"
+            notes.append(f"below put wall ({put_wall})")
+        if high_si:
+            notes.append(f"high short interest ({short_ratio:.1f}x) → squeeze risk")
+        confidence = " | " + " + ".join(notes) if notes else ""
 
         # Use call wall as dynamic target if within reach (>1% away, <4% away)
         if call_wall and 0.01 < (call_wall - price) / price < 0.04:
@@ -300,7 +377,7 @@ def run_s1(equity, open_syms, vix_ma21, spy_bull, vix_mult):
             target_note = f"→ fixed 3:1 RR"
 
         shares = (equity * RISK_S1 * vix_mult) / (price * STOP_S1)
-        print(f"  🚨 SIGNAL: QQQ sweep below Asian low → LONG {target_note}{gex_boost}")
+        print(f"  🚨 SIGNAL: QQQ sweep below Asian low → LONG {target_note}{confidence}")
         place_order("QQQ", shares, OrderSide.BUY, "S1")
     else:
         gex_note = f" | GEX ${net_gex/1e9:.1f}B {'neg✓' if neg_gex else 'pos✗'}" if net_gex is not None else ""
@@ -471,6 +548,10 @@ def run_s4(equity, open_syms, spy_bull, vix_mult):
         # GEX filter — negative gamma = dealers amplify moves = good for sweeps
         net_gex, gamma_flip, put_wall, call_wall = get_gex_levels(sym)
         neg_gex = (net_gex is None) or (net_gex < 0)
+        # IV skew filter — skip if put fear is extreme (Xing et al. 2010)
+        skew, skew_extreme = get_iv_skew(sym)
+        # Short interest — note high SI as conviction boost
+        short_ratio, high_si = get_short_interest(sym)
 
         sweep_low = (data["Low"] < data["AsianLow"]) & (data["Close"] > data["AsianLow"])
         signal = (sweep_low & data["InSession"] &
@@ -483,9 +564,13 @@ def run_s4(equity, open_syms, spy_bull, vix_mult):
             if not neg_gex:
                 print(f"  {sym}: signal exists but GEX POSITIVE (${net_gex/1e9:.1f}B) — skip")
                 continue
+            if skew_extreme:
+                print(f"  {sym}: signal exists but IV SKEW EXTREME ({skew:+.3f}) — skip")
+                continue
+            si_note = f" | short squeeze risk ({short_ratio:.1f}x)" if high_si else ""
             shares = (equity * RISK_S4 * vix_mult) / (price * STOP_S4)
             gex_note = f" | GEX ${net_gex/1e9:.1f}B neg✓" if net_gex is not None else ""
-            print(f"  🚨 {sym}: Asian sweep → LONG{gex_note}")
+            print(f"  🚨 {sym}: Asian sweep → LONG{gex_note}{si_note}")
             place_order(sym, shares, OrderSide.BUY, "S4")
         else:
             gex_note = f" | GEX ${net_gex/1e9:.1f}B {'neg✓' if neg_gex else 'pos✗'}" if net_gex is not None else ""
@@ -556,6 +641,67 @@ def run_s5(equity, open_syms, vix_ma21, spy_bull):
     else:
         print(f"  No breakout yet (price={price:.2f}, ORB: {orb_low:.2f}-{orb_high:.2f})")
 
+# ── STRATEGY S6: IV SKEW REVERSAL ──
+def run_s6(equity, open_syms, spy_bull, vix_mult):
+    """
+    S6: IV Skew Reversal (Xing, Zhang & Zhao 2010)
+    Logic:
+    - When QQQ put skew spikes to extreme (>0.15) AND VIX is elevated but not crisis,
+      the fear is overdone. Fade it: go long QQQ expecting mean reversion.
+    - Exit when skew normalizes below 0.08 or fixed 2.5:1 RR.
+    - Only trade in SPY bull regime (don't fade fear in a real downtrend).
+    - Negative GEX = dealers amplify moves = skew reversal works faster.
+    """
+    print("\n── S6: IV SKEW REVERSAL (QQQ) ──")
+
+    if "QQQ" in open_syms:
+        print("  QQQ already in position — skip")
+        return
+    if not spy_bull:
+        print("  PAUSED — SPY bear regime (don't fade fear in downtrend)")
+        return
+    if vix_mult == 0:
+        print("  PAUSED — VIX too high (>25), crisis mode")
+        return
+
+    skew, skew_extreme = get_iv_skew("QQQ")
+    if skew is None:
+        print("  Skew data unavailable — skip")
+        return
+
+    # Need extreme skew to enter (fear spike)
+    if not skew_extreme:
+        print(f"  Skew={skew:+.3f} — not extreme enough (need >0.10). No signal.")
+        return
+
+    # GEX check: negative gamma helps reversal complete faster
+    net_gex, _, put_wall, call_wall = get_gex_levels("QQQ")
+    neg_gex = (net_gex is None) or (net_gex < 0)
+
+    # Short interest: high SI + fear spike = classic squeeze setup
+    short_ratio, high_si = get_short_interest("QQQ")
+
+    # Price must be near or below put wall (fear concentrated there)
+    data = get_hourly_bars("QQQ", days=5)
+    price = float(data["Close"].iloc[-1])
+
+    # Entry: skew extreme + price stabilizing (not in freefall — close > open)
+    last_candle_bullish = float(data["Close"].iloc[-1]) > float(data["Open"].iloc[-1])
+    if not last_candle_bullish:
+        print(f"  Skew extreme but price still falling — wait for stabilization. No entry.")
+        return
+
+    si_note = f" | short squeeze potential ({short_ratio:.1f}x SI)" if high_si else ""
+    gex_note = f" | GEX {'neg✓' if neg_gex else 'pos (weaker signal)'}"
+    target = price * (1 + STOP_S6 * RR_S6)
+    stop   = price * (1 - STOP_S6)
+
+    shares = (equity * RISK_S6 * vix_mult) / (price * STOP_S6)
+    print(f"  🚨 SIGNAL: IV skew extreme ({skew:+.3f}) → fear overdone → LONG QQQ")
+    print(f"     Entry: ${price:.2f} | Stop: ${stop:.2f} | Target: ${target:.2f}{gex_note}{si_note}")
+    place_order("QQQ", shares, OrderSide.BUY, "S6")
+
+
 # ── MAIN ──
 parser = argparse.ArgumentParser()
 parser.add_argument("--session", choices=["asian","orb","eod","all"], default=None)
@@ -587,6 +733,7 @@ if args.session == "asian":
     run_s1(equity, open_syms, vix_ma21, spy_bull, vix_mult)
     run_s2(equity, open_syms, vix_mult)
     run_s4(equity, open_syms, spy_bull, vix_mult)
+    run_s6(equity, open_syms, spy_bull, vix_mult)  # IV skew reversal
 
 elif args.session == "orb":
     run_s5(equity, open_syms, vix_ma21, spy_bull)
@@ -600,6 +747,7 @@ elif args.session == "all":
     run_s4(equity, open_syms, spy_bull, vix_mult)
     run_s5(equity, open_syms, vix_ma21, spy_bull)
     run_s3(equity, open_syms, vix_mult)
+    run_s6(equity, open_syms, spy_bull, vix_mult)
 
 print(f"\n{'='*60}")
 print(f"Done — {now_et().strftime('%H:%M ET')}")
