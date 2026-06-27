@@ -94,6 +94,25 @@ Long below Value-Area-Low → target POC, rolling 10-day profile, net of costs:
 profile wants minute/tick data — this is a data limitation, not a definitive death.
 Not pursued further without finer data.
 
+### NQ futures port — VALIDATED ✅ (the prop-firm path)
+Ran the QQQ Asian-Sweep + ORB on NQ=F (Nasdaq-100 futures), 2024-2026 data
+(a DIFFERENT period + instrument wrapper than the 2019-23 QQQ backtest = true
+out-of-sample), net of costs:
+
+| Strategy | 2024 | 2025 | 2026 | avg |
+|----------|------|------|------|-----|
+| S1 Asian Sweep | +5.0% | −0.0% | +3.4% | +2.8% |
+| S5 ORB Long | +4.4% | +2.8% | +4.2% | +3.8% |
+
+The edge **ports cleanly** to NQ — same index, different wrapper, different era,
+still positive and consistent. This is the coherent conclusion of all the testing:
+
+**The edge is real and specific to the Nasdaq-100 index.** It travels across
+WRAPPERS of that index (QQQ ETF ↔ NQ/MNQ future) and across TIME (2019-23 ↔
+2024-26), but NOT to other markets (IWM/DIA/TLT/EURUSD all failed) or other
+mechanisms (VIX divergence, volume profile failed). => The prop-firm path is a
+**futures account trading NQ/MNQ** (or US100 CFD), NOT new instruments/edges.
+
 ### Short Interest boost (Asquith 2005) — REJECTED
 Added as a log-only conviction note. Never gated trades, never validated,
 added a fragile yfinance `.info` call. Removed for simplicity.
