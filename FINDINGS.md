@@ -113,6 +113,20 @@ WRAPPERS of that index (QQQ ETF ↔ NQ/MNQ future) and across TIME (2019-23 ↔
 mechanisms (VIX divergence, volume profile failed). => The prop-firm path is a
 **futures account trading NQ/MNQ** (or US100 CFD), NOT new instruments/edges.
 
+### Gold futures port — VALIDATED ✅
+S2 Gold FVG on GC=F (gold futures), 2019-2026, net of costs: +3.8%/yr avg
+(matches GLD ETF +3.3%). Gold edge ports across wrappers (GLD ETF ↔ GC/MGC
+future) just like Nasdaq (QQQ ↔ NQ). Two validated, uncorrelated futures edges
+for a prop account: NQ/MNQ (sweep+ORB) and GC/MGC (FVG). Oil (MCL/CL) is a
+DIFFERENT market — not expected to inherit the gold edge; not tested/used.
+
+### PROP-FIRM DRAWDOWN CONSTRAINT (important deployment note)
+System max DD ≈ −7.3% (full sizing). Futures prop evals (Apex/Lucid) use TIGHT
+trailing drawdowns (~3–5% of account → e.g. $2,500 on a $50k Apex account = 5%).
+At full sizing a −7% DD event BREACHES that. => On tight-DD futures evals, trade
+~HALF size (~5%/yr) to fit. Forex/CFD firms (The5%ers/FTMO, ~10% max DD) fit the
+system at full size (~10%/yr) and trade the same edges via US100 + gold CFD.
+
 ### Short Interest boost (Asquith 2005) — REJECTED
 Added as a log-only conviction note. Never gated trades, never validated,
 added a fragile yfinance `.info` call. Removed for simplicity.
