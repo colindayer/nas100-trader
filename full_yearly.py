@@ -14,6 +14,11 @@ warnings.filterwarnings("ignore")
 eastern=pytz.timezone("US/Eastern"); START,END="2019-01-01","2023-12-31"
 YEARS=range(2019,2024)
 
+# Transaction cost per SIDE (slippage + half-spread). Alpaca = commission-free,
+# and we trade liquid ETFs (QQQ/SPY/GLD), so ~3 bps/side is realistic-conservative
+# (~1c spread on $300-500 + minor slippage). Round-trip drag ~6 bps per trade.
+SLIP=0.0003
+
 # ── data ──────────────────────────────────────────────────────────────────────
 df=pd.read_csv("qqq_hourly_7y.csv"); df["timestamp"]=pd.to_datetime(df["timestamp"],utc=True)
 df=df.set_index("timestamp").tz_convert(eastern)
@@ -98,11 +103,11 @@ def run_intraday(sig_col, risk, sl, rr, short=False):
             if lock: continue
             if in_t:
                 if not short:
-                    if price<=stop: cap+=sh*(stop-entry); in_t=False
-                    elif price>=tgt: cap+=sh*(tgt-entry); in_t=False
+                    if price<=stop: cap+=sh*(stop-entry)-sh*(entry+stop)*SLIP; in_t=False
+                    elif price>=tgt: cap+=sh*(tgt-entry)-sh*(entry+tgt)*SLIP; in_t=False
                 else:
-                    if price>=stop: cap+=sh*(entry-price); in_t=False
-                    elif price<=tgt: cap+=sh*(entry-price); in_t=False
+                    if price>=stop: cap+=sh*(entry-price)-sh*(entry+stop)*SLIP; in_t=False
+                    elif price<=tgt: cap+=sh*(entry-price)-sh*(entry+tgt)*SLIP; in_t=False
             elif s==1 and vm>0 and day_traded!=d:
                 in_t=True; day_traded=d; entry=price
                 # Fixed percentage stops (validated). ATR stops were tested and
@@ -128,8 +133,8 @@ def run_s2(risk=0.005, sl=0.012, rr=2.0):
         for i in range(1,len(g)):
             price=float(g["Close"].iloc[i]); s=int(g["FVG"].iloc[i-1])
             if in_t:
-                if price<=stop: cap+=sh*(stop-entry); in_t=False
-                elif price>=tgt: cap+=sh*(tgt-entry); in_t=False
+                if price<=stop: cap+=sh*(stop-entry)-sh*(entry+stop)*SLIP; in_t=False
+                elif price>=tgt: cap+=sh*(tgt-entry)-sh*(entry+tgt)*SLIP; in_t=False
             elif s==1:
                 in_t=True; entry=price; stop=price*(1-sl); tgt=price*(1+sl*rr); sh=(cap*risk)/(price*sl)
         out[Y]=(cap-init)/init
@@ -149,7 +154,7 @@ def run_s3(risk=0.004, sl=0.02, rr=2.5, hold=5):
             price=float(g["Close"].iloc[i]); s=int(g["S3"].iloc[i-1])
             if in_t:
                 held+=1
-                if price<=stop or price>=tgt or held>=hold: cap+=sh*(price-entry); in_t=False
+                if price<=stop or price>=tgt or held>=hold: cap+=sh*(price-entry)-sh*(entry+price)*SLIP; in_t=False
             elif s==1:
                 in_t=True; entry=price; stop=price*(1-sl); tgt=price*(1+sl*rr); held=0; sh=(cap*risk)/(price*sl)
         out[Y]=(cap-init)/init
