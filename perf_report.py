@@ -112,3 +112,54 @@ try:
     print("\n✓ Tearsheet written: perf_tearsheet.html (open in a browser)")
 except Exception as e:
     print(f"\n(QuantStats tearsheet skipped: {e})")
+
+# ── Live trade log: parse logs/trader.log + emit daily summary ────────────────
+import os, re
+from datetime import date as _date
+
+_log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         "logs", "trader.log")
+_summary_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              "logs", "daily_summary.log")
+
+def parse_live_log():
+    """Parse FILL lines from trader.log → {date: (n_fills, pnl_list)}."""
+    if not os.path.exists(_log_path):
+        return {}
+    # Log line format (from alerts.py): "2026-06-27 19:11:00,123 INFO FILL S1 BUY 12.0 QQQ"
+    # We capture fills by date; actual P&L requires matching entry vs exit prices,
+    # so here we count fills and flag active sessions.
+    pattern = re.compile(
+        r"(\d{4}-\d{2}-\d{2}) \d{2}:\d{2}:\d{2}.*INFO FILL (\w+) (\w+) ([\d.]+) (\w+)")
+    by_date: dict = {}
+    with open(_log_path) as f:
+        for line in f:
+            m = pattern.search(line)
+            if m:
+                dt, tag, side, qty, sym = m.groups()
+                by_date.setdefault(dt, []).append(
+                    dict(tag=tag, side=side, qty=float(qty), sym=sym))
+    return by_date
+
+def emit_daily_summary():
+    fills_by_date = parse_live_log()
+    if not fills_by_date:
+        print("\n(No live fill records found in logs/trader.log)")
+        return
+    os.makedirs(os.path.dirname(_summary_path), exist_ok=True)
+    lines = []
+    for dt in sorted(fills_by_date.keys()):
+        fills = fills_by_date[dt]
+        n = len(fills)
+        detail = ", ".join(f"{f['tag']} {f['side']} {f['qty']:.0f} {f['sym']}"
+                           for f in fills)
+        summary = f"{dt} | fills: {n} | {detail}"
+        lines.append(summary)
+    with open(_summary_path, "w") as f:
+        f.write("\n".join(lines) + "\n")
+    print(f"\n── Live Trade Log Summary ({len(lines)} session-days) ──")
+    for l in lines[-10:]:  # show last 10
+        print(f"  {l}")
+    print(f"Full summary: {_summary_path}")
+
+emit_daily_summary()
