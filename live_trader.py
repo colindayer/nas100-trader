@@ -115,6 +115,90 @@ def get_minute_bars(symbol, days=2):
     bars.columns = ["Open","High","Low","Close","Volume"]
     return bars
 
+def get_gex_levels(symbol="QQQ"):
+    """
+    Calculate GEX levels from live options chain (yfinance has OI).
+    Formula: GEX = gamma * OI * 100 * spot^2 * 0.01  (Squeezemetrics)
+    Dealer assumption: long calls (positive), short puts (negative = multiply by -1)
+    Returns: net_gex, gamma_flip, put_wall, call_wall
+    """
+    from scipy.stats import norm
+    import math
+
+    try:
+        ticker = yf.Ticker(symbol)
+        spot = float(ticker.fast_info["lastPrice"])
+        exps = ticker.options
+        if not exps:
+            return None, None, None, None
+
+        r = 0.05  # risk-free rate
+        today = date.today()
+
+        gex_by_strike = {}
+
+        for exp in exps[:6]:  # first 6 expirations cover the key gamma
+            try:
+                exp_date = datetime.strptime(exp, "%Y-%m-%d").date()
+                T = max((exp_date - today).days / 365.0, 1/365)
+                chain = ticker.option_chain(exp)
+
+                for df, is_call in [(chain.calls, True), (chain.puts, False)]:
+                    df = df.dropna(subset=["strike", "impliedVolatility", "openInterest"])
+                    df = df[df["openInterest"] > 0]
+                    df = df[df["impliedVolatility"] > 0]
+
+                    for _, row in df.iterrows():
+                        K = float(row["strike"])
+                        sigma = float(row["impliedVolatility"])
+                        oi = float(row["openInterest"])
+
+                        # Black-Scholes gamma
+                        d1 = (math.log(spot / K) + (r + 0.5 * sigma**2) * T) / (sigma * math.sqrt(T))
+                        gamma = norm.pdf(d1) / (spot * sigma * math.sqrt(T))
+
+                        # GEX contribution (Squeezemetrics formula)
+                        gex = gamma * oi * 100 * spot**2 * 0.01
+                        if not is_call:
+                            gex *= -1  # dealers short puts = negative GEX
+
+                        if K not in gex_by_strike:
+                            gex_by_strike[K] = 0.0
+                        gex_by_strike[K] += gex
+            except Exception:
+                continue
+
+        if not gex_by_strike:
+            return None, None, None, None
+
+        strikes = sorted(gex_by_strike.keys())
+        net_gex = sum(gex_by_strike.values())
+
+        # Gamma flip: strike where cumulative GEX (sorted by proximity to spot) crosses zero
+        by_dist = sorted(strikes, key=lambda k: abs(k - spot))
+        cumulative = 0.0
+        gamma_flip = None
+        for k in sorted(strikes):
+            cumulative += gex_by_strike[k]
+            if gamma_flip is None and cumulative >= 0:
+                gamma_flip = k
+
+        # Call wall: strike with highest positive GEX above spot
+        above = {k: v for k, v in gex_by_strike.items() if k > spot and v > 0}
+        call_wall = max(above, key=above.get) if above else None
+
+        # Put wall: strike with highest absolute negative GEX below spot
+        below = {k: v for k, v in gex_by_strike.items() if k < spot and v < 0}
+        put_wall = min(below, key=below.get) if below else None
+
+        print(f"  GEX: net=${net_gex/1e9:.2f}B | flip={gamma_flip} | put_wall={put_wall} | call_wall={call_wall}")
+        return net_gex, gamma_flip, put_wall, call_wall
+
+    except Exception as e:
+        print(f"  GEX calc failed: {e}")
+        return None, None, None, None
+
+
 def get_regime():
     end = str(date.today())
     vix = yf.download("^VIX", start=str(date.today()-timedelta(days=60)),
@@ -179,6 +263,12 @@ def run_s1(equity, open_syms, vix_ma21, spy_bull, vix_mult):
     atr = tr.rolling(14).mean()
     data["HighVol"] = atr > 1.5 * atr.rolling(200).mean()
 
+    # GEX regime filter (Squeezemetrics/SpotGamma approach)
+    # Negative GEX = dealers short gamma = amplify moves = good for sweeps
+    net_gex, gamma_flip, put_wall, call_wall = get_gex_levels("QQQ")
+    neg_gex = (net_gex is None) or (net_gex < 0)  # default to allowing if data unavailable
+    below_flip = (gamma_flip is None) or (float(data["Close"].iloc[-1]) < gamma_flip)
+
     data["SweepLow"] = (data["Low"] < data["AsianLow"]) & (data["Close"] > data["AsianLow"])
     signal_cond = (
         data["SweepLow"] & data["InSession"] &
@@ -191,11 +281,30 @@ def run_s1(equity, open_syms, vix_ma21, spy_bull, vix_mult):
     recent = data.tail(3)
     if signal_cond[recent.index].any():
         price = float(data["Close"].iloc[-1])
+
+        # GEX confidence check
+        if not neg_gex:
+            print(f"  ⚠️  GEX POSITIVE (${net_gex/1e9:.1f}B) — dealers pin price, sweeps less reliable. Skipping.")
+            return
+
+        # Boost signal confidence if sweep broke below put wall
+        gex_boost = ""
+        if put_wall and price < put_wall:
+            gex_boost = f" | BELOW PUT WALL ({put_wall}) — high conviction"
+
+        # Use call wall as dynamic target if within reach (>1% away, <4% away)
+        if call_wall and 0.01 < (call_wall - price) / price < 0.04:
+            dynamic_rr = (call_wall - price) / (price * STOP_S1)
+            target_note = f"→ call wall ${call_wall} (RR {dynamic_rr:.1f}x)"
+        else:
+            target_note = f"→ fixed 3:1 RR"
+
         shares = (equity * RISK_S1 * vix_mult) / (price * STOP_S1)
-        print(f"  🚨 SIGNAL: QQQ sweep below Asian low → LONG")
+        print(f"  🚨 SIGNAL: QQQ sweep below Asian low → LONG {target_note}{gex_boost}")
         place_order("QQQ", shares, OrderSide.BUY, "S1")
     else:
-        print(f"  No signal (last bar: close={data['Close'].iloc[-1]:.2f}, AsianLow={data['AsianLow'].iloc[-1]:.2f})")
+        gex_note = f" | GEX ${net_gex/1e9:.1f}B {'neg✓' if neg_gex else 'pos✗'}" if net_gex is not None else ""
+        print(f"  No signal (close={data['Close'].iloc[-1]:.2f}, AsianLow={data['AsianLow'].iloc[-1]:.2f}{gex_note})")
 
 # ── STRATEGY S2: Gold London FVG ──
 def run_s2(equity, open_syms, vix_mult):
@@ -359,6 +468,10 @@ def run_s4(equity, open_syms, spy_bull, vix_mult):
         data["DailyEMA50"]  = data["Date"].map(ema50.to_dict())
         data["DailyEMA200"] = data["Date"].map(ema200.to_dict())
 
+        # GEX filter — negative gamma = dealers amplify moves = good for sweeps
+        net_gex, gamma_flip, put_wall, call_wall = get_gex_levels(sym)
+        neg_gex = (net_gex is None) or (net_gex < 0)
+
         sweep_low = (data["Low"] < data["AsianLow"]) & (data["Close"] > data["AsianLow"])
         signal = (sweep_low & data["InSession"] &
                   (data["Close"] > data["DailyEMA50"]) &
@@ -367,11 +480,16 @@ def run_s4(equity, open_syms, spy_bull, vix_mult):
 
         if signal.tail(3).any():
             price  = float(data["Close"].iloc[-1])
+            if not neg_gex:
+                print(f"  {sym}: signal exists but GEX POSITIVE (${net_gex/1e9:.1f}B) — skip")
+                continue
             shares = (equity * RISK_S4 * vix_mult) / (price * STOP_S4)
-            print(f"  🚨 {sym}: Asian sweep signal → LONG")
+            gex_note = f" | GEX ${net_gex/1e9:.1f}B neg✓" if net_gex is not None else ""
+            print(f"  🚨 {sym}: Asian sweep → LONG{gex_note}")
             place_order(sym, shares, OrderSide.BUY, "S4")
         else:
-            print(f"  {sym}: no signal")
+            gex_note = f" | GEX ${net_gex/1e9:.1f}B {'neg✓' if neg_gex else 'pos✗'}" if net_gex is not None else ""
+            print(f"  {sym}: no signal{gex_note}")
 
 # ── STRATEGY S5: ORB 30-min ──
 def run_s5(equity, open_syms, vix_ma21, spy_bull):
