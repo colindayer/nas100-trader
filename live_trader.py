@@ -217,8 +217,16 @@ def get_regime():
     spy_bull = bool(spy.ewm(span=50,adjust=False).mean().iloc[-1] >
                     spy.ewm(span=200,adjust=False).mean().iloc[-1])
 
+    # Faber (2007) 200-day SMA regime on QQQ — gates the S5 Short bear hedge.
+    # Backtested: shorting on this gate (vs EMA-cross) flips S5 Short +0.4%/yr
+    # and strengthens the bear-year hedge (2022 +0.6%->+2.7%). See FINDINGS.md.
+    qqq = yf.download("QQQ", start=str(date.today()-timedelta(days=400)),
+                      end=end, progress=False)["Close"]
+    if isinstance(qqq, pd.DataFrame): qqq = qqq.iloc[:,0]
+    qqq_bear200 = bool(float(qqq.iloc[-1]) < float(qqq.rolling(200).mean().iloc[-1]))
+
     mult = 0.0 if vix_ma21 > 25 else (0.5 if vix_ma21 >= 20 else 1.0)
-    return vix_ma21, spy_bull, mult
+    return vix_ma21, spy_bull, mult, qqq_bear200
 
 # ── STRATEGY S1: Asian Sweep QQQ ──
 def run_s1(equity, open_syms, vix_ma21, spy_bull, vix_mult):
@@ -504,7 +512,7 @@ def run_s4(equity, open_syms, spy_bull, vix_mult):
             print(f"  {sym}: no signal{gex_note}")
 
 # ── STRATEGY S5: ORB 30-min ──
-def run_s5(equity, open_syms, vix_ma21, spy_bull):
+def run_s5(equity, open_syms, vix_ma21, spy_bull, qqq_bear200):
     print("\n── S5: ORB 30-MIN (QQQ) ──")
     if "QQQ" in open_syms:
         print("  QQQ already in position — skip")
@@ -561,10 +569,13 @@ def run_s5(equity, open_syms, vix_ma21, spy_bull):
         print(f"  🚨 SIGNAL: QQQ broke ORB high {orb_high:.2f} → LONG")
         print(f"     ORB range: {orb_low:.2f} - {orb_high:.2f} ({orb_range_pct:.2%})")
         place_order("QQQ", shares, OrderSide.BUY, "S5")
-    elif last < orb_low and not spy_bull:
+    elif last < orb_low and qqq_bear200:
+        # Short hedge auto-armed ONLY when QQQ < 200d SMA (Faber bear regime)
         shares = (equity * RISK_S5) / (price * STOP_S5)
-        print(f"  🚨 SIGNAL: QQQ broke ORB low {orb_low:.2f} → SHORT")
+        print(f"  🚨 SIGNAL: QQQ broke ORB low {orb_low:.2f} → SHORT (200d-SMA bear regime)")
         place_order("QQQ", shares, OrderSide.SELL, "S5")
+    elif last < orb_low and not qqq_bear200:
+        print(f"  ORB-low break but QQQ above 200d SMA — short hedge disarmed (bull regime)")
     else:
         print(f"  No breakout yet (price={price:.2f}, ORB: {orb_low:.2f}-{orb_high:.2f})")
 
@@ -595,10 +606,10 @@ print(f"{'='*60}\n")
 
 equity    = get_account()
 open_syms = open_positions()
-vix_ma21, spy_bull, vix_mult = get_regime()
+vix_ma21, spy_bull, vix_mult, qqq_bear200 = get_regime()
 
 print(f"Equity:  ${equity:,.2f}")
-print(f"Regime:  VIX 21d={vix_ma21:.1f} | SPY {'Golden ✅' if spy_bull else 'Death ⚠️'}")
+print(f"Regime:  VIX 21d={vix_ma21:.1f} | SPY {'Golden ✅' if spy_bull else 'Death ⚠️'} | QQQ {'<200dSMA (bear, short armed)' if qqq_bear200 else '>200dSMA (bull, short disarmed)'}")
 print(f"Open:    {list(open_syms.keys()) or 'None'}")
 
 if args.session == "asian":
@@ -607,7 +618,7 @@ if args.session == "asian":
     run_s4(equity, open_syms, spy_bull, vix_mult)
 
 elif args.session == "orb":
-    run_s5(equity, open_syms, vix_ma21, spy_bull)
+    run_s5(equity, open_syms, vix_ma21, spy_bull, qqq_bear200)
 
 elif args.session == "eod":
     run_s3(equity, open_syms, vix_mult)
@@ -616,7 +627,7 @@ elif args.session == "all":
     run_s1(equity, open_syms, vix_ma21, spy_bull, vix_mult)
     run_s2(equity, open_syms, vix_mult)
     run_s4(equity, open_syms, spy_bull, vix_mult)
-    run_s5(equity, open_syms, vix_ma21, spy_bull)
+    run_s5(equity, open_syms, vix_ma21, spy_bull, qqq_bear200)
     run_s3(equity, open_syms, vix_mult)
 
 print(f"\n{'='*60}")

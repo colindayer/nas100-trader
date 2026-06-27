@@ -55,6 +55,14 @@ Built it as a same-day "fade the fear" long. Backtest: −0.8%, 22% win rate,
 (redundant), short-in-bear (never fires; steep skew co-occurs with VIX>25 lockout).
 No edge in any form. Removed.
 
+### S5 ORB Short "Phase 1" filter stack (OR-ratio + volume + VIX band) — REJECTED
+Added 3 research filters to force S5 Short positive. The OR-ratio band (0.25–0.60)
+**zeroed out 100% of signals by itself** — it came from 30min-ORB/daily-ATR research
+and doesn't translate to our hourly-bar / hourly-ATR scale. A strategy that never
+trades isn't "positive," it's inert. Also: the dynamic 1.5×ATR stop added to
+`run_intraday()` silently degraded the validated S1/S4 (S1 2021 +5.6%→+1.6%).
+Both reverted.
+
 ### Short Interest boost (Asquith 2005) — REJECTED
 Added as a log-only conviction note. Never gated trades, never validated,
 added a fragile yfinance `.info` call. Removed for simplicity.
@@ -113,3 +121,56 @@ Closing that gap requires (in order of safety):
 The strategies are **genuinely positive and robust but low-return**. The honest
 path is to prove them on paper, fix the broken strategies, then scale — not to
 crank risk to hit an income target.
+
+---
+
+## Full 6-strategy system (after fixing S2/S3/S5 data bugs)
+
+Data-bug fixes (see `full_yearly.py`): S5 ORB uses the hour-9 bar as opening range
+(hourly data has no 9:30 bar); S2 uses GLD **daily** FVG (yfinance won't serve 5yr
+hourly GLD); S3 uses a **1.5×** volume threshold (2.0× gave only 3 signals/5yr).
+
+### Per-year return, each strategy on its own $10k sleeve
+
+| Strategy | 2019 | 2020 | 2021 | 2022 | 2023 | avg |
+|----------|------|------|------|------|------|-----|
+| S1 Asian Sweep | +2.0% | +2.8% | +5.6% | +0.0% | +5.2% | +3.1% |
+| S4 Multi-Sweep | +4.5% | +2.0% | +3.8% | −0.5% | +4.5% | +2.9% |
+| S5 ORB Long | +5.8% | +2.0% | +3.2% | −1.2% | +3.6% | +2.7% |
+| S5 ORB Short (Faber) | +0.0% | +0.0% | +0.0% | +2.7% | −0.5% | +0.4% |
+| S2 Gold FVG | +3.5% | +6.1% | +1.5% | +2.0% | +0.5% | +2.7% |
+| S3 Abnormal Vol | −0.8% | +2.2% | −0.2% | −0.5% | +0.6% | +0.2% |
+| **COMBINED** | +15.1% | +15.1% | +13.9% | **+2.5%** | +13.9% | **+12.1%** |
+
+**Out-of-sample (IN 2019–21 vs OUT 2022–23): combined +14.7% → +8.2%, all six
+strategies hold positive OUT. Worst single year OUT = +2.5%.** The regime
+diversification thesis survives unseen data: in the bear year the equity sweeps
+weaken but Gold + the (now-gated) Short hedge offset them.
+
+### S5 ORB Short — why it's a strategy despite losing always-on
+- **Always-on (EMA50<EMA200 gate): −0.6%/yr** — it shorted *into* the 2019 recovery
+  (the EMA crossover lagged after the Dec-2018 crash). Net loser, no OOS edge.
+- **Faber 200-day gate (price < 200d SMA): +0.4%/yr** — one standard, pre-specified
+  regime rule (Faber 2007, *Quantitative Approach to Tactical Asset Allocation*),
+  no tuned thresholds. Fixes the 2019 bug and strengthens the bear-year hedge
+  (2022 +0.6%→+2.7%). The live bot auto-arms/disarms it via the QQQ 200d-SMA check
+  in `get_regime()`.
+- This is the **regime-adaptive** design working as intended: the short hedge sits
+  dormant in bull markets (no bleed) and activates only in confirmed risk-off
+  regimes. Grounded in ORB literature (Crabel 1990; Zarattini & Aziz 2023: ORB
+  shorts need a confirmed downtrend + volume confirmation).
+- **Caveat:** the +2.7% bear-year result rests on **one** bear year (2022). The rule
+  is sound and principled, but real proof is the next bear market / paper trading.
+
+### $50k prop account → monthly profit (80% split), full system
+
+| Scenario | Annual | Monthly net |
+|----------|--------|-------------|
+| Optimistic (5yr avg) | +12.1% | ~$403/mo |
+| Realistic (OOS 22–23) | +8.2% | ~$273/mo |
+| Worst year (2022) | +2.5% | ~$83/mo |
+
+Adding the 3 fixed strategies + the Faber-gated short roughly **doubled** the
+realistic monthly figure (~$143 → ~$273) and turned the worst year **positive**
+(−0.9% → +2.5%). Still short of the $1,600–3,600 goal — that gap closes by scaling
+account size/count once proven live, not by over-risking one account.
