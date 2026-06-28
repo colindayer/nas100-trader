@@ -32,6 +32,10 @@ jobs:
             -d chat_id="${ALERTS_CHAT_ID}" \
             -d text="✅ GitHub Actions Telegram test"
 
+      - name: Test Binance
+        run: |
+          curl -I https://api.binance.com/api/v3/ping
+
       - name: Nasdaq + Gold (Alpaca paper)
         run: python live_trader.py --broker alpaca --session all
 
