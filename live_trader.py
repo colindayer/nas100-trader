@@ -64,30 +64,40 @@ DAILY_KILL_PCT = float(_risk_cfg.get("daily_loss_limit", "0.05"))
 # Conformal DD-throttle (Schmitt 2026): target drawdown cap. Position size scales
 # down as live drawdown approaches this, holding the account well under prop limits.
 # Validated: cut 3-pillar MaxDD -7.9%->-4.8%, Calmar 1.54->2.00. See FINDINGS.md.
-TARGET_DD = float(_risk_cfg.get("target_drawdown", "0.06"))
+TARGET_DD = float(_risk_cfg.get("target_drawdown", "0.08"))
+MONTHLY_KILL_PCT = float(_risk_cfg.get("monthly_loss_limit", "0.04"))
 _state_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                            "logs", "risk_state.json")
 
-def dd_throttle(equity):
-    """Persist peak equity; return a size multiplier in [0.3, 1.0] based on live DD."""
+def update_risk_state(equity):
+    """Persist peak equity + month-start equity. Returns:
+       (dd_scale [0.3-1.0], cur_dd, peak, month_pnl_pct)."""
     import json
-    peak = equity
+    st = {}
     try:
         with open(_state_path) as f:
-            peak = max(float(json.load(f).get("peak_equity", equity)), equity)
+            st = json.load(f)
     except Exception:
         pass
-    if equity > peak:
-        peak = equity
-    cur_dd = (equity - peak) / max(peak, 1)          # <= 0
+    # peak equity (drawdown throttle)
+    peak = max(float(st.get("peak_equity", equity)), equity)
+    cur_dd = (equity - peak) / max(peak, 1)                      # <= 0
     scale = max(0.3, min(1.0, (TARGET_DD + cur_dd) / TARGET_DD))
+    # month-start equity (worst-month guard) — reset on new calendar month
+    mkey = now_et().strftime("%Y-%m")
+    if st.get("month_key") != mkey:
+        st["month_key"] = mkey
+        st["month_start_equity"] = equity
+    m_start = float(st.get("month_start_equity", equity))
+    month_pnl_pct = (equity - m_start) / max(m_start, 1)
+    st["peak_equity"] = peak
     try:
         os.makedirs(os.path.dirname(_state_path), exist_ok=True)
         with open(_state_path, "w") as f:
-            json.dump({"peak_equity": peak}, f)
+            json.dump(st, f)
     except Exception:
         pass
-    return scale, cur_dd, peak
+    return scale, cur_dd, peak, month_pnl_pct
 
 # ── BROKER FACTORY ────────────────────────────────────────────────────────────
 def make_broker(name: str):
@@ -552,10 +562,18 @@ open_syms = broker.get_positions()
 vix_ma21, spy_bull, vix_mult, qqq_bear200 = get_regime()
 
 # ── Conformal DD-throttle: scale RISK_SCALE by live drawdown headroom ──
-_throttle, _cur_dd, _peak = dd_throttle(equity)
+_throttle, _cur_dd, _peak, _month_pnl = update_risk_state(equity)
 broker.RISK_SCALE *= _throttle
 logger.info(f"DD-throttle: peak=${_peak:,.0f} dd={_cur_dd:+.1%} "
-            f"throttle={_throttle:.2f} -> RISK_SCALE={broker.RISK_SCALE:.2f}")
+            f"throttle={_throttle:.2f} -> RISK_SCALE={broker.RISK_SCALE:.2f} "
+            f"| month P&L {_month_pnl:+.1%}")
+
+# ── Worst-month guard: halt new orders if month-to-date loss breaches limit ──
+if _month_pnl <= -MONTHLY_KILL_PCT:
+    msg = (f"MONTHLY KILL SWITCH: month-to-date {_month_pnl:.1%} exceeds limit "
+           f"-{MONTHLY_KILL_PCT:.0%}. No new orders until next month.")
+    logger.critical(msg); alerts.send(msg); print(f"\n{msg}\n")
+    sys.exit(0)
 
 # ── Kill-switch: daily loss check ──
 _risk_cfg = load_config("risk")
