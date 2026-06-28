@@ -413,3 +413,29 @@ futures rescued the failed IWM. CAVEATS: (1) correlation to QQQ uncomputable her
 lumpy (Nikkei avg carried by one +6.6% yr). (3) NOT validated — needs proper
 correlation vs 2024-26 Nasdaq ref + more data + walk-forward. Best new-asset lead
 since BTC, but preliminary. Nikkei = pillar #4 candidate IF it passes the gauntlet.
+
+### Nikkei futures sweep — REJECTED (uncorrelated but inconsistent)
+Proper validation: correlation to NQ sweep +0.137 (uncorrelated ✅) BUT rolling
+6-month windows only 3/8 positive (38%) — lumpy, +6.2% total carried by two 2026
+windows, tiny sample (~8-24 trades/yr). Coin-flip consistency vs BTC's 10/12.
+Uncorrelated diversifier with NO reliable edge → not pillar #4. Walk-forward caught
+what the per-year average hid.
+
+### Pairs / correlation mean-reversion — REJECTED (different edge type, no edge)
+Market-neutral z-score mean-reversion on 4 pairs (2015-26, net costs):
+| Pair | CAGR | Sharpe | MaxDD | corr→QQQ |
+|------|------|--------|-------|----------|
+| Gold/Silver | -4.3% | -0.19 | -63.7% | 0.04 |
+| Nasdaq/S&P | -0.8% | -0.10 | -22.9% | -0.06 |
+| Energy/Financ | -6.3% | -0.34 | -65.0% | 0.04 |
+| BTC/ETH | -27.4% | -0.57 | -93.5% | -0.00 |
+All negative with catastrophic DDs. Uncorrelated (~0.04) but no edge. Classic
+pairs death: spread TRENDS instead of reverting (BTC/ETH ratio ran for years).
+Simple pairs trading arbitraged away in liquid markets post-2000s. Don't revisit.
+
+### HUNT CONVERGENCE NOTE
+Tested for new uncorrelated edges: multi-ETF, VIX divergence, volume profile (2x),
+EURUSD ORB, SMA crossover, foreign cash indices (5), index futures sweep (Nikkei),
+pairs (4). Of all: only BTC passed. Edge discovery has hit clear diminishing
+returns. The validated set is stable: Nasdaq (sweep+ORB) + Gold (FVG) + BTC (sweep),
++ conformal DD-throttle. The value now is DEPLOYMENT (paper test), not more hunting.
