@@ -439,3 +439,15 @@ EURUSD ORB, SMA crossover, foreign cash indices (5), index futures sweep (Nikkei
 pairs (4). Of all: only BTC passed. Edge discovery has hit clear diminishing
 returns. The validated set is stable: Nasdaq (sweep+ORB) + Gold (FVG) + BTC (sweep),
 + conformal DD-throttle. The value now is DEPLOYMENT (paper test), not more hunting.
+
+### Macro event filter (FOMC/NFP/CPI) — REJECTED (but validates existing risk mgmt)
+Tested whether skipping trades on scheduled high-impact event days cuts the tail:
+- Losses do NOT cluster on events: 2/20 worst days are event days (= random ~2).
+- Event-day mean P&L (+$41.9) actually > non-event (+$28.8); vol barely higher.
+- Skip-event filter: total +117.8%->+102.7%, MaxDD -7.9%->-6.5%, worstMonth -3.4%->-4.3%.
+Cuts return, doesn't improve the tail. WHY (good news): existing filters already
+handle event risk — VIX-mult (off when VIX>25), HighVol/ATR filter, and timed entries
+(Asian/ORB, not at 8:30/2pm releases). Event risk already managed. No filter needed.
+Also resolved: options strategies (real edge but NOT tradeable on FTMO/futures props
+= off prop-path); order-flow tick data (free for crypto, but needs HFT infra to
+exploit — proven dead end). All three "new edge" avenues closed.
