@@ -350,3 +350,49 @@ Tested a simplified RWC overlay (position scaler, no lookahead) on the 3-pillar 
   leaves strategy logic untouched. Of the 5 "Risk Quant" papers, only this one helped;
   the 3 CoVaR/derivatives-pricing papers were wrong-domain, DeePM overkill.
 TODO: wire the dd-throttle into live RISK_SCALE (replaces the manual 0.7x).
+
+## Pillar Allocation Test (Cost-Aware, Monthly Rebalancing)
+**Date**: 2026-06-28
+**Data**: Nasdaq (S1+S4+S5L+S5S), Gold (FVG), BTC (Sweep) daily P&L from 2019-01-10 to 2025-10-10
+**Method**: Monthly rebalancing on first day of month, 5 bps turnover cost, no look-ahead bias.
+**Validation**: In-sample (2019-2022) vs Out-of-sample (2023-2025)
+
+### Full Period Results (2019-2025)
+| Scheme | CAGR | Sharpe | MaxDD | Final Equity |
+|--------|------|--------|-------|--------------|
+| EqualWeight |  3.96% |   1.29 | -3.58% |     14622 |
+| InvVol |  3.38% |   1.41 | -2.83% |     13846 |
+| RiskParity |  2.72% |   1.27 | -2.65% |     13006 |
+| RollingSharpe |  3.55% |   0.66 | -8.06% |     14072 |
+
+### OOS Results (2023-2025)
+| Scheme | CAGR | Sharpe | MaxDD | Final Equity |
+|--------|------|--------|-------|--------------|
+| EqualWeight |  2.79% |   0.89 | -3.58% |     14622 |
+| InvVol |  1.84% |   0.85 | -2.64% |     13846 |
+| RiskParity |  0.99% |   0.64 | -2.01% |     13006 |
+| RollingSharpe |  3.51% |   0.52 | -8.06% |     14072 |
+
+### OOS Performance Relative to EqualWeight
+| Scheme | Δ Sharpe | Δ MaxDD | Verdict |
+|--------|----------|---------|---------|
+| InvVol |  -0.04 | +0.94% | Mixed |
+| RiskParity |  -0.25 | +1.57% | Mixed |
+| RollingSharpe |  -0.37 | -4.48% | Worse |
+
+### Foreign indices (Nikkei/DAX/CAC/HangSeng/KOSPI) — mostly REJECTED
+ORB on cash indices, ~2y yfinance hourly, net 5bps, long+uptrend:
+| Index | CAGR | Sharpe | MaxDD |
+|-------|------|--------|-------|
+| Nikkei | -6.7% | -2.82 | -20.5% |
+| DAX | -8.6% | -2.21 | -23.2% |
+| CAC40 | -12.2% | -4.44 | -31.4% |
+| HangSeng | -3.5% | -1.43 | -12.2% |
+| KOSPI | +3.5% | +1.59 | -6.1% |
+4/5 fail (big DDs) — edge doesn't transfer, same as multi-ETF. KOSPI lone positive
+but likely multiple-testing noise (163 trades/2y); NOT adopted without full gauntlet.
+CAVEAT: rough ORB on CASH indices (no overnight sessions, 2y data) — the real sweep
+needs FUTURES intraday data (FDAX/Nikkei fut). Strategic lesson: transferable +
+uncorrelated edges are RARE (3 pillars found, most candidates fail). "More assets"
+and "more strategies" both fail without a genuine uncorrelated edge — keep the rare
+winners (Nasdaq/Gold/BTC), deploy them, test new candidates as low-cost lottery tickets.
