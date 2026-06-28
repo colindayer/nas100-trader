@@ -36,7 +36,10 @@ class AlpacaBroker(Broker):
         if not key or key.startswith("YOUR_"):
             raise NotConfiguredError(
                 "Alpaca credentials missing. See SETUP.md → [alpaca] section.")
-        paper = cfg.get("base_url", "").startswith("https://paper-")
+        # Default to PAPER (safe). Only goes live if base_url is explicitly the
+        # live endpoint. In the cloud with no base_url set, this stays paper.
+        base_url = cfg.get("base_url", "https://paper-api.alpaca.markets")
+        paper = "paper" in base_url
         self._trade  = TradingClient(key, secret, paper=paper)
         self._data   = StockHistoricalDataClient(key, secret)
 
