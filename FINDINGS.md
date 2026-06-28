@@ -322,3 +322,15 @@ THREE validated, uncorrelated pillars now: Nasdaq (sweep+ORB) + Gold (FVG) + BTC
 asset. Deployable on Bybit/Binance, FTMO crypto CFD, or MBT futures. Live paper
 test still required. The diversification math: 3 uncorrelated ~7-10%/yr edges
 combine to higher return + lower combined drawdown than any one alone.
+
+### 3-PILLAR CAPSTONE — combined system measured (net of costs, one $10k account)
+| System | CAGR | Sharpe | MaxDD |
+|--------|------|--------|-------|
+| Nasdaq (S1+S4+S5) | +8.2% | 0.94 | -7.1% |
+| Gold (FVG) | +3.1% | 0.95 | -3.3% |
+| BTC (sweep) | +6.8% | 0.91 | -7.9% |
+| **COMBINED 3-pillar** | **+12.2%** | **1.38** | **-7.9%** |
+Diversification works: combined CAGR > any single pillar, Sharpe 0.9 -> 1.38, and
+MaxDD stayed ~8% instead of stacking to ~15-20% (because uncorrelated). Expressed
+as more return per unit drawdown, not lower drawdown. -7.9% over 7.5y = prop-safe
+(<FTMO 10%). At 0.7x sizing: ~8.5% CAGR / ~5.5% DD — deployable. Live test pending.
