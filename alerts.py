@@ -32,6 +32,8 @@ def _try_telegram(msg: str) -> None:
     token   = _cfg.get("telegram_token", "")
     chat_id = _cfg.get("chat_id", "")
     if not token or not chat_id or token.startswith("YOUR_"):
+        print(f"[TELEGRAM] skipped — token set: {bool(token)}, chat_id set: {bool(chat_id)} "
+              f"(check secrets TELEGRAM_TOKEN/CHAT_ID + workflow env)")
         return
     try:
         resp = requests.post(
@@ -39,9 +41,13 @@ def _try_telegram(msg: str) -> None:
             json={"chat_id": chat_id, "text": msg},
             timeout=10,
         )
-        if not resp.ok:
+        if resp.ok:
+            print("[TELEGRAM] sent ✓")
+        else:
+            print(f"[TELEGRAM] FAILED: {resp.text}")
             logger.warning(f"Telegram alert failed: {resp.text}")
     except Exception as e:
+        print(f"[TELEGRAM] error: {e}")
         logger.warning(f"Telegram alert error: {e}")
 
 
