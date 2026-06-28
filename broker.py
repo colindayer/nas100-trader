@@ -33,9 +33,17 @@ def _load_local_csv(symbol: str, tf: str):
 
 
 def load_config(section: str) -> dict:
+    """Read [section] from config.ini, then overlay any env vars named
+    SECTION_KEY (e.g. ALPACA_KEY, CTRADER_CLIENT_ID). Env wins. This lets cloud
+    deploys (GitHub Actions / Railway) inject credentials with no config.ini."""
     cfg = configparser.ConfigParser()
     cfg.read(os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.ini"))
-    return dict(cfg[section]) if section in cfg else {}
+    d = dict(cfg[section]) if section in cfg else {}
+    prefix = section.upper() + "_"
+    for ek, ev in os.environ.items():
+        if ek.startswith(prefix) and ev:
+            d[ek[len(prefix):].lower()] = ev
+    return d
 
 
 class NotConfiguredError(RuntimeError):
