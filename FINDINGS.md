@@ -396,3 +396,20 @@ needs FUTURES intraday data (FDAX/Nikkei fut). Strategic lesson: transferable +
 uncorrelated edges are RARE (3 pillars found, most candidates fail). "More assets"
 and "more strategies" both fail without a genuine uncorrelated edge — keep the rare
 winners (Nasdaq/Gold/BTC), deploy them, test new candidates as low-cost lottery tickets.
+
+### Index FUTURES sweep — PROMISING lead (data was the issue, not the edge)
+Sweep on 24h index futures (yfinance, ~2y, net costs) — overnight session exists,
+unlike cash indices:
+| Future | avg/yr | cash/ETF version |
+|--------|--------|------------------|
+| Nikkei (NIY=F) | +1.5% | cash ORB was -6.7% |
+| Russell (RTY=F) | +2.0% | IWM ETF was -1.8% |
+| Dow (YM=F) | +1.7% | DIA ETF failed |
+KEY: the sweep needs the OVERNIGHT session. Cash indices/ETFs lack it → earlier
+failures were partly a DATA artifact. Futures (24h) make it positive. Russell
+futures rescued the failed IWM. CAVEATS: (1) correlation to QQQ uncomputable here
+(period mismatch 2019-23 vs 2024-26 — must fix); Dow/Russell are US-correlated
+(low diversification); NIKKEI (Japan) is the only genuine diversifier. (2) ~2y,
+lumpy (Nikkei avg carried by one +6.6% yr). (3) NOT validated — needs proper
+correlation vs 2024-26 Nasdaq ref + more data + walk-forward. Best new-asset lead
+since BTC, but preliminary. Nikkei = pillar #4 candidate IF it passes the gauntlet.
