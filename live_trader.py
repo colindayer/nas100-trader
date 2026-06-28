@@ -61,6 +61,34 @@ eastern = pytz.timezone("US/Eastern")
 _risk_cfg      = load_config("risk")
 DAILY_KILL_PCT = float(_risk_cfg.get("daily_loss_limit", "0.05"))
 
+# Conformal DD-throttle (Schmitt 2026): target drawdown cap. Position size scales
+# down as live drawdown approaches this, holding the account well under prop limits.
+# Validated: cut 3-pillar MaxDD -7.9%->-4.8%, Calmar 1.54->2.00. See FINDINGS.md.
+TARGET_DD = float(_risk_cfg.get("target_drawdown", "0.06"))
+_state_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "logs", "risk_state.json")
+
+def dd_throttle(equity):
+    """Persist peak equity; return a size multiplier in [0.3, 1.0] based on live DD."""
+    import json
+    peak = equity
+    try:
+        with open(_state_path) as f:
+            peak = max(float(json.load(f).get("peak_equity", equity)), equity)
+    except Exception:
+        pass
+    if equity > peak:
+        peak = equity
+    cur_dd = (equity - peak) / max(peak, 1)          # <= 0
+    scale = max(0.3, min(1.0, (TARGET_DD + cur_dd) / TARGET_DD))
+    try:
+        os.makedirs(os.path.dirname(_state_path), exist_ok=True)
+        with open(_state_path, "w") as f:
+            json.dump({"peak_equity": peak}, f)
+    except Exception:
+        pass
+    return scale, cur_dd, peak
+
 # ── BROKER FACTORY ────────────────────────────────────────────────────────────
 def make_broker(name: str):
     if name == "alpaca":
@@ -523,6 +551,12 @@ equity    = broker.get_account()
 open_syms = broker.get_positions()
 vix_ma21, spy_bull, vix_mult, qqq_bear200 = get_regime()
 
+# ── Conformal DD-throttle: scale RISK_SCALE by live drawdown headroom ──
+_throttle, _cur_dd, _peak = dd_throttle(equity)
+broker.RISK_SCALE *= _throttle
+logger.info(f"DD-throttle: peak=${_peak:,.0f} dd={_cur_dd:+.1%} "
+            f"throttle={_throttle:.2f} -> RISK_SCALE={broker.RISK_SCALE:.2f}")
+
 # ── Kill-switch: daily loss check ──
 _risk_cfg = load_config("risk")
 daily_start_equity = float(_risk_cfg.get("session_start_equity", str(equity)))
@@ -534,7 +568,8 @@ if daily_pnl_pct <= -DAILY_KILL_PCT:
     sys.exit(0)
 
 print(f"Equity:     ${equity:,.2f}")
-print(f"Broker:     {type(broker).__name__}  RISK_SCALE={broker.RISK_SCALE:.1f}")
+print(f"Broker:     {type(broker).__name__}  RISK_SCALE={broker.RISK_SCALE:.2f} "
+      f"(DD-throttle {_throttle:.2f}, live DD {_cur_dd:+.1%})")
 print(f"Regime:     VIX 21d={vix_ma21:.1f} | "
       f"SPY {'Golden ✅' if spy_bull else 'Death ⚠️'} | "
       f"QQQ {'<200dSMA bear' if qqq_bear200 else '>200dSMA bull'}")
