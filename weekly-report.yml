@@ -1,0 +1,19 @@
+name: Weekly Report
+on:
+  schedule:
+    - cron: "0 22 * * 5"   # Friday 22:00 UTC, after US close
+  workflow_dispatch: {}
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    env:
+      ALPACA_KEY: ${{ secrets.ALPACA_KEY }}
+      ALPACA_SECRET: ${{ secrets.ALPACA_SECRET }}
+      ALERTS_TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      ALERTS_CHAT_ID: ${{ secrets.CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt
+      - run: python weekly_report.py
