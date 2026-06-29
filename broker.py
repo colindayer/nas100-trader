@@ -109,7 +109,12 @@ class DryRunBroker(Broker):
 
     def get_account(self) -> float:
         try:
-            return self._b.get_account()
+            eq = self._b.get_account()
+            if not eq or eq <= 0:
+                # unfunded / unauthenticated account returns 0 → use notional default
+                print(f"[DRY-RUN] inner equity ${eq:,.2f}; using default ${self._DEFAULT_EQUITY:,.0f}")
+                return self._DEFAULT_EQUITY
+            return eq
         except Exception as e:
             print(f"[DRY-RUN] get_account failed ({e}); using default ${self._DEFAULT_EQUITY:,.0f}")
             return self._DEFAULT_EQUITY
