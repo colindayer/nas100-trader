@@ -7,7 +7,7 @@ Strategy logic in live_trader.py calls only these methods, never broker-specific
 
 import configparser
 import logging
-import os
+import os            
 import time
 
 logger = logging.getLogger("trader")
@@ -139,4 +139,11 @@ class DryRunBroker(Broker):
         logger.info(msg)
 
     def place_order_safe(self, symbol, qty, side, tag, max_retries=3):
+        import alerts
+
         self.place_order(symbol, qty, side, tag)
+
+        alerts.send(
+            f"🧪 DRY RUN {tag}\n"
+            f"{side.upper()} {qty:.5f} {symbol}"
+        )

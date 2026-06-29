@@ -1,26 +1,51 @@
 name: Paper Trade (Alpaca)
+
 on:
   schedule:
     - cron: "30 7 * * 1-5"
     - cron: "30 14 * * 1-5"
     - cron: "0 21 * * 1-5"
   workflow_dispatch: {}
+
 jobs:
   trade:
     runs-on: ubuntu-latest
+
     env:
       ALPACA_KEY: ${{ secrets.ALPACA_KEY }}
       ALPACA_SECRET: ${{ secrets.ALPACA_SECRET }}
       ALERTS_TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       ALERTS_CHAT_ID: ${{ secrets.CHAT_ID }}
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
       - run: pip install -r requirements.txt
+
+      - name: Test Telegram
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${ALERTS_TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${ALERTS_CHAT_ID}" \
+            -d text="✅ GitHub Actions Telegram test"
+
+      - name: Test Binance
+        run: |
+          curl -I https://api.binance.com/api/v3/ping
+
       - name: Nasdaq + Gold (Alpaca paper)
         run: python live_trader.py --broker alpaca --session all
+
       - name: BTC sweep (Binance dry-run)
         continue-on-error: true
         run: python live_trader.py --broker binance --session btc --dry-run
+
+      - name: Alert on failure
+        if: failure()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${ALERTS_TELEGRAM_TOKEN}/sendMessage" \
+            -d chat_id="${ALERTS_CHAT_ID}" \
+            -d text="❌ Trade workflow failed"
