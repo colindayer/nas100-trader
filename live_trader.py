@@ -117,6 +117,9 @@ def make_broker(name: str):
     if name == "binance":
         from binance_broker import BinanceBroker
         return BinanceBroker()
+    if name == "mt5":
+        from mt5_broker import MT5Broker
+        return MT5Broker()
     raise ValueError(f"Unknown broker: {name}")
 
 # ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -664,7 +667,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--session",
                     choices=["asian", "orb", "eod", "all", "btc", "rebal"], default=None)
 parser.add_argument("--broker",
-                    choices=["alpaca", "tradovate", "ctrader", "binance"], default="alpaca",
+                    choices=["alpaca", "tradovate", "ctrader", "binance", "mt5"], default="alpaca",
                     help="Broker adapter to use (default: alpaca)")
 parser.add_argument("--dry-run", action="store_true",
                     help="Print intended orders without placing them")
