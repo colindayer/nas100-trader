@@ -686,8 +686,8 @@ def run_overnight(broker, equity, open_syms):
     except Exception:
         pass
     held = st.get("active", False)
-    in_open_window  = (hr == 9 and mn >= 30) or (hr == 10)          # ~09:30-11:00 ET
-    in_close_window = (hr == 15 and mn >= 30) or (hr == 16 and mn < 5)  # ~15:30-16:00 ET
+    in_open_window  = (hr == 9 and mn >= 30) or (hr == 10)   # ~09:30-11:00 ET
+    in_close_window = (15 <= hr < 16)                        # 15:00-16:00 ET (wide for 30-min scheduler)
 
     # EXIT at the open on Tue(1)/Wed(2) if we're holding
     if held and in_open_window:
