@@ -698,8 +698,9 @@ def run_overnight(broker, equity, open_syms):
     # ENTER at the close on Mon(0)/Tue(1) — overnight lands on Tue/Wed (the strong nights)
     if not held and in_close_window and wd in (0, 1):
         price = float(broker.get_bars(OVN_SYMBOL, "1Hour", 5)["Close"].iloc[-1])
-        qty = int((equity * OVN_ALLOC) / price)
-        if qty >= 1:
+        # fractional units: Alpaca floors to whole shares internally; MT5 converts to lots
+        qty = round((equity * OVN_ALLOC) / price, 2)
+        if qty > 0:
             print(f"  ENTER overnight {OVN_SYMBOL}: BUY {qty} @ ~{price:.2f} (into "
                   f"{'Tue' if wd==0 else 'Wed'} morning)")
             oid = broker.place_order_safe(OVN_SYMBOL, qty, "buy", "OVN")
@@ -707,7 +708,7 @@ def run_overnight(broker, equity, open_syms):
                 with open(_ovn_state_path, "w") as f:
                     json.dump({"active": True, "qty": qty, "entry": price}, f)
         else:
-            print("  qty < 1, skip")
+            print("  qty too small, skip")
     else:
         reason = ("holding, waiting for open" if held else
                   "not Mon/Tue close window" if not in_close_window else "wrong weekday")
