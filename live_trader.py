@@ -665,10 +665,60 @@ def run_xsmom(broker, equity, open_syms):
             print(f"  {sym}: already at target ({have} sh)")
 
 
+# ── PILLAR: midweek overnight drift (validated edge) ───────────────────────────
+# Long QQQ overnight ONLY into Tue & Wed mornings (hold close->open), flat otherwise.
+# Validated: 15-ticker cross-section, OOS Sharpe 0.68, maxDD -14%, ~103 trades/yr,
+# Tue overnight positive in 100% of tickers OOS. Mon/Thu/Fri overnight are negative.
+# Enter at/near close (>=15:30 ET) on Mon/Tue; exit at/near open (<11:00 ET) Tue/Wed.
+_ovn_state_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "logs", "ovn_state.json")
+OVN_SYMBOL = "QQQ"
+OVN_ALLOC  = 0.25   # fraction of equity per overnight hold (low-DD edge can size up)
+
+def run_overnight(broker, equity, open_syms):
+    import json
+    logger.info("SESSION OVERNIGHT start")
+    print("\n── MIDWEEK OVERNIGHT (QQQ, Tue+Wed nights) ──")
+    now = now_et(); wd = now.weekday(); hr = now.hour; mn = now.minute
+    st = {}
+    try:
+        with open(_ovn_state_path) as f: st = json.load(f)
+    except Exception:
+        pass
+    held = st.get("active", False)
+    in_open_window  = (hr == 9 and mn >= 30) or (hr == 10)          # ~09:30-11:00 ET
+    in_close_window = (hr == 15 and mn >= 30) or (hr == 16 and mn < 5)  # ~15:30-16:00 ET
+
+    # EXIT at the open on Tue(1)/Wed(2) if we're holding
+    if held and in_open_window:
+        print(f"  EXIT overnight {OVN_SYMBOL} at open")
+        broker.close_position(OVN_SYMBOL)
+        with open(_ovn_state_path, "w") as f: json.dump({"active": False}, f)
+        return
+    # ENTER at the close on Mon(0)/Tue(1) — overnight lands on Tue/Wed (the strong nights)
+    if not held and in_close_window and wd in (0, 1):
+        price = float(broker.get_bars(OVN_SYMBOL, "1Hour", 5)["Close"].iloc[-1])
+        qty = int((equity * OVN_ALLOC) / price)
+        if qty >= 1:
+            print(f"  ENTER overnight {OVN_SYMBOL}: BUY {qty} @ ~{price:.2f} (into "
+                  f"{'Tue' if wd==0 else 'Wed'} morning)")
+            oid = broker.place_order_safe(OVN_SYMBOL, qty, "buy", "OVN")
+            if oid is not None:
+                with open(_ovn_state_path, "w") as f:
+                    json.dump({"active": True, "qty": qty, "entry": price}, f)
+        else:
+            print("  qty < 1, skip")
+    else:
+        reason = ("holding, waiting for open" if held else
+                  "not Mon/Tue close window" if not in_close_window else "wrong weekday")
+        logger.info(f"OVN no action: {reason} (wd={wd} {hr:02d}:{mn:02d} ET)")
+        print(f"  No action ({reason})")
+
+
 # ── MAIN ──────────────────────────────────────────────────────────────────────
 parser = argparse.ArgumentParser()
 parser.add_argument("--session",
-                    choices=["asian", "orb", "eod", "all", "btc", "rebal"], default=None)
+                    choices=["asian", "orb", "eod", "all", "btc", "rebal", "overnight"], default=None)
 parser.add_argument("--broker",
                     choices=["alpaca", "tradovate", "ctrader", "binance", "mt5"], default="alpaca",
                     help="Broker adapter to use (default: alpaca)")
@@ -745,6 +795,8 @@ elif args.session == "btc":
     run_btc(broker, equity, open_syms)
 elif args.session == "rebal":
     run_xsmom(broker, equity, open_syms)
+elif args.session == "overnight":
+    run_overnight(broker, equity, open_syms)
 elif args.session == "all":
     run_s1(broker, equity, open_syms, vix_ma21, spy_bull, vix_mult)
     run_s2(broker, equity, open_syms, vix_mult)
