@@ -718,10 +718,55 @@ def run_overnight(broker, equity, open_syms):
         print(f"  No action ({reason})")
 
 
+# ── PILLAR: vol-targeted BTC trend (validated reject, rescued by refining) ─────
+# Donchian 20/10 long/flat trend on BTC, sized by inverse-vol to a 20% target.
+# Validated 2017-26: OOS Sharpe 0.67, maxDD -24% (raw was -44%), 33 OOS trades,
+# corr to QQQ +0.12 (uncorrelated). Run daily. Rebalances to target each run.
+BTC_TREND_VOLTARGET = 0.20
+_btctrend_state = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "logs", "btc_trend_state.json")
+
+def run_btc_trend(broker, equity, open_syms):
+    import json
+    logger.info("SESSION BTC-TREND start")
+    print("\n── BTC TREND (vol-targeted Donchian 20/10) ──")
+    daily = broker.get_bars("BTC", "1Day", 250)
+    close = daily["Close"]
+    if len(close) < 30:
+        print("  not enough data"); return
+    H = close.rolling(20).max().shift(1); L = close.rolling(10).min().shift(1)
+    p = 0
+    for i in range(len(close)):
+        c = float(close.iloc[i])
+        if p == 0 and c > (H.iloc[i] if pd.notna(H.iloc[i]) else 1e18): p = 1
+        elif p == 1 and c < (L.iloc[i] if pd.notna(L.iloc[i]) else 0): p = 0
+    in_trend = (p == 1)
+    rvol = float(close.pct_change().rolling(20).std().iloc[-1]) * (365 ** 0.5)
+    target_frac = min(BTC_TREND_VOLTARGET / rvol, 1.0) if (in_trend and rvol > 0) else 0.0
+    price = float(close.iloc[-1])
+    target_qty = round((equity * target_frac * broker.RISK_SCALE) / price, 5)
+    # current qty held (state file; on the same account BTC may also be held by the sweep)
+    st = {}
+    try:
+        with open(_btctrend_state) as f: st = json.load(f)
+    except Exception: pass
+    cur = float(st.get("qty", 0.0))
+    delta = round(target_qty - cur, 5)
+    print(f"  trend={'UP' if in_trend else 'flat'} vol={rvol:.0%} target_frac={target_frac:.2f} "
+          f"target={target_qty} cur={cur} delta={delta}")
+    if abs(delta) * price < max(10, equity * 0.01):
+        print("  within tolerance, no rebalance")
+        return
+    side = "buy" if delta > 0 else "sell"
+    broker.place_order_safe("BTC", abs(delta), side, "BTCTREND")
+    with open(_btctrend_state, "w") as f:
+        json.dump({"qty": target_qty, "price": price}, f)
+
+
 # ── MAIN ──────────────────────────────────────────────────────────────────────
 parser = argparse.ArgumentParser()
 parser.add_argument("--session",
-                    choices=["asian", "orb", "eod", "all", "btc", "rebal", "overnight"], default=None)
+                    choices=["asian", "orb", "eod", "all", "btc", "rebal", "overnight", "btctrend"], default=None)
 parser.add_argument("--broker",
                     choices=["alpaca", "tradovate", "ctrader", "binance", "mt5"], default="alpaca",
                     help="Broker adapter to use (default: alpaca)")
@@ -800,6 +845,8 @@ elif args.session == "rebal":
     run_xsmom(broker, equity, open_syms)
 elif args.session == "overnight":
     run_overnight(broker, equity, open_syms)
+elif args.session == "btctrend":
+    run_btc_trend(broker, equity, open_syms)
 elif args.session == "all":
     run_s1(broker, equity, open_syms, vix_ma21, spy_bull, vix_mult)
     run_s2(broker, equity, open_syms, vix_mult)
