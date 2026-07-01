@@ -73,12 +73,28 @@ class BinanceBroker(Broker):
         interval = _TF.get(tf, "1h")
         url = (f"{self._base}/api/v3/klines?symbol={sym}"
                f"&interval={interval}&limit={min(lookback, 1000)}")
-        with urllib.request.urlopen(url, timeout=15) as r:
-            data = json.loads(r.read())
-        df = pd.DataFrame(data, columns=["ot", "Open", "High", "Low", "Close",
-                                         "Volume", "ct", "qv", "n", "tb", "tq", "ig"])
-        df.index = pd.to_datetime(df["ot"], unit="ms", utc=True)
-        return df[["Open", "High", "Low", "Close", "Volume"]].astype(float)
+        try:
+            with urllib.request.urlopen(url, timeout=15) as r:
+                data = json.loads(r.read())
+            df = pd.DataFrame(data, columns=["ot", "Open", "High", "Low", "Close",
+                                             "Volume", "ct", "qv", "n", "tb", "tq", "ig"])
+            df.index = pd.to_datetime(df["ot"], unit="ms", utc=True)
+            return df[["Open", "High", "Low", "Close", "Volume"]].astype(float)
+        except Exception as e:
+            # Binance geo-blocks US cloud IPs (HTTP 451). Fall back to yfinance
+            # (BTC-USD) so BTC data works ANYWHERE (cloud/US) for dry-run/signals.
+            logger.warning(f"Binance get_bars failed ({e}); yfinance fallback")
+            import yfinance as yf
+            yf_sym = {"BTCUSDT": "BTC-USD", "ETHUSDT": "ETH-USD"}.get(sym, sym)
+            yf_int = {"1m": "1m", "5m": "5m", "15m": "15m", "1h": "1h", "1d": "1d"}.get(interval, "1h")
+            period = "60d" if yf_int.endswith("m") else ("730d" if yf_int == "1h" else "max")
+            d = yf.download(yf_sym, period=period, interval=yf_int, progress=False, auto_adjust=True)
+            if isinstance(d.columns, pd.MultiIndex):
+                d.columns = d.columns.get_level_values(0)
+            d = d[["Open", "High", "Low", "Close", "Volume"]].dropna().tail(min(lookback, 1000))
+            if d.index.tz is None:
+                d.index = d.index.tz_localize("UTC")
+            return d
 
     # ── account / positions ───────────────────────────────────────────────────
     def get_account(self) -> float:
