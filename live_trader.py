@@ -209,9 +209,11 @@ def run_s1(broker, equity, open_syms, vix_ma21, spy_bull, vix_mult):
     if "QQQ" in open_syms:
         logger.info("S1 skip: QQQ already in position")
         print("  QQQ already in position — skip"); return
-    if not spy_bull or vix_mult == 0:
-        logger.info(f"S1 pause: spy_bull={spy_bull} vix_mult={vix_mult}")
-        print(f"  PAUSED — SPY={'bull' if spy_bull else 'bear'}, VIX={vix_ma21:.1f}"); return
+    # Bull filter REMOVED (validated: sweep works in bear too — OOS Sharpe 0.88->1.02,
+    # +44%->+55%, same -10% DD). Keep only the extreme-VIX pause.
+    if vix_mult == 0:
+        logger.info("S1 pause: extreme VIX")
+        print(f"  PAUSED — extreme VIX ({vix_ma21:.1f})"); return
 
     data = broker.get_bars("QQQ", "1Hour", 30)
     data["Date"] = data.index.date
@@ -802,8 +804,8 @@ def _asian_sweep_fires(data):
 def run_sweep_basket(broker, equity, open_syms, spy_bull, vix_mult):
     logger.info("SESSION SWEEP-BASKET start")
     print("\n── S1 SWEEP BASKET (validated wider universe) ──")
-    if not spy_bull or vix_mult == 0:
-        print("  PAUSED (regime: bear/high-VIX)"); return
+    if vix_mult == 0:
+        print("  PAUSED (extreme VIX)"); return
     for sym in SWEEP_BASKET:
         if sym in open_syms:
             print(f"  {sym}: already held, skip"); continue
