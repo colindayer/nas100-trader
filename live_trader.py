@@ -769,7 +769,7 @@ def run_btc_trend(broker, equity, open_syms):
 # The Asian-sweep edge validated across SPY/IWM/GLD/AAPL/MSFT/NVDA (all OOS-positive,
 # PF 1.1-1.9). Runs the same pre-GEX sweep on the basket → 5-7x the trade count from
 # the SAME validated edge. (QQQ stays in S1 with its GEX filter, to avoid doubling.)
-SWEEP_BASKET = ["SPY", "IWM", "GLD", "AAPL", "MSFT", "NVDA"]
+SWEEP_BASKET = ["SPY", "IWM", "GLD", "XLK", "XLE", "AAPL", "MSFT", "NVDA", "AMZN"]
 
 def _asian_sweep_fires(data):
     """(fires, price) for the Asian-low-sweep + VWAP reclaim + EMA + calm-vol signal."""
