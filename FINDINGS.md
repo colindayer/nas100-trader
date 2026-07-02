@@ -489,6 +489,30 @@ calendar-time levers are (a) 2.5x static (median ~60 days, P(pass) 36%),
   robust post-cost edge in the academic record (data-snooping literature);
   also our own BB-adjacent tests (volume profile, dynamic exits) all failed.
 
+### London Breakout (Asian-range straddle, video strategy) — REJECTED (decisively)
+Tested on 6y of broker-real Pepperstone H1 (EURUSD + GBPUSD, costs on,
+2026-07): EURUSD OOS Sharpe **−3.96**, GBPUSD **−6.19**; both lose ~40–60%
+over the sample at 0.5%/trade risk, ~145 trades/yr each. Optimistic intrabar
+bound equally negative → not a bar-resolution artifact, the strategy itself
+bleeds. The classic retail London-breakout is arbitraged below retail costs.
+Consistent with our validated S1: the Asian-range BREAK fails more often than
+it follows through (S1 profitably fades it). Do not revisit.
+
+### Intraday momentum, noise bands + VWAP stop (SSRN 4824172) — REJECTED (decayed)
+On US100 CFD feed (hourly approx, costs on): IS 2020–mid-23 Sharpe **+1.32**
+(incl. +24.8% in 2022 — the short side worked in the bear), OOS mid-23–2026
+Sharpe **−0.80** (−8.4%, −5.0%, −5.6% in 2024/25/26). The paper's sample ends
+early 2024; the edge decayed right after publication — textbook post-publication
+decay. Caveat: hourly bars coarsen the paper's intraday rule, but OOS-negative
+on the tradeable feed = not deployable. Do not adopt.
+
+### MT5 liveness RESTORED (post timezone fix) — the silent weeks explained
+With server-time bars rebased to UTC, the replay on broker-real NAS100 data
+shows all strategies alive: S1 13 signals/180d, S4 27, S5 274, S3 3 (pre-GEX
+counts), latest signals same-day. The 2-week live silence was 100% the MT5
+server-time bug (Asian windows shifted ~3h), NOT over-strict filters. Gates
+verified working (S4 SPY correctly blocked on positive GEX same run).
+
 ### "50 Graphs" quant reference doc — reviewed, nothing to add
 The shared Google Doc is a chart/diagnostics catalog (distributions, ACF/PACF,
 rolling Sharpe, vol surfaces, microstructure, ML diagnostics) — zero strategies.
