@@ -35,7 +35,7 @@ eastern = pytz.timezone("US/Eastern")
 
 
 class MT5Broker(Broker):
-    SYMBOL_MAP = {"QQQ": "US100", "SPY": "US500", "GLD": "XAUUSD"}
+    SYMBOL_MAP = {"QQQ": "US100", "SPY": "US500", "GLD": "XAUUSD", "BTC": "BTCUSD"}
     RISK_SCALE = 1.0
 
     def __init__(self):
@@ -48,7 +48,7 @@ class MT5Broker(Broker):
         self._mt5 = mt5
         cfg = load_config("mt5")
         # optional per-broker symbol overrides
-        for internal in ("qqq", "spy", "gld"):
+        for internal in ("qqq", "spy", "gld", "btc"):
             ov = cfg.get(f"map_{internal}")
             if ov:
                 self.SYMBOL_MAP[internal.upper()] = ov

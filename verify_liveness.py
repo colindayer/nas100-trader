@@ -123,13 +123,23 @@ def report(name, sig, asset):
 def main():
     print(f"REPLAY LIVENESS TEST — signals each strategy WOULD fire "
           f"(last {WINDOW_DAYS} days + 7y)\n")
-    qqq = load_hourly("QQQ"); spy = load_hourly("SPY")
+    try:
+        qqq = load_hourly("QQQ")
+    except FileNotFoundError:
+        print("  qqq_hourly_7y.csv missing — on the VPS create it from the MT5 "
+              "bridge:\n  python fetch_mt5_history.py --symbols US100 --alias qqq")
+        return
     report("S1 Asian sweep",   s1_signals(qqq), "QQQ")
     report("S4 multi-sweep",   s4_signals(qqq), "QQQ")
-    report("S4 multi-sweep",   s4_signals(spy), "SPY")
+    try:
+        spy = load_hourly("SPY")
+        report("S4 multi-sweep", s4_signals(spy), "SPY")
+    except FileNotFoundError:
+        print("  S4 SPY: spy_hourly_7y.csv missing — skipped")
     report("S5 ORB breakout",  s5_signals(qqq), "QQQ")
     for s in ["QQQ", "GLD", "GDX", "SLV", "USO"]:
         try: report("S3 abnormal-vol", s3_signals(s), s)
+        except FileNotFoundError: print(f"  S3 {s}: no data file — skipped")
         except Exception as e: print(f"  S3 {s}: data err ({e})")
     print("\nNote: S1/S4 counts are PRE-GEX (live also needs negative GEX → fewer). "
           "A recent non-zero count proves the price logic is alive and firing.")

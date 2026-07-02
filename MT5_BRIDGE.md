@@ -1,5 +1,35 @@
 # MT5 Data + Execution Bridge — VPS Quickstart
 
+## ⭐ The only two commands you need now (everything is on `main`)
+
+Open **PowerShell** (blue icon — NOT the black Command Prompt; `iwr` doesn't
+exist there), then:
+
+```powershell
+iwr https://raw.githubusercontent.com/colindayer-boop/nas100-trader/main/update_vps.ps1 -OutFile update_vps.ps1
+powershell -ExecutionPolicy Bypass -File update_vps.ps1 -Validate -Schedule
+```
+
+`update_vps.ps1` re-downloads every current file from `main` (no more manual
+`iwr` per file, no paste-corruption), `-Schedule` registers ALL session tasks
+(all/overnight/btc/btctrend/rebal — replaces the lone Overnight-MT5 task), and
+`-Validate` pulls MT5 history and runs the whole test battery into
+`validation_report.txt` — paste that file back into the chat for verdicts.
+
+## Telegram alerts (2 minutes, so signals reach your phone)
+
+1. In Telegram, talk to **@BotFather** → `/newbot` → copy the token.
+2. Message your new bot once, then open
+   `https://api.telegram.org/bot<TOKEN>/getUpdates` and copy the number at
+   `"chat":{"id":...}`.
+3. In `config.ini` on the VPS:
+
+```ini
+[alerts]
+telegram_token = 123456789:AA...your-token...
+chat_id        = 123456789
+```
+
 The bridge is two-way: **data** (broker-real 24h CFD history out of the MT5
 terminal → CSVs for validation) and **execution** (`--broker mt5` in
 `live_trader.py`, already implemented). Validating and trading on the SAME
