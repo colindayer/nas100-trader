@@ -29,7 +29,41 @@ from datetime import datetime, timedelta, timezone
 
 import pandas as pd
 
+# Windows consoles default to cp1252 and crash on unicode — never let a print kill a fetch
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 CHUNK_DAYS = 90          # fetch window per request (kind to the terminal)
+
+# broker-specific names for the same instrument (first match wins)
+SYMBOL_ALIASES = {
+    "US100":  ["US100", "NAS100", "USTEC", "US100.cash", "NAS100.a", "USTECH100"],
+    "US500":  ["US500", "SPX500", "US500.cash", "SPX500.a"],
+    "XAUUSD": ["XAUUSD", "GOLD", "XAUUSD.a"],
+    "BTCUSD": ["BTCUSD", "BTCUSD.a", "Bitcoin"],
+}
+
+
+def resolve_symbol(mt5, sym):
+    """Find the broker's actual name for `sym` (US100 vs NAS100 vs USTEC...)."""
+    for cand in SYMBOL_ALIASES.get(sym.upper(), [sym]):
+        if mt5.symbol_select(cand, True):
+            if cand != sym:
+                print(f"  note: broker calls {sym} '{cand}' — using that")
+            return cand
+    if mt5.symbol_select(sym, True):          # not in alias table, direct hit
+        return sym
+    names = [s.name for s in (mt5.symbols_get() or [])]
+    for n in names:                            # last resort: substring scan
+        if sym.upper() in n.upper() and mt5.symbol_select(n, True):
+            print(f"  note: broker calls {sym} '{n}' — using that")
+            return n
+    close = [n for n in names if sym[:3].upper() in n.upper()][:8]
+    print(f"  WARN: '{sym}' not found on this broker. Close matches: {close}")
+    return None
 
 
 def connect():
@@ -77,9 +111,8 @@ def detect_utc_offset(mt5, fallback=3.0):
 
 
 def fetch_symbol(mt5, sym, years, utc_off):
-    if not mt5.symbol_select(sym, True):
-        print(f"  ⚠️ '{sym}' not on this broker — run `python mt5_broker.py` to "
-              f"list symbol names, then retry with the right one")
+    broker_sym = resolve_symbol(mt5, sym)
+    if broker_sym is None:
         return None
     end = datetime.now(timezone.utc)
     start = end - timedelta(days=int(years * 365.25))
@@ -87,14 +120,14 @@ def fetch_symbol(mt5, sym, years, utc_off):
     cur = start
     while cur < end:
         nxt = min(cur + timedelta(days=CHUNK_DAYS), end)
-        rates = mt5.copy_rates_range(sym, mt5.TIMEFRAME_H1, cur, nxt)
+        rates = mt5.copy_rates_range(broker_sym, mt5.TIMEFRAME_H1, cur, nxt)
         if rates is not None and len(rates):
             frames.append(pd.DataFrame(rates))
         cur = nxt
     if not frames:
-        print(f"  ⚠️ {sym}: no H1 history returned — broker may limit depth; "
-              f"try fewer --years, or open a {sym} H1 chart in the terminal and "
-              f"scroll back once to force a history download, then re-run")
+        print(f"  WARN {sym}: no H1 history returned — broker may limit depth; "
+              f"try fewer --years, or open a {broker_sym} H1 chart in the terminal "
+              f"and scroll back once to force a history download, then re-run")
         return None
     df = pd.concat(frames).drop_duplicates(subset="time").sort_values("time")
     out = pd.DataFrame({

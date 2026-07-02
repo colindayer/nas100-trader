@@ -19,6 +19,7 @@ Rule (hourly-bar approximation of the paper):
 Run LOCALLY (needs qqq_hourly_7y.csv / spy_hourly_7y.csv):
   python3 intraday_momentum_test.py
 """
+import sys
 import numpy as np
 import pandas as pd
 import warnings
@@ -26,6 +27,10 @@ import warnings
 from mean_reversion_test import load, SLIP
 
 warnings.filterwarnings("ignore")
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 
 
 # (inlined from test_doc_strategies.py — importing that module runs its backtests)

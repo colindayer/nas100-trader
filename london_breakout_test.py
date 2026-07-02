@@ -26,8 +26,14 @@ HONESTY NOTES
   a pass here on US100 would be suspicious; the video pitches it for FX majors.
 """
 import argparse
+import sys
 import numpy as np
 import pandas as pd
+
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 
 SPREAD_PIPS = 1.2
 BUF_PIPS    = 5.0

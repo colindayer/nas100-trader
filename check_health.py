@@ -28,6 +28,13 @@ import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timedelta
 
+# Windows consoles default to cp1252 and crash on the status emoji — guard it
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 LOGDIR = os.path.join(HERE, "logs")
 

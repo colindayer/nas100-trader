@@ -26,7 +26,7 @@ function Register-BotTask($name, $session, $minutes, $monthGate) {
         # only run on the 1st of the month (xsmom monthly rebalance)
         $gate = "for /f %%d in ('powershell -NoProfile -Command (Get-Date).Day') do if not %%d==1 exit /b 0`r`n"
     }
-    $content = "@echo off`r`n" + $gate + "cd /d `"$folder`"`r`n" +
+    $content = "@echo off`r`nset PYTHONUTF8=1`r`n" + $gate + "cd /d `"$folder`"`r`n" +
         "python live_trader.py --broker mt5 --session $session >> `"$logdir\$session.log`" 2>&1`r`n"
     Set-Content -Path $bat -Encoding ASCII -Value $content
     $action  = New-ScheduledTaskAction -Execute "cmd.exe" -Argument "/c `"$bat`""

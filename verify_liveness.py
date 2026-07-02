@@ -13,9 +13,13 @@ Note: GEX cache stops 2023, so S1/S4 here count the PRICE-STRUCTURE signal
 (sweep+VWAP+EMA+session). Live additionally requires negative GEX, so live fires
 are a subset of these. The point is to prove the price logic is alive.
 """
-import pandas as pd, numpy as np, pytz, warnings
+import pandas as pd, numpy as np, pytz, warnings, sys
 from datetime import timedelta
 warnings.filterwarnings("ignore")
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 eastern = pytz.timezone("US/Eastern")
 
 WINDOW_DAYS = 180   # "recent" lookback to report

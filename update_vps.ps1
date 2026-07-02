@@ -14,6 +14,10 @@ param(
     [switch]$Schedule
 )
 
+# force UTF-8 python I/O (Windows cp1252 console crashes on unicode output)
+$env:PYTHONUTF8 = "1"
+$env:PYTHONIOENCODING = "utf-8"
+
 $base = "https://raw.githubusercontent.com/colindayer-boop/nas100-trader/main"
 $files = @(
     "live_trader.py", "broker.py", "mt5_broker.py", "alerts.py",
