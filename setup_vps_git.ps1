@@ -45,12 +45,15 @@ if (Select-String -Path .\mt5_broker.py -Pattern 'BTCUSD' -Quiet) {
 
 Write-Host "== 5. registering scheduled tasks ==" -ForegroundColor Cyan
 $trUpdate = 'cmd /c cd /d "' + $Repo + '" && git pull'
-$trBtc    = 'cmd /c cd /d "' + $Repo + '" && python live_trader.py --broker mt5 --session btc'
 schtasks /create /tn "nas100-update" /sc MINUTE /mo 30 /f /tr $trUpdate | Out-Null
-schtasks /create /tn "nas100-btc"    /sc HOURLY          /f /tr $trBtc    | Out-Null
-Write-Host "   nas100-update (git pull every 30 min) + nas100-btc (hourly) registered" -ForegroundColor Green
+# session tasks (all/overnight/btc/btctrend/rebal) come from schedule_mt5.ps1 —
+# drop the old standalone BTC task so the hourly session does not run twice
+schtasks /delete /tn "nas100-btc" /f 2>$null | Out-Null
+powershell -ExecutionPolicy Bypass -File (Join-Path $Repo "schedule_mt5.ps1")
+Write-Host "   nas100-update (git pull every 30 min) + Nas100Bot-* session tasks registered" -ForegroundColor Green
 
 Write-Host "== 6. test BTC run ==" -ForegroundColor Cyan
+$env:PYTHONUTF8 = "1"
 python live_trader.py --broker mt5 --session btc
 
 Write-Host ""
