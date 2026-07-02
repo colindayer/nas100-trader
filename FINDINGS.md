@@ -440,6 +440,24 @@ pairs (4). Of all: only BTC passed. Edge discovery has hit clear diminishing
 returns. The validated set is stable: Nasdaq (sweep+ORB) + Gold (FVG) + BTC (sweep),
 + conformal DD-throttle. The value now is DEPLOYMENT (paper test), not more hunting.
 
+### Prop-challenge Monte-Carlo optimizer (FundedNext presets) — ADOPTED
+Replaced the Gaussian `prop_ev_sim.py` model with `prop_firm_optimizer.py`:
+fat tails (Student-t df=4), sparse trade days (40%), intraday daily-loss buffer
+(80% of stated limit), min-trading-day rules, per-firm presets (FundedNext
+Stellar 2-Step / 1-Step / Lite, FTMO), funded stage WITH the conformal
+dd-throttle, and 3 edge scenarios (backtest / haircut 0.66 / weak 0.33).
+Key results at the HONEST haircut edge (~8%/yr, Sharpe ~0.9), $100k:
+- **Best plan: FN Stellar 2-Step at RISK_SCALE 1.5–2.0** — P(pass) 44–52%,
+  median 85–136 market days to funded, ~$1.1–1.25k expected fees to funded,
+  EV $8.4–12k/challenge. EV/time peaks at 2.0x, EV/challenge at 1.5x.
+- **Stellar 1-Step REJECTED for this system**: 3% daily / 6% max loss vs our
+  fat tails → optimum stuck at 1.0x, P(pass) 41%, EV ~⅓ of the 2-Step.
+- Even the weak scenario (+4%/yr) keeps 2-Step EV positive at 1.5–2x →
+  challenge farming robust to a big edge haircut, but NOT to zero edge.
+- Funded stage: drop to 1.0x + dd-throttle (survival >> speed once funded).
+Full cheat-sheet: PROP_PLAN.md. This changes SIZING/venue choice only — the
+frozen strategy set is untouched (no new filters, freeze rule respected).
+
 ### Macro event filter (FOMC/NFP/CPI) — REJECTED (but validates existing risk mgmt)
 Tested whether skipping trades on scheduled high-impact event days cuts the tail:
 - Losses do NOT cluster on events: 2/20 worst days are event days (= random ~2).
