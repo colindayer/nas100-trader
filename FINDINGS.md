@@ -440,6 +440,64 @@ pairs (4). Of all: only BTC passed. Edge discovery has hit clear diminishing
 returns. The validated set is stable: Nasdaq (sweep+ORB) + Gold (FVG) + BTC (sweep),
 + conformal DD-throttle. The value now is DEPLOYMENT (paper test), not more hunting.
 
+### Prop-challenge Monte-Carlo optimizer (FundedNext presets) — ADOPTED
+Replaced the Gaussian `prop_ev_sim.py` model with `prop_firm_optimizer.py`:
+fat tails (Student-t df=4), sparse trade days (40%), intraday daily-loss buffer
+(80% of stated limit), min-trading-day rules, per-firm presets (FundedNext
+Stellar 2-Step / 1-Step / Lite, FTMO), funded stage WITH the conformal
+dd-throttle, and 3 edge scenarios (backtest / haircut 0.66 / weak 0.33).
+Key results at the HONEST haircut edge (~8%/yr, Sharpe ~0.9), $100k:
+- **Best plan: FN Stellar 2-Step at RISK_SCALE 1.5–2.0** — P(pass) 44–52%,
+  median 85–136 market days to funded, ~$1.1–1.25k expected fees to funded,
+  EV $8.4–12k/challenge. EV/time peaks at 2.0x, EV/challenge at 1.5x.
+- **Stellar 1-Step REJECTED for this system**: 3% daily / 6% max loss vs our
+  fat tails → optimum stuck at 1.0x, P(pass) 41%, EV ~⅓ of the 2-Step.
+- Even the weak scenario (+4%/yr) keeps 2-Step EV positive at 1.5–2x →
+  challenge farming robust to a big edge haircut, but NOT to zero edge.
+- Funded stage: drop to 1.0x + dd-throttle (survival >> speed once funded).
+Full cheat-sheet: PROP_PLAN.md. This changes SIZING/venue choice only — the
+frozen strategy set is untouched (no new filters, freeze rule respected).
+
+### Challenge "cushion governor" (dynamic sizing) — REJECTED
+Tested anti-martingale dynamic sizing for challenges (risk ∝ headroom above the
+static max-loss floor, `clip(m0·cushion/maxdd, 0.3, cap)`) vs static, same MC:
+governor LOSES at every setting (e.g. 2.0x: P(pass) 44.9%→37.5%, no speed gain).
+Root cause: the DAILY loss limit is fixed vs initial balance — profit cushion
+gives no protection against it, so upsizing after gains only adds daily-breach
+risk. Static challenge sizing + funded dd-throttle is near-optimal; the honest
+calendar-time levers are (a) 2.5x static (median ~60 days, P(pass) 36%),
+(b) PARALLEL challenges (3 accounts at 2.0x → 82% at least one funded in ~4mo),
+(c) smaller accounts (same %-rules → same pass odds, fees scale down).
+
+### SSRN sweep 2026-07 (price mismatch / overnight / Bollinger / VWAP) — 1 lead, 3 rejects
+- **LEAD → intraday momentum, noise bands + VWAP trailing stop** (Zarattini/
+  Aziz/Barbon SSRN 4824172; Maróy SSRN 5095349 finds VWAP exits best). Same
+  authors as our validated S5 ORB source; paper: net Sharpe 1.33, +19.6%/yr,
+  SPY 2007-24, trades ~daily (breadth → faster prop pass), takes shorts.
+  Test script ready: `intraday_momentum_test.py` (six-filter gauntlet, our
+  costs/data; sanity-checked: correctly loses on synthetic random data). Run
+  where the hourly CSVs live. If it passes: still needs corr-to-book (<0.3),
+  walk-forward, decay check before any adoption.
+- **Overnight drift — REJECT for us**: Boyarchenko/Larsen/Whelan (SSRN 3546173):
+  pre-cost Sharpe 1.1-1.3 but **-0.5 to +0.3 after costs** — the edge is real
+  but thinner than retail frictions; our S1 already harvests related
+  overnight-session structure.
+- **ETF NAV premium/discount "price mismatch" — REJECT**: AP/HFT arbitrage
+  (FCA OP68 2025), sub-second latency game — same conclusion as our earlier
+  order-flow rejection. Not retail-tradeable.
+- **Bollinger bands — REJECT**: standard band-reversion/breakout rules have no
+  robust post-cost edge in the academic record (data-snooping literature);
+  also our own BB-adjacent tests (volume profile, dynamic exits) all failed.
+
+### "50 Graphs" quant reference doc — reviewed, nothing to add
+The shared Google Doc is a chart/diagnostics catalog (distributions, ACF/PACF,
+rolling Sharpe, vol surfaces, microstructure, ML diagnostics) — zero strategies.
+Most relevant items are already practiced here (drawdown/rolling-Sharpe/walk-
+forward = the validation gauntlet; QQ/fat-tails = the t(4) MC). Its earlier
+strategy prompts (UO, Turtle, XS-mom) were already gauntlet-rejected in
+test_doc_strategies.py. Calendar-anomaly ideas (turn-of-month, overnight drift)
+remain untested (hunt scripts were broken) — low-priority lottery tickets only.
+
 ### Macro event filter (FOMC/NFP/CPI) — REJECTED (but validates existing risk mgmt)
 Tested whether skipping trades on scheduled high-impact event days cuts the tail:
 - Losses do NOT cluster on events: 2/20 worst days are event days (= random ~2).

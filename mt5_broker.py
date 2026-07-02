@@ -65,6 +65,33 @@ class MT5Broker(Broker):
         logger.info(f"MT5 connected: login={login} server={server} "
                     f"equity={getattr(info, 'equity', '?')} "
                     f"currency={getattr(info, 'currency', '?')}")
+        # MT5 bar/tick timestamps are in SERVER time (brokers run "NY-close"
+        # charts, UTC+2 winter / UTC+3 summer), NOT UTC. Treating them as UTC
+        # shifts every session window ~3h and corrupts Asian high/low & ORB.
+        self._utc_off = self._detect_utc_offset(float(cfg.get("server_utc_offset", "3")))
+        logger.info(f"MT5 server-UTC offset: {self._utc_off:+.0f}h "
+                    f"(bars re-based to true UTC)")
+
+    def _detect_utc_offset(self, fallback):
+        """Compare a live tick's server timestamp to real UTC. Only trust the
+        detection if the tick is fresh (market open); else use config/fallback."""
+        import time as _time
+        m = self._mt5
+        for probe in ("BTCUSD", "US100", "XAUUSD", "EURUSD"):
+            try:
+                if not m.symbol_select(probe, True):
+                    continue
+                tick = m.symbol_info_tick(probe)
+                if tick is None or not tick.time:
+                    continue
+                diff_h = (tick.time - _time.time()) / 3600.0
+                off = round(diff_h)
+                # fresh tick: residual under ~5 min after removing whole hours
+                if abs(diff_h - off) < 0.084 and -12 <= off <= 14:
+                    return float(off)
+            except Exception:
+                continue
+        return fallback
 
     _TF = None
     def _tf(self, tf):
@@ -100,7 +127,9 @@ class MT5Broker(Broker):
         if rates is None or len(rates) == 0:
             raise RuntimeError(f"MT5 get_bars {sym} failed: {self._mt5.last_error()}")
         df = pd.DataFrame(rates)
-        df.index = pd.to_datetime(df["time"], unit="s", utc=True).dt.tz_convert(eastern)
+        # rebase server-time epoch → true UTC before converting to ET
+        utc_secs = df["time"] - self._utc_off * 3600
+        df.index = pd.to_datetime(utc_secs, unit="s", utc=True).dt.tz_convert(eastern)
         df = df.rename(columns={"open": "Open", "high": "High", "low": "Low",
                                 "close": "Close", "tick_volume": "Volume"})
         return df[["Open", "High", "Low", "Close", "Volume"]]
