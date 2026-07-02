@@ -17,10 +17,25 @@ Set-Location $Repo
 
 Write-Host "== 2. checking git ==" -ForegroundColor Cyan
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-    Write-Host "   git missing. Installing via winget..." -ForegroundColor Yellow
-    winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
-    Write-Host "   PLEASE CLOSE AND REOPEN POWERSHELL, THEN RE-RUN THIS COMMAND." -ForegroundColor Red
-    return
+    # Windows Server has no winget — download Git for Windows and install silently
+    Write-Host "   git missing. Downloading Git for Windows..." -ForegroundColor Yellow
+    $url = "https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/Git-2.47.1-64-bit.exe"
+    try {
+        $rel = Invoke-RestMethod "https://api.github.com/repos/git-for-windows/git/releases/latest"
+        $asset = $rel.assets | Where-Object { $_.name -match "^Git-.*-64-bit\.exe$" } | Select-Object -First 1
+        if ($asset) { $url = $asset.browser_download_url }
+    } catch { }
+    $exe = Join-Path $env:TEMP "git-installer.exe"
+    Invoke-WebRequest $url -OutFile $exe -UseBasicParsing
+    Write-Host "   Installing silently (takes 1-2 min)..." -ForegroundColor Yellow
+    Start-Process $exe -ArgumentList "/VERYSILENT /NORESTART /NOCANCEL /SP-" -Wait
+    $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" +
+                [Environment]::GetEnvironmentVariable("Path", "User")
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+        Write-Host "   Git installed but PATH not refreshed. CLOSE and REOPEN PowerShell, then re-run the same one-line command." -ForegroundColor Red
+        return
+    }
+    Write-Host "   Git installed." -ForegroundColor Green
 }
 
 Write-Host "== 3. converting folder to a git clone (config.ini is gitignored, preserved) ==" -ForegroundColor Cyan
