@@ -25,7 +25,7 @@ $files = @(
     "london_breakout_test.py", "intraday_momentum_test.py",
     "prop_firm_optimizer.py", "mean_reversion_test.py",
     "schedule_mt5.ps1", "perf_report.py", "setup_telegram.py",
-    "dix_filter_test.py"
+    "dix_filter_test.py", "voc_timing_test.py"
 )
 
 Write-Host "=== nas100-trader VPS updater ===" -ForegroundColor Cyan
