@@ -513,6 +513,20 @@ counts), latest signals same-day. The 2-week live silence was 100% the MT5
 server-time bug (Asian windows shifted ~3h), NOT over-strict filters. Gates
 verified working (S4 SPY correctly blocked on positive GEX same run).
 
+### VENUE RELIABILITY — VERIFIED GREEN on VPS (2026-07-06)
+Evidence captured on the VPS after the UTF-8 fix landed:
+- All scheduled tasks return **Last Result: 0** (Nas100Bot-MT5/BTC/Overnight,
+  nas100-update) — pre-fix they returned 1 on every run. UTF-8 fix confirmed live.
+- **MT5 PLACED A REAL DEMO TRADE**: session showed `Positions: ['QQQ']` and equity
+  $50,000.02 → $50,008.86 (+$8.84). First live trade end-to-end. All 4 symbols
+  resolve (QQQ→NAS100, SPY→US500, GLD→XAUUSD, BTC→BTCUSD) with live prices.
+- BTC session runs clean, uptrend gate correctly holding (uptrend=False), exit 0.
+- nas100-update auto-pull working (pulled 029867c mid-session).
+- Telegram: token+chat_id set, "[TELEGRAM] sent ✓", ping received on phone.
+- Alpaca Actions green 2026-07-06 with real broker.
+ALL THREE VENUES GREEN. Note: broker calls NAS100 (not US100) — handled by MT5
+symbol resolution; equity ticked up = the QQQ position is live and profitable.
+
 ### VENUE RELIABILITY (plumbing, not edge) — 2026-07
 - **UTF-8 scheduled-run crash (ae148e3): FIXED & verified in code.** Windows
   scheduled tasks redirect stdout to a cp1252 log; the emoji in "SPY Golden ✅"
