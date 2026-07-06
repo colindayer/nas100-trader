@@ -581,6 +581,13 @@ def run_btc(broker, equity, open_syms):
         pass
     in_pos = st.get("active", False) or ("BTC" in open_syms)
     if st.get("active", False):
+        if "BTC" not in open_syms:
+            # broker SL/TP already closed the position -> reconcile state; do NOT
+            # sell (that would open an unintended SHORT on a hedging account).
+            logger.info("BTC: position closed by broker bracket; clearing state")
+            print("  BTC closed by broker SL/TP -> state cleared")
+            with open(_btc_state_path, "w") as f: json.dump({"active": False}, f)
+            return
         if price <= st.get("stop", 0):
             logger.info(f"BTC exit STOP price={price:.0f}"); print(f"  EXIT stop @ {price:.0f}")
             broker.place_order_safe("BTC", st.get("qty", 0), "sell", "BTC"); st = {"active": False}
@@ -618,7 +625,7 @@ def run_btc(broker, equity, open_syms):
         logger.info(f"BTC SIGNAL sweep+reclaim price={price:.0f} qty={qty:.5f}")
         print(f"  SIGNAL: BTC swept Asian low {asian_low:.0f} & reclaimed -> LONG")
         print(f"     entry {price:.0f} | stop {stop:.0f} | target {target:.0f}")
-        oid = broker.place_order_safe("BTC", round(qty, 5), "buy", "BTC")
+        oid = broker.place_order_safe("BTC", round(qty, 5), "buy", "BTC", sl=stop, tp=target)
         if oid is not None:
             with open(_btc_state_path, "w") as f:
                 json.dump({"active": True, "entry": price, "stop": stop,
@@ -723,7 +730,10 @@ def run_overnight(broker, equity, open_syms):
         if qty > 0:
             print(f"  ENTER overnight {OVN_SYMBOL}: BUY {qty} @ ~{price:.2f} (into "
                   f"{'Tue' if wd==0 else 'Wed'} morning)")
-            oid = broker.place_order_safe(OVN_SYMBOL, qty, "buy", "OVN")
+            # Time exit is next-morning; add a WIDE 5% catastrophe stop purely as a
+            # VPS-death safety net (far beyond normal overnight moves, so it does not
+            # alter the validated time-exit behavior).
+            oid = broker.place_order_safe(OVN_SYMBOL, qty, "buy", "OVN", sl=price*0.95)
             if oid is not None:
                 with open(_ovn_state_path, "w") as f:
                     json.dump({"active": True, "qty": qty, "entry": price}, f)

@@ -14,8 +14,8 @@ position). Residual risks flagged as blockers for human decision._
 | **S4** Multi-sweep | stop −1.5% / 3:1 | broker bracket | ✅ SL+TP | none | 🟢 |
 | **S5** ORB (QQQ→US100) | stop −1% / 3:1 (long+short) | broker bracket | ✅ SL+TP | none | 🟢 |
 | **SWEEP** basket | stop −1.5% / 3:1 | broker bracket | ✅ SL+TP | none | 🟢 |
-| **BTC** sweep | stop −2.5% / 3:1 | **state-machine** (bot checks each hourly run) | ❌ none | **HIGH** — 24/7 crypto, no broker stop; a multi-day outage = unbounded | 🔴 |
-| **OVN** overnight | exit next-morning (time) | **bot closes next AM** | ❌ none | **MED** — held overnight, gap risk, no stop if bot down | 🔴 |
+| **BTC** sweep | stop −2.5% / 3:1 | broker bracket + state-machine reconcile | ✅ SL+TP | none — broker holds stop | 🟢 (fixed) |
+| **OVN** overnight | exit next-morning (time) | bot closes next AM + 5% catastrophe stop | ✅ wide SL | capped ~5% if bot down | 🟢 (fixed) |
 | **BTCTREND** | vol-target Donchian rebalance | **state-machine** (rebal each run) | ❌ none | **MED** — trend position can run against you with no stop | 🟡 |
 | **XSMOM** rebal | monthly rebalance | bot rebalances (Alpaca paper) | ❌ none | **LOW** — Alpaca paper, diversified, monthly | 🟡 |
 
@@ -88,12 +88,11 @@ treat it as live-capable: verify `[mt5] server = *-Demo` before running.
 
 ## REMAINING BLOCKERS (ranked)
 
-1. **🔴 BTC entry has no broker-side stop.** 24/7 crypto + proven 6-day outage risk =
-   unbounded loss if the bot is down mid-position. Documented state-machine exit only
-   works while the bot runs. **Recommended fix (one line, needs your approval):**
-   pass `sl=stop, tp=target` on `live_trader.py:621` (both already computed above it).
-2. **🔴 OVN overnight has no broker-side stop.** Held overnight with gap risk.
-   Recommended: attach a protective SL at entry (`:726`).
+1. **✅ RESOLVED — BTC entry now carries broker SL+TP** (`live_trader.py:621`) plus a
+   state-machine reconcile: if the broker bracket closes the position, the bot clears
+   state instead of selling (which would have opened a short on the hedge account).
+2. **✅ RESOLVED — OVN now carries a wide 5% catastrophe stop** (`:726`) as a VPS-death
+   safety net; normal overnight moves never reach it, so the time-exit is unchanged.
 3. **🟡 BTCTREND / XSMOM** rely on bot-managed rebalance; lower urgency (trend/paper).
 4. **🟡 Alpaca places naked (paper only).** Add bracket support to `alpaca_broker.py`
    before Alpaca ever trades real money.
