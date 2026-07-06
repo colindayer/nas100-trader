@@ -1,12 +1,12 @@
 """
-Live Trader — All 5 Strategies
+Live Trader - All 5 Strategies
 Broker-agnostic: use --broker {alpaca,tradovate,ctrader} (default: alpaca)
 Use --dry-run to print intended orders without placing them.
 
 Railway cron schedule (3 runs per day):
-  0 7  * * 1-5  →  7am  UTC = 2am  ET  → S1 Asian Sweep, S2 Gold FVG, S4 Multi-Sweep
-  30 14 * * 1-5  → 2:30pm UTC = 10:30am ET → S5 ORB hourly (9:00 opening range done, breakout window 10-13)
-  0 21 * * 1-5  →  9pm  UTC = 5pm  ET  → S3 Abnormal Volume (end of day)
+  0 7  * * 1-5  ->  7am  UTC = 2am  ET  -> S1 Asian Sweep, S2 Gold FVG, S4 Multi-Sweep
+  30 14 * * 1-5  -> 2:30pm UTC = 10:30am ET -> S5 ORB hourly (9:00 opening range done, breakout window 10-13)
+  0 21 * * 1-5  ->  9pm  UTC = 5pm  ET  -> S3 Abnormal Volume (end of day)
 
 Run manually:
   python3 live_trader.py --session asian
@@ -29,13 +29,13 @@ from datetime import datetime, timedelta, date
 try:
     from alpaca.trading.enums import OrderSide  # only needed for the Alpaca S3 position-check
 except ImportError:
-    OrderSide = None  # not installed (e.g. MT5-only VPS) — the Alpaca-only path won't run
+    OrderSide = None  # not installed (e.g. MT5-only VPS) - the Alpaca-only path won't run
 
 import alerts
 from broker import load_config, DryRunBroker
 
 # Force UTF-8 on stdout/stderr. Scheduled Windows tasks redirect output to a log
-# file encoded cp1252, which cannot encode emoji (✅ 🟢) — that raised
+# file encoded cp1252, which cannot encode emoji ([OK] [OK]) - that raised
 # UnicodeEncodeError and crashed EVERY scheduled run with exit code 1 *before any
 # strategy was evaluated* (manual runs to a UTF-8 console were fine, masking it).
 try:
@@ -44,7 +44,7 @@ try:
 except Exception:
     pass
 
-# ── LOGGING ──────────────────────────────────────────────────────────────────
+# -- LOGGING ------------------------------------------------------------------
 os.makedirs(os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs"),
             exist_ok=True)
 _log_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -56,7 +56,7 @@ logger.addHandler(_handler)
 logger.addHandler(logging.StreamHandler(sys.stdout))
 logger.setLevel(logging.INFO)
 
-# ── RISK CONSTANTS (unchanged from validated backtest) ────────────────────────
+# -- RISK CONSTANTS (unchanged from validated backtest) ------------------------
 RISK_S1 = 0.0070
 RISK_S2 = 0.0050
 RISK_S3 = 0.0040
@@ -85,7 +85,7 @@ _state_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 
 def update_risk_state(equity, broker_name="default"):
     """Persist peak equity + month-start equity, PER BROKER (each account tracks
-    its own — so Alpaca's $100k peak can't trigger a false drawdown on BTC's $25k).
+    its own - so Alpaca's $100k peak can't trigger a false drawdown on BTC's $25k).
     Returns: (dd_scale [0.3-1.0], cur_dd, peak, month_pnl_pct)."""
     import json
     state_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -100,7 +100,7 @@ def update_risk_state(equity, broker_name="default"):
     peak = max(float(st.get("peak_equity", equity)), equity)
     cur_dd = (equity - peak) / max(peak, 1)                      # <= 0
     scale = max(0.3, min(1.0, (TARGET_DD + cur_dd) / TARGET_DD))
-    # month-start equity (worst-month guard) — reset on new calendar month
+    # month-start equity (worst-month guard) - reset on new calendar month
     mkey = now_et().strftime("%Y-%m")
     if st.get("month_key") != mkey:
         st["month_key"] = mkey
@@ -116,7 +116,7 @@ def update_risk_state(equity, broker_name="default"):
         pass
     return scale, cur_dd, peak, month_pnl_pct
 
-# ── BROKER FACTORY ────────────────────────────────────────────────────────────
+# -- BROKER FACTORY ------------------------------------------------------------
 def make_broker(name: str):
     if name == "alpaca":
         from alpaca_broker import AlpacaBroker
@@ -135,7 +135,7 @@ def make_broker(name: str):
         return MT5Broker()
     raise ValueError(f"Unknown broker: {name}")
 
-# ── HELPERS ───────────────────────────────────────────────────────────────────
+# -- HELPERS -------------------------------------------------------------------
 def now_et():
     return datetime.now(eastern)
 
@@ -212,18 +212,18 @@ def get_gex_levels(broker, symbol="QQQ"):
         logger.warning(f"GEX calc failed for {symbol}: {e}")
         return None, None, None, None
 
-# ── STRATEGY S1: Asian Sweep QQQ ─────────────────────────────────────────────
+# -- STRATEGY S1: Asian Sweep QQQ ---------------------------------------------
 def run_s1(broker, equity, open_syms, vix_ma21, spy_bull, vix_mult):
     logger.info("SESSION S1 start")
-    print("\n── S1: ASIAN SWEEP (QQQ) ──")
+    print("\n-- S1: ASIAN SWEEP (QQQ) --")
     if "QQQ" in open_syms:
         logger.info("S1 skip: QQQ already in position")
-        print("  QQQ already in position — skip"); return
-    # Bull filter REMOVED (validated: sweep works in bear too — OOS Sharpe 0.88->1.02,
+        print("  QQQ already in position - skip"); return
+    # Bull filter REMOVED (validated: sweep works in bear too - OOS Sharpe 0.88->1.02,
     # +44%->+55%, same -10% DD). Keep only the extreme-VIX pause.
     if vix_mult == 0:
         logger.info("S1 pause: extreme VIX")
-        print(f"  PAUSED — extreme VIX ({vix_ma21:.1f})"); return
+        print(f"  PAUSED - extreme VIX ({vix_ma21:.1f})"); return
 
     data = broker.get_bars("QQQ", "1Hour", 30)
     data["Date"] = data.index.date
@@ -275,15 +275,15 @@ def run_s1(broker, equity, open_syms, vix_ma21, spy_bull, vix_mult):
         price = float(data["Close"].iloc[-1])
         if not neg_gex:
             logger.info(f"S1 skip: GEX positive ${net_gex/1e9:.1f}B")
-            print(f"  GEX POSITIVE (${net_gex/1e9:.1f}B) — dealers pin price. Skipping."); return
+            print(f"  GEX POSITIVE (${net_gex/1e9:.1f}B) - dealers pin price. Skipping."); return
         notes = []
         if put_wall and price < put_wall:
             notes.append(f"below put wall ({put_wall})")
         confidence = " | " + " + ".join(notes) if notes else ""
         if call_wall and 0.01 < (call_wall - price) / price < 0.04:
-            target_note = f"→ call wall ${call_wall} (RR {(call_wall-price)/(price*STOP_S1):.1f}x)"
+            target_note = f"-> call wall ${call_wall} (RR {(call_wall-price)/(price*STOP_S1):.1f}x)"
         else:
-            target_note = "→ fixed 3:1 RR"
+            target_note = "-> fixed 3:1 RR"
         shares = (equity * RISK_S1 * vix_mult * broker.RISK_SCALE) / (price * STOP_S1)
         logger.info(f"S1 SIGNAL QQQ sweep_low price={price:.2f} shares={shares:.1f}")
         print(f"  SIGNAL: QQQ sweep below Asian low {target_note}{confidence}")
@@ -291,20 +291,20 @@ def run_s1(broker, equity, open_syms, vix_ma21, spy_bull, vix_mult):
     else:
         al = data["AsianLow"].iloc[-1]
         logger.info(f"S1 no signal: close={data['Close'].iloc[-1]:.2f} asian_low={al:.2f}")
-        gex_note = (f" | GEX ${net_gex/1e9:.1f}B {'neg✓' if neg_gex else 'pos✗'}"
+        gex_note = (f" | GEX ${net_gex/1e9:.1f}B {'negok' if neg_gex else 'posx'}"
                     if net_gex is not None else "")
         print(f"  No signal (close={data['Close'].iloc[-1]:.2f}, AsianLow={al:.2f}{gex_note})")
 
-# ── STRATEGY S2: Gold London FVG ─────────────────────────────────────────────
+# -- STRATEGY S2: Gold London FVG ---------------------------------------------
 def run_s2(broker, equity, open_syms, vix_mult):
     logger.info("SESSION S2 start")
-    print("\n── S2: GOLD LONDON FVG (GLD) ──")
+    print("\n-- S2: GOLD LONDON FVG (GLD) --")
     if "GLD" in open_syms:
         logger.info("S2 skip: GLD in position")
-        print("  GLD already in position — skip"); return
+        print("  GLD already in position - skip"); return
     if vix_mult == 0:
         logger.info("S2 pause: VIX too high")
-        print("  PAUSED — VIX too high"); return
+        print("  PAUSED - VIX too high"); return
 
     data = broker.get_bars("GLD", "1Hour", 30)
     data["Date"] = data.index.date
@@ -359,10 +359,10 @@ def run_s2(broker, equity, open_syms, vix_mult):
         logger.info("S2 no signal")
         print("  No signal")
 
-# ── STRATEGY S3: Abnormal Volume (end of day) ─────────────────────────────────
+# -- STRATEGY S3: Abnormal Volume (end of day) ---------------------------------
 def run_s3(broker, equity, open_syms, vix_mult):
     logger.info("SESSION S3 start")
-    print("\n── S3: ABNORMAL VOLUME ──")
+    print("\n-- S3: ABNORMAL VOLUME --")
     SYMBOLS = ["QQQ", "GLD", "GDX", "SLV", "USO"]
     end = str(date.today())
 
@@ -393,13 +393,13 @@ def run_s3(broker, equity, open_syms, vix_mult):
                             broker.close_position(sym)
                         else:
                             logger.info(f"S3 hold {sym} days={days_held} pnl={pnl:.2%}")
-                            print(f"  {sym}: held {days_held}d, P&L {pnl:+.2%} — hold")
+                            print(f"  {sym}: held {days_held}d, P&L {pnl:+.2%} - hold")
                 else:
                     logger.info(f"S3 {sym}: in position; manual exit check needed for non-Alpaca broker")
                     print(f"  {sym}: in position (manual exit check for {type(broker).__name__})")
             except Exception as e:
                 logger.error(f"S3 position check error {sym}: {e}")
-                print(f"  {sym}: position check error — {e}")
+                print(f"  {sym}: position check error - {e}")
             continue
 
         d = yf.download(sym, start=str(date.today()-timedelta(days=120)),
@@ -417,24 +417,24 @@ def run_s3(broker, equity, open_syms, vix_mult):
             logger.info(f"S3 SIGNAL {sym} abnvol={abnvol.iloc[-2]:.2f} "
                         f"dayret={dayret.iloc[-2]:.2%} shares={shares:.1f}")
             print(f"  SIGNAL {sym}: abnvol={abnvol.iloc[-2]:.2f}, "
-                  f"ret={dayret.iloc[-2]:+.2%} → BUY")
+                  f"ret={dayret.iloc[-2]:+.2%} -> BUY")
             broker.place_order_safe(sym, shares, "buy", "S3")
         else:
             logger.info(f"S3 {sym}: no signal abnvol={abnvol.iloc[-2]:.2f}")
             print(f"  {sym}: no signal (abnvol={abnvol.iloc[-2]:.2f})")
 
-# ── STRATEGY S4: Multi-Sweep QQQ + SPY ───────────────────────────────────────
+# -- STRATEGY S4: Multi-Sweep QQQ + SPY ---------------------------------------
 def run_s4(broker, equity, open_syms, spy_bull, vix_mult):
     logger.info("SESSION S4 start")
-    print("\n── S4: MULTI-SWEEP (QQQ + SPY) ──")
+    print("\n-- S4: MULTI-SWEEP (QQQ + SPY) --")
     if not spy_bull or vix_mult == 0:
         logger.info(f"S4 pause: spy_bull={spy_bull} vix_mult={vix_mult}")
-        print(f"  PAUSED — SPY={'bull' if spy_bull else 'bear'}, VIX mult={vix_mult}"); return
+        print(f"  PAUSED - SPY={'bull' if spy_bull else 'bear'}, VIX mult={vix_mult}"); return
 
     for sym in ["QQQ", "SPY"]:
         if sym in open_syms:
             logger.info(f"S4 skip {sym}: in position")
-            print(f"  {sym}: already in position — skip"); continue
+            print(f"  {sym}: already in position - skip"); continue
 
         data = broker.get_bars(sym, "1Hour", 30)
         data["Date"] = data.index.date
@@ -480,32 +480,32 @@ def run_s4(broker, equity, open_syms, spy_bull, vix_mult):
             price = float(data["Close"].iloc[-1])
             if not neg_gex:
                 logger.info(f"S4 skip {sym}: GEX positive ${net_gex/1e9:.1f}B")
-                print(f"  {sym}: GEX POSITIVE (${net_gex/1e9:.1f}B) — skip"); continue
+                print(f"  {sym}: GEX POSITIVE (${net_gex/1e9:.1f}B) - skip"); continue
             shares = (equity * RISK_S4 * vix_mult * broker.RISK_SCALE) / (price * STOP_S4)
-            gex_note = f" | GEX ${net_gex/1e9:.1f}B neg✓" if net_gex is not None else ""
+            gex_note = f" | GEX ${net_gex/1e9:.1f}B negok" if net_gex is not None else ""
             logger.info(f"S4 SIGNAL {sym} price={price:.2f} shares={shares:.1f}")
-            print(f"  SIGNAL {sym}: Asian sweep → LONG{gex_note}")
+            print(f"  SIGNAL {sym}: Asian sweep -> LONG{gex_note}")
             broker.place_order_safe(sym, shares, "buy", "S4")
         else:
-            gex_note = (f" | GEX ${net_gex/1e9:.1f}B {'neg✓' if neg_gex else 'pos✗'}"
+            gex_note = (f" | GEX ${net_gex/1e9:.1f}B {'negok' if neg_gex else 'posx'}"
                         if net_gex is not None else "")
             logger.info(f"S4 {sym}: no signal")
             print(f"  {sym}: no signal{gex_note}")
 
-# ── STRATEGY S5: ORB (validated HOURLY version) ───────────────────────────────
+# -- STRATEGY S5: ORB (validated HOURLY version) -------------------------------
 # Opening range = the 9:00 ET hourly bar; breakout window 10:00-13:00 ET; volume
-# confirmation (>0.6× opening-range volume). Long needs SPY-bull regime; short
+# confirmation (>0.6x opening-range volume). Long needs SPY-bull regime; short
 # needs Faber bear (QQQ < 200d SMA). This matches the walk-forward-validated edge
 # (7/7 windows, Sharpe 3.21). The old 30-min/1-min version was the losing one.
 def run_s5(broker, equity, open_syms, vix_ma21, spy_bull, qqq_bear200):
     logger.info("SESSION S5 start")
-    print("\n── S5: ORB HOURLY (QQQ) ──")
+    print("\n-- S5: ORB HOURLY (QQQ) --")
     if "QQQ" in open_syms:
         logger.info("S5 skip: QQQ in position")
-        print("  QQQ already in position — skip"); return
+        print("  QQQ already in position - skip"); return
     if vix_ma21 >= 20:
         logger.info(f"S5 pause: VIX {vix_ma21:.1f} >= 20")
-        print(f"  PAUSED — VIX {vix_ma21:.1f} >= 20"); return
+        print(f"  PAUSED - VIX {vix_ma21:.1f} >= 20"); return
 
     data = broker.get_bars("QQQ", "1Hour", 5)
     today = now_et().date()
@@ -515,7 +515,7 @@ def run_s5(broker, equity, open_syms, vix_ma21, spy_bull, qqq_bear200):
     or_bar = today_bars[today_bars.index.hour == 9]
     if len(or_bar) == 0:
         logger.info("S5: opening-range (9:00 ET) bar not formed yet")
-        print("  Opening-range bar (9:00 ET) not formed yet — wait"); return
+        print("  Opening-range bar (9:00 ET) not formed yet - wait"); return
     orb_high = float(or_bar["High"].iloc[0])
     orb_low  = float(or_bar["Low"].iloc[0])
     orb_vol  = float(or_bar["Volume"].iloc[0])
@@ -534,21 +534,21 @@ def run_s5(broker, equity, open_syms, vix_ma21, spy_bull, qqq_bear200):
     if price > orb_high and spy_bull and vol_ok:
         shares = (equity * RISK_S5 * broker.RISK_SCALE) / (price * STOP_S5)
         logger.info(f"S5 SIGNAL QQQ ORB long price={price:.2f} shares={shares:.1f}")
-        print(f"  SIGNAL: QQQ broke ORB high {orb_high:.2f} → LONG")
+        print(f"  SIGNAL: QQQ broke ORB high {orb_high:.2f} -> LONG")
         broker.place_order_safe("QQQ", shares, "buy", "S5")
     elif price < orb_low and qqq_bear200 and vol_ok:
         shares = (equity * RISK_S5 * broker.RISK_SCALE) / (price * STOP_S5)
         logger.info(f"S5 SIGNAL QQQ ORB short price={price:.2f} shares={shares:.1f}")
-        print(f"  SIGNAL: QQQ broke ORB low {orb_low:.2f} → SHORT (200d-SMA bear regime)")
+        print(f"  SIGNAL: QQQ broke ORB low {orb_low:.2f} -> SHORT (200d-SMA bear regime)")
         broker.place_order_safe("QQQ", shares, "sell", "S5")
     elif price < orb_low and not qqq_bear200:
-        logger.info("S5: ORB-low break but bull regime — short disarmed")
-        print("  ORB-low break but QQQ above 200d SMA — short disarmed (bull)")
+        logger.info("S5: ORB-low break but bull regime - short disarmed")
+        print("  ORB-low break but QQQ above 200d SMA - short disarmed (bull)")
     else:
         logger.info(f"S5: no breakout price={price:.2f} orb={orb_low:.2f}-{orb_high:.2f} vol_ok={vol_ok}")
         print(f"  No valid breakout (price={price:.2f}, ORB {orb_low:.2f}-{orb_high:.2f})")
 
-# ── STRATEGY BTC: crypto Asian sweep (pillar #3, via Binance) ─────────────────
+# -- STRATEGY BTC: crypto Asian sweep (pillar #3, via Binance) -----------------
 # Validated: 10/12 walk-forward windows, uncorrelated to Nasdaq (+0.02). Asian range
 # 00-08 UTC, reclaim window 08-16 UTC, EMA50>EMA200 uptrend. 2.5% stop, 3:1 RR.
 # Crypto is 24/7 so the position is HELD to stop/target across runs (state-machine
@@ -559,7 +559,7 @@ _btc_state_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 def run_btc(broker, equity, open_syms):
     import json
     logger.info("SESSION BTC start")
-    print("\n── BTC: ASIAN SWEEP (crypto) ──")
+    print("\n-- BTC: ASIAN SWEEP (crypto) --")
     data = broker.get_bars("BTC", "1Hour", 400)
     if data.index.tz is None:
         data.index = data.index.tz_localize("UTC")
@@ -567,7 +567,7 @@ def run_btc(broker, equity, open_syms):
     data["Date"] = data.index.date; data["H"] = data.index.hour
     price = float(data["Close"].iloc[-1])
 
-    # ── manage open position (held to stop/target across runs) ──
+    # -- manage open position (held to stop/target across runs) --
     st = {}
     try:
         with open(_btc_state_path) as f: st = json.load(f)
@@ -586,9 +586,9 @@ def run_btc(broker, equity, open_syms):
         with open(_btc_state_path, "w") as f: json.dump(st, f)
         return
     if in_pos:
-        print("  BTC position open (untracked) — skip new entry"); return
+        print("  BTC position open (untracked) - skip new entry"); return
 
-    # ── entry: sweep below Asian low + reclaim, in 08-16 UTC window, uptrend ──
+    # -- entry: sweep below Asian low + reclaim, in 08-16 UTC window, uptrend --
     # Trend from DAILY bars (the 400 hourly bars ~16d can't form a 200-day EMA).
     daily = broker.get_bars("BTC", "1Day", 250)
     dc = daily["Close"]
@@ -610,7 +610,7 @@ def run_btc(broker, equity, open_syms):
         stop = price * (1 - STOP_BTC); target = price * (1 + STOP_BTC * RR_BTC)
         qty = (equity * RISK_BTC * broker.RISK_SCALE) / (price * STOP_BTC)
         logger.info(f"BTC SIGNAL sweep+reclaim price={price:.0f} qty={qty:.5f}")
-        print(f"  SIGNAL: BTC swept Asian low {asian_low:.0f} & reclaimed → LONG")
+        print(f"  SIGNAL: BTC swept Asian low {asian_low:.0f} & reclaimed -> LONG")
         print(f"     entry {price:.0f} | stop {stop:.0f} | target {target:.0f}")
         oid = broker.place_order_safe("BTC", round(qty, 5), "buy", "BTC")
         if oid is not None:
@@ -624,10 +624,10 @@ def run_btc(broker, equity, open_syms):
         print(f"  No signal ({reason}) | price {price:.0f} asian_low {asian_low:.0f} uptrend={uptrend}")
 
 
-# ── PILLAR: monthly cross-sectional (cross-asset) momentum ─────────────────────
+# -- PILLAR: monthly cross-sectional (cross-asset) momentum ---------------------
 # Validated (2010-21 IS / 2022-26 OOS, costs on): OOS Sharpe 1.07, CAGR +15.6%,
 # maxDD -16.7%, beats SPY risk-adjusted, survives the 2022 bear (rotates to
-# bonds/gold/commodities). LOW frequency (~12 trades/yr) — this is a DIVERSIFIER,
+# bonds/gold/commodities). LOW frequency (~12 trades/yr) - this is a DIVERSIFIER,
 # not a frequency booster. Holds positions for a month (unlike flat-by-EOD
 # intraday), so it MUST run on its OWN account or it will clobber the intraday
 # QQQ/SPY/GLD positions. Run monthly (e.g. 1st trading day) via --session rebal.
@@ -637,7 +637,7 @@ XSMOM_TOPN  = 3       # hold the top-N by 12-1 month momentum, equal weight
 
 def run_xsmom(broker, equity, open_syms):
     logger.info("SESSION XSMOM start")
-    print("\n── MONTHLY CROSS-ASSET MOMENTUM (rebalance) ──")
+    print("\n-- MONTHLY CROSS-ASSET MOMENTUM (rebalance) --")
     scores = {}
     for sym in XSMOM_UNIVERSE:
         try:
@@ -677,7 +677,7 @@ def run_xsmom(broker, equity, open_syms):
             print(f"  {sym}: already at target ({have} sh)")
 
 
-# ── PILLAR: midweek overnight drift (validated edge) ───────────────────────────
+# -- PILLAR: midweek overnight drift (validated edge) ---------------------------
 # Long QQQ overnight ONLY into Tue & Wed mornings (hold close->open), flat otherwise.
 # Validated: 15-ticker cross-section, OOS Sharpe 0.68, maxDD -14%, ~103 trades/yr,
 # Tue overnight positive in 100% of tickers OOS. Mon/Thu/Fri overnight are negative.
@@ -690,7 +690,7 @@ OVN_ALLOC  = 0.25   # fraction of equity per overnight hold (low-DD edge can siz
 def run_overnight(broker, equity, open_syms):
     import json
     logger.info("SESSION OVERNIGHT start")
-    print("\n── MIDWEEK OVERNIGHT (QQQ, Tue+Wed nights) ──")
+    print("\n-- MIDWEEK OVERNIGHT (QQQ, Tue+Wed nights) --")
     now = now_et(); wd = now.weekday(); hr = now.hour; mn = now.minute
     st = {}
     try:
@@ -709,7 +709,7 @@ def run_overnight(broker, equity, open_syms):
         broker.close_position(OVN_SYMBOL)
         with open(_ovn_state_path, "w") as f: json.dump({"active": False}, f)
         return
-    # ENTER at the close on Mon(0)/Tue(1) — overnight lands on Tue/Wed (the strong nights)
+    # ENTER at the close on Mon(0)/Tue(1) - overnight lands on Tue/Wed (the strong nights)
     if not held and in_close_window and wd in (0, 1):
         price = float(broker.get_bars(OVN_SYMBOL, "1Hour", 5)["Close"].iloc[-1])
         # fractional units: Alpaca floors to whole shares internally; MT5 converts to lots
@@ -730,7 +730,7 @@ def run_overnight(broker, equity, open_syms):
         print(f"  No action ({reason})")
 
 
-# ── PILLAR: vol-targeted BTC trend (validated reject, rescued by refining) ─────
+# -- PILLAR: vol-targeted BTC trend (validated reject, rescued by refining) -----
 # Donchian 20/10 long/flat trend on BTC, sized by inverse-vol to a 20% target.
 # Validated 2017-26: OOS Sharpe 0.67, maxDD -24% (raw was -44%), 33 OOS trades,
 # corr to QQQ +0.12 (uncorrelated). Run daily. Rebalances to target each run.
@@ -741,7 +741,7 @@ _btctrend_state = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 def run_btc_trend(broker, equity, open_syms):
     import json
     logger.info("SESSION BTC-TREND start")
-    print("\n── BTC TREND (vol-targeted Donchian 20/10) ──")
+    print("\n-- BTC TREND (vol-targeted Donchian 20/10) --")
     daily = broker.get_bars("BTC", "1Day", 250)
     close = daily["Close"]
     if len(close) < 30:
@@ -775,23 +775,11 @@ def run_btc_trend(broker, equity, open_syms):
         json.dump({"qty": target_qty, "price": price}, f)
 
 
-# ── PILLAR: S1 sweep on a WIDER validated universe ─────────────────────────────
+# -- PILLAR: S1 sweep on a WIDER validated universe -----------------------------
 # The Asian-sweep edge validated across SPY/IWM/GLD/AAPL/MSFT/NVDA (all OOS-positive,
-# PF 1.1-1.9). Runs the same pre-GEX sweep on the basket → 5-7x the trade count from
+# PF 1.1-1.9). Runs the same pre-GEX sweep on the basket -> 5-7x the trade count from
 # the SAME validated edge. (QQQ stays in S1 with its GEX filter, to avoid doubling.)
 SWEEP_BASKET = ["SPY", "IWM", "GLD", "XLK", "XLE", "AAPL", "MSFT", "NVDA", "AMZN"]
-# Pepperstone/MT5 offers CFDs, not US single-stock/ETF tickers. Only these basket
-# symbols resolve there (SPY->US500, GLD->XAUUSD); the rest raised a noisy
-# "Symbol not available" every run. Trim per-broker — Alpaca keeps the full list.
-MT5_SWEEP_AVAILABLE = {"SPY", "GLD"}
-
-def _sweep_universe_for(broker):
-    """Full basket on Alpaca; only broker-served CFDs on MT5. Detects MT5 via its
-    SYMBOL_MAP (QQQ->US100), which DryRunBroker copies from the inner broker."""
-    is_mt5 = broker.SYMBOL_MAP.get("QQQ") == "US100"
-    if is_mt5:
-        return [s for s in SWEEP_BASKET if s in MT5_SWEEP_AVAILABLE]
-    return SWEEP_BASKET
 
 def _asian_sweep_fires(data):
     """(fires, price) for the Asian-low-sweep + VWAP reclaim + EMA + calm-vol signal."""
@@ -825,12 +813,19 @@ def _asian_sweep_fires(data):
 
 def run_sweep_basket(broker, equity, open_syms, spy_bull, vix_mult):
     logger.info("SESSION SWEEP-BASKET start")
-    print("\n── S1 SWEEP BASKET (validated wider universe) ──")
+    print("\n-- S1 SWEEP BASKET (validated wider universe) --")
     if vix_mult == 0:
         print("  PAUSED (extreme VIX)"); return
-    universe = _sweep_universe_for(broker)
-    logger.info(f"SWEEP universe ({len(universe)}): {universe}")
-    for sym in universe:
+    # Broker-specific universe: MT5/Pepperstone only offers a few of these as CFDs
+    # (US single stocks aren't available), so restrict to what the broker actually
+    # maps and skip the rest - avoids noisy caught "symbol not available" failures.
+    # Alpaca (empty pass-through map) keeps the full validated universe.
+    basket = SWEEP_BASKET
+    if getattr(broker, "RESTRICTED_UNIVERSE", False):
+        supported = set(getattr(broker, "SYMBOL_MAP", {}) or {})
+        basket = [s for s in SWEEP_BASKET if s in supported]
+        logger.info(f"sweep basket restricted to broker-supported: {basket}")
+    for sym in basket:
         if sym in open_syms:
             print(f"  {sym}: already held, skip"); continue
         try:
@@ -839,13 +834,13 @@ def run_sweep_basket(broker, equity, open_syms, spy_bull, vix_mult):
             logger.warning(f"sweep {sym} failed: {e}"); print(f"  {sym}: data err"); continue
         if fires:
             shares = round((equity * RISK_S1 * vix_mult * broker.RISK_SCALE) / (price * STOP_S1), 2)
-            print(f"  SIGNAL {sym}: sweep below Asian low @ {price:.2f} → BUY {shares}")
+            print(f"  SIGNAL {sym}: sweep below Asian low @ {price:.2f} -> BUY {shares}")
             broker.place_order_safe(sym, shares, "buy", "SWEEP")
         else:
             print(f"  {sym}: no signal")
 
 
-# ── MAIN ──────────────────────────────────────────────────────────────────────
+# -- MAIN ----------------------------------------------------------------------
 parser = argparse.ArgumentParser()
 parser.add_argument("--session",
                     choices=["asian", "orb", "eod", "all", "btc", "rebal", "overnight", "btctrend", "sweep"], default=None)
@@ -861,8 +856,8 @@ if args.session is None:
     args.session = "asian" if 1 <= h < 7 else ("orb" if 10 <= h < 14 else "eod")
 
 print(f"\n{'='*60}")
-print(f"LIVE TRADER — broker={args.broker} dry_run={args.dry_run}")
-print(f"  Session: {args.session.upper()} — {now_et().strftime('%Y-%m-%d %H:%M ET')}")
+print(f"LIVE TRADER - broker={args.broker} dry_run={args.dry_run}")
+print(f"  Session: {args.session.upper()} - {now_et().strftime('%Y-%m-%d %H:%M ET')}")
 print(f"{'='*60}\n")
 logger.info(f"START session={args.session} broker={args.broker} dry_run={args.dry_run}")
 
@@ -880,21 +875,21 @@ equity    = broker.get_account()
 open_syms = broker.get_positions()
 vix_ma21, spy_bull, vix_mult, qqq_bear200 = get_regime()
 
-# ── Conformal DD-throttle: scale RISK_SCALE by live drawdown headroom ──
+# -- Conformal DD-throttle: scale RISK_SCALE by live drawdown headroom --
 _throttle, _cur_dd, _peak, _month_pnl = update_risk_state(equity, args.broker)
 broker.RISK_SCALE *= _throttle
 logger.info(f"DD-throttle: peak=${_peak:,.0f} dd={_cur_dd:+.1%} "
             f"throttle={_throttle:.2f} -> RISK_SCALE={broker.RISK_SCALE:.2f} "
             f"| month P&L {_month_pnl:+.1%}")
 
-# ── Worst-month guard: halt new orders if month-to-date loss breaches limit ──
+# -- Worst-month guard: halt new orders if month-to-date loss breaches limit --
 if _month_pnl <= -MONTHLY_KILL_PCT:
     msg = (f"MONTHLY KILL SWITCH: month-to-date {_month_pnl:.1%} exceeds limit "
            f"-{MONTHLY_KILL_PCT:.0%}. No new orders until next month.")
     logger.critical(msg); alerts.send(msg); print(f"\n{msg}\n")
     sys.exit(0)
 
-# ── Kill-switch: daily loss check ──
+# -- Kill-switch: daily loss check --
 _risk_cfg = load_config("risk")
 daily_start_equity = float(_risk_cfg.get("session_start_equity", str(equity)))
 daily_pnl_pct = (equity - daily_start_equity) / max(daily_start_equity, 1)
@@ -908,7 +903,7 @@ print(f"Equity:     ${equity:,.2f}")
 print(f"Broker:     {type(broker).__name__}  RISK_SCALE={broker.RISK_SCALE:.2f} "
       f"(DD-throttle {_throttle:.2f}, live DD {_cur_dd:+.1%})")
 print(f"Regime:     VIX 21d={vix_ma21:.1f} | "
-      f"SPY {'Golden ✅' if spy_bull else 'Death ⚠️'} | "
+      f"SPY {'Golden [OK]' if spy_bull else 'Death [!]'} | "
       f"QQQ {'<200dSMA bear' if qqq_bear200 else '>200dSMA bull'}")
 print(f"Positions:  {list(open_syms.keys()) or 'None'}")
 print(f"Kill limit: daily loss {DAILY_KILL_PCT:.0%} | current {daily_pnl_pct:+.1%}")
@@ -940,7 +935,7 @@ elif args.session == "all":
     run_sweep_basket(broker, equity, open_syms, spy_bull, vix_mult)
 
 print(f"\n{'='*60}")
-print(f"Done — {now_et().strftime('%H:%M ET')}")
+print(f"Done - {now_et().strftime('%H:%M ET')}")
 print(f"{'='*60}")
 logger.info(f"END session={args.session}")
 # FILL / DRY-RUN / kill-switch events alert on their own (broker.py). The

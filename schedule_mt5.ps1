@@ -27,7 +27,7 @@ function Register-BotTask($name, $session, $minutes, $monthGate) {
         $gate = "for /f %%d in ('powershell -NoProfile -Command (Get-Date).Day') do if not %%d==1 exit /b 0`r`n"
     }
     $content = "@echo off`r`nset PYTHONUTF8=1`r`n" + $gate + "cd /d `"$folder`"`r`n" +
-        "python live_trader.py --broker mt5 --session $session >> `"$logdir\$session.log`" 2>&1`r`n"
+        "python live_trader.py --broker mt5 --session $session >> `"$logdir\mt5_$session.log`" 2>&1`r`n"
     Set-Content -Path $bat -Encoding ASCII -Value $content
     $action  = New-ScheduledTaskAction -Execute "cmd.exe" -Argument "/c `"$bat`""
     $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(2) `
@@ -50,5 +50,5 @@ Unregister-ScheduledTask -TaskName "Overnight-MT5" -Confirm:$false -ErrorAction 
 
 Write-Host ""
 Write-Host "DONE. Verify with:  Get-ScheduledTask -TaskName Nas100Bot*" -ForegroundColor Green
-Write-Host "Logs land in $logdir\<session>.log ; triage with: python check_health.py"
+Write-Host "Logs land in $logdir\mt5_<session>.log ; triage with: python status.py"
 Write-Host "Keep MT5 open; DISCONNECT the RDP window, do not log off."

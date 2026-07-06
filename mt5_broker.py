@@ -37,6 +37,9 @@ eastern = pytz.timezone("US/Eastern")
 class MT5Broker(Broker):
     SYMBOL_MAP = {"QQQ": "US100", "SPY": "US500", "GLD": "XAUUSD", "BTC": "BTCUSD"}
     RISK_SCALE = 1.0
+    # Only symbols in SYMBOL_MAP are tradeable CFDs here — US single stocks aren't
+    # offered. run_sweep_basket uses this to skip unavailable names cleanly.
+    RESTRICTED_UNIVERSE = True
 
     def __init__(self):
         try:
