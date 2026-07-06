@@ -63,7 +63,11 @@ $trUpdate = 'cmd /c cd /d "' + $Repo + '" && git pull'
 schtasks /create /tn "nas100-update" /sc MINUTE /mo 30 /f /tr $trUpdate | Out-Null
 # session tasks (all/overnight/btc/btctrend/rebal) come from schedule_mt5.ps1 —
 # drop the old standalone BTC task so the hourly session does not run twice
-schtasks /delete /tn "nas100-btc" /f 2>$null | Out-Null
+# guarded: delete only if it exists, then reset exit code so a missing task (a
+# native non-zero exit) does not abort the rest of setup under ErrorActionPreference=Stop
+schtasks /query /tn "nas100-btc" *> $null
+if ($LASTEXITCODE -eq 0) { schtasks /delete /tn "nas100-btc" /f *> $null }
+$global:LASTEXITCODE = 0
 powershell -ExecutionPolicy Bypass -File (Join-Path $Repo "schedule_mt5.ps1")
 Write-Host "   nas100-update (git pull every 30 min) + Nas100Bot-* session tasks registered" -ForegroundColor Green
 
