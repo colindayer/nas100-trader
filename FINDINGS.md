@@ -513,6 +513,21 @@ counts), latest signals same-day. The 2-week live silence was 100% the MT5
 server-time bug (Asian windows shifted ~3h), NOT over-strict filters. Gates
 verified working (S4 SPY correctly blocked on positive GEX same run).
 
+### VENUE RELIABILITY (plumbing, not edge) — 2026-07
+- **UTF-8 scheduled-run crash (ae148e3): FIXED & verified in code.** Windows
+  scheduled tasks redirect stdout to a cp1252 log; the emoji in "SPY Golden ✅"
+  raised UnicodeEncodeError → exit 1 on EVERY scheduled run before any strategy
+  evaluated (≈6 silent days). `sys.stdout/stderr.reconfigure(utf-8, replace)` at
+  the top of live_trader.py. This — not the earlier timezone bug — was the final
+  zero-trades cause on the VPS scheduler.
+- **MT5 sweep universe trimmed per-broker.** SWEEP_BASKET (SPY/IWM/GLD/XLK/XLE/
+  AAPL/MSFT/NVDA/AMZN) is Alpaca-only; on MT5/Pepperstone only SPY(→US500) and
+  GLD(→XAUUSD) are valid CFDs, the rest raised "Symbol not available" every run.
+  `_sweep_universe_for(broker)` detects MT5 via SYMBOL_MAP (QQQ→US100, copied by
+  DryRunBroker) and trims to MT5_SWEEP_AVAILABLE={SPY,GLD}; Alpaca keeps the full
+  list. Unit-verified both branches. Does NOT add QQQ to sweep (S1 already trades
+  it — avoids double-order in --session all).
+
 ### DIX dark-pool regime gate — REJECTED (sign-unstable)
 Tested prior-day SqueezeMetrics DIX as a daily gate on S1+S4 sweeps (US100
 broker feed, 338 trade-days 2020–26, identical trade sim, a-priori thresholds,
