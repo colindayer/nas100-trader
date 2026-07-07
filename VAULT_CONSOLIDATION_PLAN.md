@@ -1,6 +1,15 @@
 # VAULT CONSOLIDATION PLAN
 
-_Audit + plan only. Nothing moved or deleted. Execution is Phase 1 of [[MIGRATION_PLAN]]._
+_Audit + plan. **Phase 1 EXECUTED 2026-07-07** — see status box below._
+
+> [!success] Phase 1 done (2026-07-07)
+> - Flattened working tree: `vault/vault/*` removed; the 31 notes sit flat at `vault/*`
+>   (git HEAD already tracked them flat — the nesting was a local working-tree artifact,
+>   all 31 nested copies verified byte-identical before removal, zero content loss).
+> - Empty `obsidian_vault/` stub removed.
+> - `.DS_Store` added to `.gitignore`.
+> - Verified: 31 flat notes, no `vault/vault`, all wikilinks + 5 Dataview `FROM` paths resolve.
+> - No `.py` touched.
 
 ## 1. What exists
 
