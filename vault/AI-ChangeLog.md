@@ -49,3 +49,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-10 | Obsidian Bridge / automated | Hook installer: skip [bridge-auto] commits (loop guard, from parallel session) | git post-commit hook | b82759a |
 | 2026-07-10 | Obsidian Bridge / automated | Fix: prevent infinite post-commit loop (skip [bridge-auto] commits) | git post-commit hook | aaa876b |
 | 2026-07-10 | Obsidian Bridge / automated | Add scripts/README.md placeholder | git post-commit hook | 25b02a0 |
+| 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | c9c26b4 |
+| 2026-07-10 | Obsidian Bridge / automated | Remove test placeholder | git post-commit hook | 70a88b2 |
