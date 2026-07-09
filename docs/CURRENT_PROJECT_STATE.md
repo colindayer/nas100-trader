@@ -73,7 +73,7 @@ live_trader.py / broker.py / mt5_broker.py. Working tree clean at time of writin
 | `full_yearly.py`, `master_backtest.py` | the two validated backtest lineages (reference) |
 | `docs/*` + `vault/` | governance: parity, readiness, monitoring plan, Obsidian OS |
 | `scripts/obsidian/build_obsidian.py` | Obsidian Bridge: generates vault/auto/ knowledge base (idempotent, AUTO-marker sections; runs via git post-commit hook) |
-| `research/` + `scripts/research/new_idea.py`, `new_paper.py` | Research OS v1: idea/paper intake with gauntlet-checklist templates (research firewall: never the live path) |
+| `research/` + `scripts/research/new_idea.py`, `new_paper.py` | Research OS v1: idea/paper intake with gauntlet-checklist templates (research firewall: never the live path); experiment pipeline queue->experiments->archive via new_experiment.py/promote_experiment.py (lifecycle + reviewer gates) |
 
 Everything else in the 143-file root is research/experiment sprawl — inventoried in
 CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet run).
