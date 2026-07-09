@@ -87,14 +87,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+30a78e4  Research OS v1: ideas/papers/experiments intake + new_idea/new_paper generators
+259f3dd  Obsidian bridge auto-sync [bridge-auto]
 70a88b2  Remove test placeholder
 c9c26b4  Obsidian bridge auto-sync [bridge-auto]
 25b02a0  Add scripts/README.md placeholder
 aaa876b  Fix: prevent infinite post-commit loop (skip [bridge-auto] commits)
 b82759a  Hook installer: skip [bridge-auto] commits (loop guard, from parallel session)
 e4ba048  Commit post-commit-hook residue (changelog/state/vault rows for 80c63d5) [hook bypassed to end loop]
-80c63d5  Bridge follow-up: enrich changelog row with verification evidence; register bridge in CURRENT_PROJECT_STATE; commit hook-generated vault updates
-b146b9b  Obsidian bridge: post-commit auto-sync (1bbb221 trail)
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

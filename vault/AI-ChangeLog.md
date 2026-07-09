@@ -51,3 +51,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-10 | Obsidian Bridge / automated | Add scripts/README.md placeholder | git post-commit hook | 25b02a0 |
 | 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | c9c26b4 |
 | 2026-07-10 | Obsidian Bridge / automated | Remove test placeholder | git post-commit hook | 70a88b2 |
+| 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 259f3dd |
+| 2026-07-10 | Obsidian Bridge / automated | Research OS v1: ideas/papers/experiments intake + new_idea/new_paper generators | git post-commit hook | 30a78e4 |
