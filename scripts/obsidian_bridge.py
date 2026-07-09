@@ -383,7 +383,7 @@ def main():
     parser.add_argument(
         "--post-commit",
         action="store_true",
-        help="Post-commit mode: run --all (called by git hook).",
+        help="Post-commit mode: run --all + auto-commit changes with [bridge-auto] tag.",
     )
     parser.add_argument(
         "--role",
@@ -404,7 +404,6 @@ def main():
 
     if args.all or args.changelog:
         n, new_entries = changelog_sync(entries, role=args.role)
-        # Re-read entries if changelog changed, so state/vault see fresh data
     else:
         new_entries = []
 
@@ -413,6 +412,17 @@ def main():
 
     if args.all or args.vault:
         vault_sync(entries, new_entries)
+
+    # In post-commit mode, auto-commit the sync changes with the loop-breaker tag
+    if args.post_commit:
+        status = run_git(["status", "--porcelain"])
+        if status:
+            run_git(["add", "docs/AI_CHANGELOG.md", "docs/CURRENT_PROJECT_STATE.md",
+                     "vault/"])
+            run_git(["commit", "-m",
+                     "Obsidian bridge auto-sync [bridge-auto]"])
+            print("[obsidian-bridge] auto-committed sync changes.")
+        else:            print("[obsidian-bridge] nothing to commit.")
 
     print("[obsidian-bridge] done.")
 
