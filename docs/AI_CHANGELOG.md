@@ -52,3 +52,6 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-10 | Obsidian Bridge / automated | Bookkeeping: changelog + state for Research OS v1 [bridge-auto] | git post-commit hook | cc0138d |
 | 2026-07-10 | Obsidian Bridge / automated | Experiment Pipeline: queue/experiments/archive lifecycle + new_experiment/pro... | git post-commit hook | ee19aee |
 | 2026-07-10 | Lead Engineer / Claude Code | **Experiment Pipeline**: research/{queue,archive} + new_experiment.py/promote_experiment.py (unique IDs, lifecycle gates, reviewer!=author enforcement) | end-to-end lifecycle test incl. 3 refusal gates; false test-state reset to truthful queued | (see git) |
+| 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | fd09e4f |
+| 2026-07-10 | Obsidian Bridge / automated | Bookkeeping: changelog + state for Experiment Pipeline [bridge-auto] | git post-commit hook | 147896b |
+| 2026-07-10 | Obsidian Bridge / automated | Daily Ops Report 2026-07-10: no production bug detected, system nominal | git post-commit hook | 970d46b |

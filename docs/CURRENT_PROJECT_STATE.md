@@ -88,14 +88,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+970d46b  Daily Ops Report 2026-07-10: no production bug detected, system nominal
+147896b  Bookkeeping: changelog + state for Experiment Pipeline [bridge-auto]
+fd09e4f  Obsidian bridge auto-sync [bridge-auto]
 ee19aee  Experiment Pipeline: queue/experiments/archive lifecycle + new_experiment/promote_experiment
 cc0138d  Bookkeeping: changelog + state for Research OS v1 [bridge-auto]
 5d68a5a  Obsidian bridge auto-sync [bridge-auto]
 30a78e4  Research OS v1: ideas/papers/experiments intake + new_idea/new_paper generators
 259f3dd  Obsidian bridge auto-sync [bridge-auto]
-70a88b2  Remove test placeholder
-c9c26b4  Obsidian bridge auto-sync [bridge-auto]
-25b02a0  Add scripts/README.md placeholder
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
