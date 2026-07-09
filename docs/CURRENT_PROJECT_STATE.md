@@ -68,7 +68,7 @@ live_trader.py / broker.py / mt5_broker.py. Working tree clean at time of writin
 | `alerts.py` | Telegram/email sink |
 | `config.ini` (gitignored) | all credentials + `[risk]` config |
 | `schedule_mt5.ps1`, `.github/workflows/main.yml` | schedulers (VPS / Actions) |
-| `status.py`, `s5_watchdog.py`, `check_health.py`, `verify_liveness.py`, `diag_live.py` | ops/verification |
+| `status.py`, `s5_watchdog.py`, `check_health.py`, `verify_liveness.py`, `diag_live.py` | ops/verification; `scripts/ops/daily_check.py` -> docs/DAILY_OPS_REPORT.md (nightly report-only verdict) |
 | `protect_positions.py`, `test_order.py` (demo-guarded) | emergency/manual tools |
 | `full_yearly.py`, `master_backtest.py` | the two validated backtest lineages (reference) |
 | `docs/*` + `vault/` | governance: parity, readiness, monitoring plan, Obsidian OS |
