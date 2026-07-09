@@ -87,6 +87,7 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+80c63d5  Bridge follow-up: enrich changelog row with verification evidence; register bridge in CURRENT_PROJECT_STATE; commit hook-generated vault updates
 b146b9b  Obsidian bridge: post-commit auto-sync (1bbb221 trail)
 1bbb221  Obsidian Bridge: generate vault/auto/ knowledge base from repo data
 d9677a6  Add AI_OPERATING_SYSTEM.md (roles, handoffs, memory, pipelines) + seed AI_CHANGELOG.md
@@ -94,7 +95,6 @@ d9677a6  Add AI_OPERATING_SYSTEM.md (roles, handoffs, memory, pipelines) + seed 
 24eb4b9  Add 30-day monitoring plan (metrics, daily/weekly checklists, month-end go/no-go)
 419da99  Add LIVE_TRADING_PARITY.md — bugs fixed, blockers, intentional differences
 236abe3  Parity: fix get_bars unit bug (Alpaca days vs MT5 bars), starve-proof lookbacks, GTC brackets
-62b90c6  Add production readiness review (score 88 demo / 55 funded, top-10 blockers)
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

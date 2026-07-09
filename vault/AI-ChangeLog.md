@@ -42,5 +42,6 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-07 | Obsidian Bridge / automated | Docs: vault consolidation plan + code inventory (143 files) + V1->V2 migratio... | git post-commit hook | 0e48ed8 |
 | 2026-07-07 | Obsidian Bridge / automated | Phase 1: flatten Obsidian vault (un-nest vault/vault), remove empty obsidian_... | git post-commit hook | b0dfea5 |
 | 2026-07-10 | Obsidian Bridge / automated | Add AI_OPERATING_SYSTEM.md (roles, handoffs, memory, pipelines) + seed AI_CHA... | git post-commit hook | d9677a6 |
-| 2026-07-10 | Obsidian Bridge / automated | Obsidian Bridge: generate vault/auto/ knowledge base from repo data | git post-commit hook | 1bbb221 |
+| 2026-07-10 | Lead Engineer / Claude Code | **Obsidian Bridge built** (scripts/obsidian/build_obsidian.py + README): 16 generated notes under vault/auto/ (daily, AI session log, git commits, bugs fixed, monitoring, trade journal, research, dashboard snapshot + 7 indexes), AUTO-marker managed sections | verified: idempotent, human edits outside markers survive, 33 hand-written notes byte-untouched, 0 broken wikilinks; py_compile OK | 1bbb221 |
 | 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge: post-commit auto-sync (1bbb221 trail) | git post-commit hook | b146b9b |
+| 2026-07-10 | Obsidian Bridge / automated | Bridge follow-up: enrich changelog row with verification evidence; register b... | git post-commit hook | 80c63d5 |
