@@ -43,3 +43,4 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-07 | Obsidian Bridge / automated | Phase 1: flatten Obsidian vault (un-nest vault/vault), remove empty obsidian_... | git post-commit hook | b0dfea5 |
 | 2026-07-10 | Obsidian Bridge / automated | Add AI_OPERATING_SYSTEM.md (roles, handoffs, memory, pipelines) + seed AI_CHA... | git post-commit hook | d9677a6 |
 | 2026-07-10 | Obsidian Bridge / automated | Obsidian Bridge: generate vault/auto/ knowledge base from repo data | git post-commit hook | 1bbb221 |
+| 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge: post-commit auto-sync (1bbb221 trail) | git post-commit hook | b146b9b |

@@ -72,6 +72,7 @@ live_trader.py / broker.py / mt5_broker.py. Working tree clean at time of writin
 | `protect_positions.py`, `test_order.py` (demo-guarded) | emergency/manual tools |
 | `full_yearly.py`, `master_backtest.py` | the two validated backtest lineages (reference) |
 | `docs/*` + `vault/` | governance: parity, readiness, monitoring plan, Obsidian OS |
+| `scripts/obsidian/build_obsidian.py` | Obsidian Bridge: generates vault/auto/ knowledge base (idempotent, AUTO-marker sections; runs via git post-commit hook) |
 
 Everything else in the 143-file root is research/experiment sprawl — inventoried in
 CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet run).
@@ -86,6 +87,7 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+b146b9b  Obsidian bridge: post-commit auto-sync (1bbb221 trail)
 1bbb221  Obsidian Bridge: generate vault/auto/ knowledge base from repo data
 d9677a6  Add AI_OPERATING_SYSTEM.md (roles, handoffs, memory, pipelines) + seed AI_CHANGELOG.md
 535579f  Add CURRENT_PROJECT_STATE.md — onboarding snapshot (architecture, status, blockers, frozen surfaces)
@@ -93,7 +95,6 @@ d9677a6  Add AI_OPERATING_SYSTEM.md (roles, handoffs, memory, pipelines) + seed 
 419da99  Add LIVE_TRADING_PARITY.md — bugs fixed, blockers, intentional differences
 236abe3  Parity: fix get_bars unit bug (Alpaca days vs MT5 bars), starve-proof lookbacks, GTC brackets
 62b90c6  Add production readiness review (score 88 demo / 55 funded, top-10 blockers)
-fd0ff25  Production readiness: startup fix, Alpaca brackets, crash alert, test_order demo guard
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
