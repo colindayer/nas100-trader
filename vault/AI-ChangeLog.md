@@ -53,3 +53,7 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-10 | Obsidian Bridge / automated | Remove test placeholder | git post-commit hook | 70a88b2 |
 | 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 259f3dd |
 | 2026-07-10 | Obsidian Bridge / automated | Research OS v1: ideas/papers/experiments intake + new_idea/new_paper generators | git post-commit hook | 30a78e4 |
+| 2026-07-10 | Lead Engineer / Claude Code | **Research OS v1**: research/{ideas,papers,experiments}+README, scripts/research/new_idea.py + new_paper.py (templated, backlinked, no-overwrite) | py_compile, create/refuse/slug tests all pass; seeded DIX idea + Zarattini paper | (see git) |
+| 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 5d68a5a |
+| 2026-07-10 | Obsidian Bridge / automated | Bookkeeping: changelog + state for Research OS v1 [bridge-auto] | git post-commit hook | cc0138d |
+| 2026-07-10 | Obsidian Bridge / automated | Experiment Pipeline: queue/experiments/archive lifecycle + new_experiment/pro... | git post-commit hook | ee19aee |
