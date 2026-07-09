@@ -45,3 +45,7 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-10 | Lead Engineer / Claude Code | **Obsidian Bridge built** (scripts/obsidian/build_obsidian.py + README): 16 generated notes under vault/auto/ (daily, AI session log, git commits, bugs fixed, monitoring, trade journal, research, dashboard snapshot + 7 indexes), AUTO-marker managed sections | verified: idempotent, human edits outside markers survive, 33 hand-written notes byte-untouched, 0 broken wikilinks; py_compile OK | 1bbb221 |
 | 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge: post-commit auto-sync (1bbb221 trail) | git post-commit hook | b146b9b |
 | 2026-07-10 | Obsidian Bridge / automated | Bridge follow-up: enrich changelog row with verification evidence; register b... | git post-commit hook | 80c63d5 |
+| 2026-07-10 | Obsidian Bridge / automated | Commit post-commit-hook residue (changelog/state/vault rows for 80c63d5) [hoo... | git post-commit hook | e4ba048 |
+| 2026-07-10 | Obsidian Bridge / automated | Hook installer: skip [bridge-auto] commits (loop guard, from parallel session) | git post-commit hook | b82759a |
+| 2026-07-10 | Obsidian Bridge / automated | Fix: prevent infinite post-commit loop (skip [bridge-auto] commits) | git post-commit hook | aaa876b |
+| 2026-07-10 | Obsidian Bridge / automated | Add scripts/README.md placeholder | git post-commit hook | 25b02a0 |
