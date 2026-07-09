@@ -55,7 +55,18 @@ class AlpacaBroker(Broker):
         alpaca_tf = _TF_MAP.get(tf)
         if alpaca_tf is None:
             raise ValueError(f"Unsupported timeframe '{tf}'. Use '1Hour' or '1Min'.")
-        start = datetime.now(pytz.utc) - timedelta(days=lookback)
+        # CONTRACT: lookback = number of BARS (same as MT5/Binance adapters).
+        # This adapter used to read it as DAYS, so the same call returned ~16x
+        # more history on Alpaca than on MT5 — strategies behaved differently
+        # per venue (MT5's EMA50/HighVol filters were starved). Fetch a generous
+        # calendar window, then trim to the last `lookback` bars.
+        if tf == "1Day":
+            days = int(lookback * 1.6) + 10
+        elif tf == "1Hour":
+            days = int(lookback / 10) + 10       # ~16 ext-hours bars/trading day
+        else:  # 1Min
+            days = int(lookback / 600) + 5
+        start = datetime.now(pytz.utc) - timedelta(days=days)
         req   = StockBarsRequest(symbol_or_symbols=[symbol],
                                   timeframe=alpaca_tf, start=start)
         bars = self._data.get_stock_bars(req).df
@@ -64,7 +75,7 @@ class AlpacaBroker(Broker):
         bars.index = pd.to_datetime(bars.index, utc=True).tz_convert(eastern)
         bars = bars[["open", "high", "low", "close", "volume"]].copy()
         bars.columns = ["Open", "High", "Low", "Close", "Volume"]
-        return bars
+        return bars.tail(lookback)
 
     def place_order(self, symbol: str, qty: float, side: str, tag: str,
                     sl: float = None, tp: float = None):
@@ -74,11 +85,14 @@ class AlpacaBroker(Broker):
         # Broker-side protection: BRACKET (sl+tp) or OTO stop-only, so the position
         # is protected even if the bot/runner dies. Falls back to a plain market
         # order only when no sl was provided (state-machine/time-exit strategies).
+        # GTC, not DAY: the validated backtests hold every position to its stop or
+        # target ACROSS days. DAY brackets expire at the close, leaving the position
+        # open but unprotected and never target-exited — a live/backtest divergence.
         kwargs = dict(
             symbol=symbol,
             qty=int(qty),
             side=OrderSide.BUY if side.lower() == "buy" else OrderSide.SELL,
-            time_in_force=TimeInForce.DAY,
+            time_in_force=TimeInForce.GTC,
         )
         note = ""
         if sl is not None:

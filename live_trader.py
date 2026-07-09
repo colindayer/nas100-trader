@@ -317,7 +317,10 @@ def run_s1(broker, equity, open_syms, vix_ma21, spy_bull, vix_mult):
         logger.info("S1 pause: extreme VIX")
         print(f"  PAUSED - extreme VIX ({vix_ma21:.1f})"); return
 
-    data = broker.get_bars("QQQ", "1Hour", 30)
+    # 1200 BARS (not 30): DailyEMA50 needs ~50 daily closes and HighVol needs a
+    # 200-bar ATR baseline. 30 bars starved both on MT5 (EMA over ~2 closes,
+    # HighVol always-False) — a confirmed live-vs-backtest divergence.
+    data = broker.get_bars("QQQ", "1Hour", 1200)
     if data is None or data.empty:
         logger.warning("S1: no bar data for QQQ, skipping")
         print("  No data for QQQ - skip"); return
@@ -402,7 +405,7 @@ def run_s2(broker, equity, open_syms, vix_mult):
         logger.info("S2 pause: VIX too high")
         print("  PAUSED - VIX too high"); return
 
-    data = broker.get_bars("GLD", "1Hour", 30)
+    data = broker.get_bars("GLD", "1Hour", 1200)
     if data is None or data.empty:
         logger.warning("S2: no bar data for GLD, skipping")
         print("  No data for GLD - skip"); return
@@ -545,7 +548,7 @@ def run_s4(broker, equity, open_syms, spy_bull, vix_mult):
             logger.info(f"S4 skip {sym}: in position")
             print(f"  {sym}: already in position - skip"); continue
 
-        data = broker.get_bars(sym, "1Hour", 30)
+        data = broker.get_bars(sym, "1Hour", 1200)
         if data is None or data.empty:
             logger.warning(f"S4: no bar data for {sym}, skipping")
             print(f"  {sym}: no data - skip"); continue
@@ -620,7 +623,7 @@ def run_s5(broker, equity, open_syms, vix_ma21, spy_bull, qqq_bear200):
         logger.info(f"S5 pause: VIX {vix_ma21:.1f} >= 20")
         print(f"  PAUSED - VIX {vix_ma21:.1f} >= 20"); return
 
-    data = broker.get_bars("QQQ", "1Hour", 5)
+    data = broker.get_bars("QQQ", "1Hour", 24)
     if data is None or data.empty:
         logger.warning("S5: no bar data for QQQ, skipping")
         print("  No data for QQQ - skip"); return
@@ -982,7 +985,7 @@ def run_sweep_basket(broker, equity, open_syms, spy_bull, vix_mult):
         # _asian_sweep_fires already guards None/empty data at the top
         # (returns False, 0.0), and this try/except catches any remaining errors.
         try:
-            fires, price = _asian_sweep_fires(broker.get_bars(sym, "1Hour", 30))
+            fires, price = _asian_sweep_fires(broker.get_bars(sym, "1Hour", 1200))
         except Exception as e:
             logger.warning(f"sweep {sym} failed: {e}"); print(f"  {sym}: data err"); continue
         if fires:
