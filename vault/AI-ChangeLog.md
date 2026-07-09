@@ -61,3 +61,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | fd09e4f |
 | 2026-07-10 | Obsidian Bridge / automated | Bookkeeping: changelog + state for Experiment Pipeline [bridge-auto] | git post-commit hook | 147896b |
 | 2026-07-10 | Obsidian Bridge / automated | Daily Ops Report 2026-07-10: no production bug detected, system nominal | git post-commit hook | 970d46b |
+| 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | eac5f8a |
+| 2026-07-10 | Obsidian Bridge / automated | Nightly Ops Runner v1: scripts/ops/daily_check.py -> docs/DAILY_OPS_REPORT.md | git post-commit hook | b070fa7 |
