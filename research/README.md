@@ -11,9 +11,25 @@ through the Gauntlet + Reviewer + human sign-off.**
 research/
   ideas/         one note per trading idea (from any AI/human brainstorm)
   papers/        one note per paper/resource reviewed (SSRN, arXiv, books)
-  experiments/   standalone test scripts + their result notes
+  queue/         experiments waiting to run (status: queued)
+  experiments/   active experiments (running/gauntlet) + their test scripts
+  archive/       finished experiments (rejected | validated) -- the graveyard
   README.md      this file
 ```
+
+## Experiment pipeline
+
+```
+new_experiment.py  ->  queue/EXP-YYYYMMDD-NN-slug.md   (unique id, all fields)
+promote_experiment.py EXP-... --to running             (-> experiments/)
+promote_experiment.py EXP-... --to gauntlet
+promote_experiment.py EXP-... --to rejected            (-> archive/, log to FINDINGS)
+promote_experiment.py EXP-... --to validated --reviewer NAME   (-> archive/)
+```
+Enforced by the tool: lifecycle order (no queued->validated jumps), reviewer
+required and reviewer != author for validation, no overwrites. 'validated' only
+clears the HUMAN decision -- integration never happens from here, and never
+during the 30-day statistics window.
 
 ## Creating entries
 
