@@ -88,14 +88,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+e5d9102  TensorTrade evaluation: installs w/ surgery (py3.13), smoke test PASS, verdict DEFER
+26772ba  Bookkeeping: changelog + state for AI Task Router [bridge-auto]
+aa7a711  Obsidian bridge auto-sync [bridge-auto]
 39482e5  AI Task Router: orchestration layer (scan/sort/dispatch/state), infrastructure only
 825f111  Obsidian bridge auto-sync [bridge-auto]
 9c189d7  Add automatic paper ingestion: scripts/research/import_paper.py
 a5e2ef0  Commit run_experiment.py from parallel session (compiles, research-only, no production imports) [bridge-auto]
 24759f0  Obsidian bridge auto-sync [bridge-auto]
-1eebf04  ROADMAP_V2: 10 proposed systems for the research platform (design only, window-safe ordering)
-a78595d  Bookkeeping: changelog + state for Nightly Ops Runner v1 [bridge-auto]
-201c6df  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
