@@ -88,14 +88,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+6a97f08  Losing-trade forensics: L1 Alpaca OVN -1,567 (state-loss oversize + missed exit), L2 MT5 S5 -136 floating (mid-bar entry, naked era)
+8137c4a  Bookkeeping: changelog + state for router auto-execution [bridge-auto]
+7436dfb  Obsidian bridge auto-sync [bridge-auto]
 985c4af  Router: automatic task execution (executor.py) + follow-up chains
 69cb675  Bookkeeping: changelog for TensorTrade evaluation [bridge-auto]
 b1f800d  Obsidian bridge auto-sync [bridge-auto]
 e5d9102  TensorTrade evaluation: installs w/ surgery (py3.13), smoke test PASS, verdict DEFER
 26772ba  Bookkeeping: changelog + state for AI Task Router [bridge-auto]
-aa7a711  Obsidian bridge auto-sync [bridge-auto]
-39482e5  AI Task Router: orchestration layer (scan/sort/dispatch/state), infrastructure only
-825f111  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
