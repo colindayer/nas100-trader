@@ -44,6 +44,18 @@ class AlpacaBroker(Broker):
         paper = "paper" in base_url
         self._trade  = TradingClient(key, secret, paper=paper)
         self._data   = StockHistoricalDataClient(key, secret)
+        self.ACCOUNT = "alpaca-paper" if paper else "alpaca-LIVE"   # ledger label
+
+    def quote(self, symbol: str):
+        """(bid, ask) for the fill ledger. Read-only; never raises."""
+        try:
+            from alpaca.data.requests import StockLatestQuoteRequest
+            q = self._data.get_stock_latest_quote(
+                StockLatestQuoteRequest(symbol_or_symbols=symbol))[symbol]
+            bid, ask = float(q.bid_price or 0), float(q.ask_price or 0)
+            return (bid or None, ask or None)
+        except Exception:
+            return (None, None)
 
     def get_account(self) -> float:
         return float(self._trade.get_account().equity)
@@ -105,6 +117,11 @@ class AlpacaBroker(Broker):
                 kwargs["order_class"] = OrderClass.OTO
                 note = f" SL={sl:.2f}"
         order = self._trade.submit_order(MarketOrderRequest(**kwargs))
+        # fill-ledger details (logging only). filled_avg_price is usually None at
+        # submission for market orders -> empty field, never fabricated.
+        fap = getattr(order, "filled_avg_price", None)
+        self.LAST_FILL = {"order_id": str(order.id),
+                          "fill_price": float(fap) if fap else None}
         print(f"  {tag} {symbol}: {side.upper()} {int(qty)} shares{note} | {order.id}")
         return order
 

@@ -76,16 +76,41 @@ class Broker:
     def close_position(self, symbol: str):
         raise NotImplementedError
 
+    # --- read-only introspection for the fill ledger (logging only) ----------
+    ACCOUNT: str = ""          # adapters may set a label (login id / "paper")
+    LAST_FILL: dict = {}       # adapters may stash fill details after success
+
+    def quote(self, symbol: str):
+        """(bid, ask) at submission time, or (None, None) if unavailable.
+        Read-only; adapters override. Must never raise."""
+        return (None, None)
+
+    def _ledger(self, **kw):
+        """Record a fill-ledger row. NEVER raises, never affects the order."""
+        try:
+            import fill_ledger
+            fill_ledger.record(broker=type(self).__name__,
+                               account=getattr(self, "ACCOUNT", ""), **kw)
+        except Exception:
+            pass
+
     def place_order_safe(self, symbol: str, qty: float, side: str, tag: str,
-                         max_retries: int = 3, sl: float = None, tp: float = None):
+                         max_retries: int = 3, sl: float = None, tp: float = None,
+                         signal_price: float = None, signal_ts: str = None):
         """Retry-with-backoff wrapper. Never double-sends on repeated failure.
         sl/tp are absolute PRICE levels attached broker-side at entry, so the stop
         is enforced by the broker even if the bot/VPS goes offline. Brokers that
-        don't support brackets fall back to a plain order."""
+        don't support brackets fall back to a plain order.
+        signal_price/signal_ts are LOGGING-ONLY passthroughs for the fill ledger
+        (the research's assumed entry) -- they influence nothing."""
         import alerts
         if sl is None:
             logger.warning(f"NAKED ORDER {tag} {symbol} - no stop-loss attached")
         brk = f" SL={sl:.2f} TP={tp:.2f}" if sl is not None else " (no SL)"
+        try:
+            bid, ask = self.quote(symbol)
+        except Exception:
+            bid, ask = (None, None)
         for attempt in range(max_retries):
             try:
                 try:
@@ -94,11 +119,26 @@ class Broker:
                     result = self.place_order(symbol, qty, side, tag)
                 logger.info(f"FILL {tag} {side.upper()} {qty:.1f} {symbol}{brk}")
                 alerts.send(f"FILL {tag} {side.upper()} {qty:.1f} {symbol}{brk}")
+                lf = getattr(self, "LAST_FILL", {}) or {}
+                self._ledger(strategy=tag, symbol=symbol, side=side, quantity=qty,
+                             signal_price=signal_price, signal_timestamp=signal_ts or "",
+                             bid_at_submission=bid, ask_at_submission=ask,
+                             requested_price=lf.get("requested_price"),
+                             fill_price=lf.get("fill_price"),
+                             stop_price=sl, target_price=tp,
+                             order_id=lf.get("order_id", result if result is not None else ""),
+                             position_id=lf.get("position_id"),
+                             dry_run="False", status="submitted")
                 return result
             except Exception as e:
                 if attempt == max_retries - 1:
                     logger.error(f"ORDER_FAIL {tag} {symbol} after {max_retries} attempts: {e}")
                     alerts.send(f"ORDER FAIL {tag} {symbol}: {e}")
+                    self._ledger(strategy=tag, symbol=symbol, side=side, quantity=qty,
+                                 signal_price=signal_price, signal_timestamp=signal_ts or "",
+                                 bid_at_submission=bid, ask_at_submission=ask,
+                                 stop_price=sl, target_price=tp,
+                                 dry_run="False", status="failed", error=str(e)[:200])
                     return None
                 wait = 2 ** attempt
                 logger.warning(f"Order attempt {attempt+1} failed ({e}), retrying in {wait}s")
@@ -155,7 +195,8 @@ class DryRunBroker(Broker):
         print(msg)
         logger.info(msg)
 
-    def place_order_safe(self, symbol, qty, side, tag, max_retries=3, sl=None, tp=None):
+    def place_order_safe(self, symbol, qty, side, tag, max_retries=3, sl=None, tp=None,
+                         signal_price=None, signal_ts=None):
         import alerts
         brk = f" SL={sl:.2f} TP={tp:.2f}" if sl is not None else " (no SL)"
         self.place_order(symbol, qty, side, tag)
@@ -164,3 +205,13 @@ class DryRunBroker(Broker):
             f"DRY RUN {tag}\n"
             f"{side.upper()} {qty:.5f} {symbol}{brk}"
         )
+        # ledger row, clearly labeled dry-run (logging only, never raises)
+        try:
+            bid, ask = self._b.quote(symbol)
+        except Exception:
+            bid, ask = (None, None)
+        self._ledger(strategy=tag, symbol=symbol, side=side, quantity=qty,
+                     signal_price=signal_price, signal_timestamp=signal_ts or "",
+                     bid_at_submission=bid, ask_at_submission=ask,
+                     stop_price=sl, target_price=tp,
+                     dry_run="True", status="dry_run")

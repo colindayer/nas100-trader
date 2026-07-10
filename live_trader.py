@@ -386,7 +386,8 @@ def run_s1(broker, equity, open_syms, vix_ma21, spy_bull, vix_mult):
         logger.info(f"S1 SIGNAL QQQ sweep_low price={price:.2f} shares={shares:.1f}")
         print(f"  SIGNAL: QQQ sweep below Asian low {target_note}{confidence}")
         broker.place_order_safe("QQQ", shares, "buy", "S1",
-                                sl=price*(1-STOP_S1), tp=price*(1+STOP_S1*RR_S1))
+                                sl=price*(1-STOP_S1), tp=price*(1+STOP_S1*RR_S1),
+                                signal_price=price)
     else:
         al = data["AsianLow"].iloc[-1]
         logger.info(f"S1 no signal: close={data['Close'].iloc[-1]:.2f} asian_low={al:.2f}")
@@ -453,12 +454,14 @@ def run_s2(broker, equity, open_syms, vix_mult):
         logger.info(f"S2 SIGNAL GLD long price={price:.2f} shares={shares:.1f}")
         print("  SIGNAL: GLD London FVG long")
         broker.place_order_safe("GLD", shares, "buy", "S2",
-                                sl=price*(1-STOP_S2), tp=price*(1+STOP_S2*RR_S2))
+                                sl=price*(1-STOP_S2), tp=price*(1+STOP_S2*RR_S2),
+                                signal_price=price)
     elif short_cond[recent.index].any():
         logger.info(f"S2 SIGNAL GLD short price={price:.2f} shares={shares:.1f}")
         print("  SIGNAL: GLD London FVG short")
         broker.place_order_safe("GLD", shares, "sell", "S2",
-                                sl=price*(1+STOP_S2), tp=price*(1-STOP_S2*RR_S2))
+                                sl=price*(1+STOP_S2), tp=price*(1-STOP_S2*RR_S2),
+                                signal_price=price)
     else:
         logger.info("S2 no signal")
         print("  No signal")
@@ -530,7 +533,8 @@ def run_s3(broker, equity, open_syms, vix_mult):
                         f"dayret={dayret.iloc[-2]:.2%} shares={shares:.1f}")
             print(f"  SIGNAL {sym}: abnvol={abnvol.iloc[-2]:.2f}, "
                   f"ret={dayret.iloc[-2]:+.2%} -> BUY")
-            broker.place_order_safe(sym, shares, "buy", "S3", sl=price*(1-STOP_S3))
+            broker.place_order_safe(sym, shares, "buy", "S3", sl=price*(1-STOP_S3),
+                                    signal_price=price)
         else:
             logger.info(f"S3 {sym}: no signal abnvol={abnvol.iloc[-2]:.2f}")
             print(f"  {sym}: no signal (abnvol={abnvol.iloc[-2]:.2f})")
@@ -601,7 +605,8 @@ def run_s4(broker, equity, open_syms, spy_bull, vix_mult):
             logger.info(f"S4 SIGNAL {sym} price={price:.2f} shares={shares:.1f}")
             print(f"  SIGNAL {sym}: Asian sweep -> LONG{gex_note}")
             broker.place_order_safe(sym, shares, "buy", "S4",
-                                    sl=price*(1-STOP_S4), tp=price*(1+STOP_S4*RR_S4))
+                                    sl=price*(1-STOP_S4), tp=price*(1+STOP_S4*RR_S4),
+                                    signal_price=price)
         else:
             gex_note = (f" | GEX ${net_gex/1e9:.1f}B {'negok' if neg_gex else 'posx'}"
                         if net_gex is not None else "")
@@ -655,13 +660,15 @@ def run_s5(broker, equity, open_syms, vix_ma21, spy_bull, qqq_bear200):
         logger.info(f"S5 SIGNAL QQQ ORB long price={price:.2f} shares={shares:.1f}")
         print(f"  SIGNAL: QQQ broke ORB high {orb_high:.2f} -> LONG")
         broker.place_order_safe("QQQ", shares, "buy", "S5",
-                                sl=price*(1-STOP_S5), tp=price*(1+STOP_S5*RR_S5))
+                                sl=price*(1-STOP_S5), tp=price*(1+STOP_S5*RR_S5),
+                                signal_price=price)
     elif price < orb_low and qqq_bear200 and vol_ok:
         shares = (equity * RISK_S5 * broker.RISK_SCALE) / (price * STOP_S5)
         logger.info(f"S5 SIGNAL QQQ ORB short price={price:.2f} shares={shares:.1f}")
         print(f"  SIGNAL: QQQ broke ORB low {orb_low:.2f} -> SHORT (200d-SMA bear regime)")
         broker.place_order_safe("QQQ", shares, "sell", "S5",
-                                sl=price*(1+STOP_S5), tp=price*(1-STOP_S5*RR_S5))
+                                sl=price*(1+STOP_S5), tp=price*(1-STOP_S5*RR_S5),
+                                signal_price=price)
     elif price < orb_low and not qqq_bear200:
         logger.info("S5: ORB-low break but bull regime - short disarmed")
         print("  ORB-low break but QQQ above 200d SMA - short disarmed (bull)")
@@ -746,7 +753,8 @@ def run_btc(broker, equity, open_syms):
         logger.info(f"BTC SIGNAL sweep+reclaim price={price:.0f} qty={qty:.5f}")
         print(f"  SIGNAL: BTC swept Asian low {asian_low:.0f} & reclaimed -> LONG")
         print(f"     entry {price:.0f} | stop {stop:.0f} | target {target:.0f}")
-        oid = broker.place_order_safe("BTC", round(qty, 5), "buy", "BTC", sl=stop, tp=target)
+        oid = broker.place_order_safe("BTC", round(qty, 5), "buy", "BTC", sl=stop, tp=target,
+                                 signal_price=price)
         if oid is not None:
             with open(_btc_state_path, "w") as f:
                 json.dump({"active": True, "entry": price, "stop": stop,
@@ -866,7 +874,8 @@ def run_overnight(broker, equity, open_syms):
             # Time exit is next-morning; add a WIDE 5% catastrophe stop purely as a
             # VPS-death safety net (far beyond normal overnight moves, so it does not
             # alter the validated time-exit behavior).
-            oid = broker.place_order_safe(OVN_SYMBOL, qty, "buy", "OVN", sl=price*0.95)
+            oid = broker.place_order_safe(OVN_SYMBOL, qty, "buy", "OVN", sl=price*0.95,
+                                     signal_price=price)
             if oid is not None:
                 with open(_ovn_state_path, "w") as f:
                     json.dump({"active": True, "qty": qty, "entry": price}, f)
@@ -992,7 +1001,8 @@ def run_sweep_basket(broker, equity, open_syms, spy_bull, vix_mult):
             shares = round((equity * RISK_S1 * vix_mult * broker.RISK_SCALE) / (price * STOP_S1), 2)
             print(f"  SIGNAL {sym}: sweep below Asian low @ {price:.2f} -> BUY {shares}")
             broker.place_order_safe(sym, shares, "buy", "SWEEP",
-                                    sl=price*(1-STOP_S1), tp=price*(1+STOP_S1*RR_S1))
+                                    sl=price*(1-STOP_S1), tp=price*(1+STOP_S1*RR_S1),
+                                    signal_price=price)
         else:
             print(f"  {sym}: no signal")
 
@@ -1098,6 +1108,14 @@ print(f"Regime:     VIX 21d={vix_ma21:.1f} | "
       f"QQQ {'<200dSMA bear' if qqq_bear200 else '>200dSMA bull'}")
 print(f"Positions:  {list(open_syms.keys()) or 'None'}")
 print(f"Kill limit: daily loss {DAILY_KILL_PCT:.0%} | current {daily_pnl_pct:+.1%}")
+
+# fill-ledger session context (logging only -- see fill_ledger.py)
+try:
+    import fill_ledger
+    fill_ledger.set_context(session=args.session, account_equity=round(equity, 2),
+                            risk_scale=round(broker.RISK_SCALE, 3))
+except Exception:
+    pass
 
 if args.session == "asian":
     run_s1(broker, equity, open_syms, vix_ma21, spy_bull, vix_mult)

@@ -64,6 +64,7 @@ class MT5Broker(Broker):
         ok = mt5.initialize(login=int(login), password=passwd, server=server)
         if not ok:
             raise NotConfiguredError(f"MT5 initialize failed: {mt5.last_error()}")
+        self.ACCOUNT = str(login)          # fill-ledger label (logging only)
         info = mt5.account_info()
         logger.info(f"MT5 connected: login={login} server={server} "
                     f"equity={getattr(info, 'equity', '?')} "
@@ -108,6 +109,16 @@ class MT5Broker(Broker):
         if not self._mt5.symbol_select(sym, True):
             raise ValueError(f"Symbol '{sym}' not available on this broker "
                              f"(run `python mt5_broker.py` to list valid symbols)")
+
+    def quote(self, symbol: str):
+        """(bid, ask) for the fill ledger. Read-only; never raises."""
+        try:
+            tick = self._mt5.symbol_info_tick(self.map(symbol))
+            if tick and tick.bid and tick.ask:
+                return (float(tick.bid), float(tick.ask))
+        except Exception:
+            pass
+        return (None, None)
 
     def get_account(self) -> float:
         info = self._mt5.account_info()
@@ -179,6 +190,10 @@ class MT5Broker(Broker):
             logger.error(f"MT5 ORDER FAIL {tag} {sym} {side} {lots}: retcode={rc} {cm}")
             raise RuntimeError(f"MT5 order failed retcode={rc}: {cm}")
         logger.info(f"MT5 FILL {tag} {side} {lots} lots {sym} @ {res.price} ticket={res.order}")
+        # fill-ledger details (logging only; read by place_order_safe)
+        self.LAST_FILL = {"requested_price": price, "fill_price": getattr(res, "price", None),
+                          "order_id": getattr(res, "order", None),
+                          "position_id": getattr(res, "deal", None)}
         return res.order
 
     def close_position(self, symbol: str):
