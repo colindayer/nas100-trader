@@ -89,14 +89,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+18322de  Setup-supply analysis: setups at 3y highs (96th pct), filters not over-rejecting; drought was operational
+77d6191  Obsidian bridge auto-sync [bridge-auto]
 af5a494  tools/analyze_execution.py: execution-quality analytics over logs/fills.csv (CSV+MD, graceful when empty)
 b71c8cb  Bookkeeping: changelog + state for fill ledger [bridge-auto]
 9fc5770  Obsidian bridge auto-sync [bridge-auto]
 14c10e6  Fill ledger: record every order at the place_order_safe boundary (logging only)
 6039c5b  Bookkeeping: changelog for losing-trade forensics [bridge-auto]
 a8e2623  Obsidian bridge auto-sync [bridge-auto]
-6a97f08  Losing-trade forensics: L1 Alpaca OVN -1,567 (state-loss oversize + missed exit), L2 MT5 S5 -136 floating (mid-bar entry, naked era)
-8137c4a  Bookkeeping: changelog + state for router auto-execution [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

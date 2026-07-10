@@ -86,3 +86,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 9fc5770 |
 | 2026-07-10 | Obsidian Bridge / automated | Bookkeeping: changelog + state for fill ledger [bridge-auto] | git post-commit hook | b71c8cb |
 | 2026-07-10 | Obsidian Bridge / automated | tools/analyze_execution.py: execution-quality analytics over logs/fills.csv (... | git post-commit hook | af5a494 |
+| 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 77d6191 |
+| 2026-07-10 | Obsidian Bridge / automated | Setup-supply analysis: setups at 3y highs (96th pct), filters not over-reject... | git post-commit hook | 18322de |
