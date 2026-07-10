@@ -57,6 +57,7 @@ live_trader.py / broker.py / mt5_broker.py. Working tree clean at time of writin
 6. **`risk/` mode package (challenge/funded/live) is dormant** — never imported.
 7. **Single-VPS SPOF**; secrets pasted in old chats need rotation before real money.
 8. First Alpaca BRACKET/GTC fill not yet observed live (code verified, fill pending).
+9. ~~Fill ledger~~ RESOLVED 2026-07-10: logs/fills.csv now records signal-vs-fill execution costs at the order boundary (forensics recommendation implemented).
 
 ## Files that matter
 

@@ -82,3 +82,4 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | a8e2623 |
 | 2026-07-10 | Obsidian Bridge / automated | Bookkeeping: changelog for losing-trade forensics [bridge-auto] | git post-commit hook | 6039c5b |
 | 2026-07-10 | Obsidian Bridge / automated | Fill ledger: record every order at the place_order_safe boundary (logging only) | git post-commit hook | 14c10e6 |
+| 2026-07-10 | Lead Engineer / Claude Code | **Fill ledger** (fill_ledger.py -> logs/fills.csv): signal vs bid/ask/fill per order, derived spread+slippage bps, dry-run labeled, fail-safe by construction | 17/17 tests; dry-runs clean; constants byte-identical; 0 sizing/filter lines changed | (see git) |
