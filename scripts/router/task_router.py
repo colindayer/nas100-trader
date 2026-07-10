@@ -30,6 +30,7 @@ from models import Task, STATUSES, TYPES, PRIORITIES, TERMINAL   # noqa: E402
 import queue as q                                                 # noqa: E402
 import dispatch                                                   # noqa: E402
 import state as st_mod                                            # noqa: E402
+import executor                                                   # noqa: E402
 
 
 def cmd_run(args):
@@ -62,7 +63,15 @@ def cmd_run(args):
         q.save(path, t)
         assigned.append(t)
         print(f"ASSIGNED {t.id} [{t.priority}/{t.type}] -> {owner}")
+        # automatic execution: if the task's `inputs` names a known action,
+        # run the mapped existing script now (capture rc/stdout/stderr/time,
+        # auto-update status, queue follow-ups). Tasks without a recognized
+        # action stay `running` for their assigned AI to pick up manually.
+        if not args.assign_only:
+            executor.execute(path, t)
     if not args.dry_run:
+        # follow-up tasks created during execution are dispatched on the NEXT
+        # run (keeps each run bounded and auditable). Run twice to drain a chain.
         st_mod.save(st_mod.record_run(st, assigned, skipped))
     print(f"run complete: {len(assigned)} assigned, "
           f"{len(skipped)} skipped (non-queued/held)")
@@ -108,6 +117,8 @@ def main():
 
     r = sub.add_parser("run")
     r.add_argument("--dry-run", action="store_true")
+    r.add_argument("--assign-only", action="store_true",
+                   help="dispatch owners but skip automatic execution")
     r.set_defaults(fn=cmd_run)
 
     n = sub.add_parser("new")
