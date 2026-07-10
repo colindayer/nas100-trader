@@ -66,3 +66,4 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-10 | Obsidian Bridge / automated | Add automatic paper ingestion: scripts/research/import_paper.py | git post-commit hook | 9c189d7 |
 | 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 825f111 |
 | 2026-07-10 | Obsidian Bridge / automated | AI Task Router: orchestration layer (scan/sort/dispatch/state), infrastructur... | git post-commit hook | 39482e5 |
+| 2026-07-10 | Lead Engineer / Claude Code | **AI Task Router** (scripts/router/): file-based task queue in research/queue/ (TASK-*), priority dispatch to Claude/GLM/Qwen/Fable/OpenClaw, dependency holds, state ledger | 3-task routing test, idempotency, persistence, human-note preservation, EXP-note isolation all verified | (see git) |
