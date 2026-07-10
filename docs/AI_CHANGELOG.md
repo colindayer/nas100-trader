@@ -58,3 +58,6 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | eac5f8a |
 | 2026-07-10 | Obsidian Bridge / automated | Nightly Ops Runner v1: scripts/ops/daily_check.py -> docs/DAILY_OPS_REPORT.md | git post-commit hook | b070fa7 |
 | 2026-07-10 | Ops Runner (built by Lead Engineer / Claude Code) | **Nightly Ops Runner v1**: scripts/ops/daily_check.py generates docs/DAILY_OPS_REPORT.md (verdict HEALTHY/ACTION REQUIRED, exit 0/2) | compile + healthy run + negative injection test all pass | (see git) |
+| 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 201c6df |
+| 2026-07-10 | Obsidian Bridge / automated | Bookkeeping: changelog + state for Nightly Ops Runner v1 [bridge-auto] | git post-commit hook | a78595d |
+| 2026-07-10 | Obsidian Bridge / automated | ROADMAP_V2: 10 proposed systems for the research platform (design only, windo... | git post-commit hook | 1eebf04 |

@@ -88,14 +88,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+1eebf04  ROADMAP_V2: 10 proposed systems for the research platform (design only, window-safe ordering)
+a78595d  Bookkeeping: changelog + state for Nightly Ops Runner v1 [bridge-auto]
+201c6df  Obsidian bridge auto-sync [bridge-auto]
 b070fa7  Nightly Ops Runner v1: scripts/ops/daily_check.py -> docs/DAILY_OPS_REPORT.md
 eac5f8a  Obsidian bridge auto-sync [bridge-auto]
 970d46b  Daily Ops Report 2026-07-10: no production bug detected, system nominal
 147896b  Bookkeeping: changelog + state for Experiment Pipeline [bridge-auto]
 fd09e4f  Obsidian bridge auto-sync [bridge-auto]
-ee19aee  Experiment Pipeline: queue/experiments/archive lifecycle + new_experiment/promote_experiment
-cc0138d  Bookkeeping: changelog + state for Research OS v1 [bridge-auto]
-5d68a5a  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
