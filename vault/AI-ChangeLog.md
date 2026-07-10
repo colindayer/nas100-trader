@@ -84,3 +84,7 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 7436dfb |
 | 2026-07-10 | Obsidian Bridge / automated | Bookkeeping: changelog + state for router auto-execution [bridge-auto] | git post-commit hook | 8137c4a |
 | 2026-07-10 | Obsidian Bridge / automated | Losing-trade forensics: L1 Alpaca OVN -1,567 (state-loss oversize + missed ex... | git post-commit hook | 6a97f08 |
+| 2026-07-10 | Investigator / Claude Code | **Losing-trade forensics** (docs/LOSING_TRADE_FORENSICS.md): 2 losers total; L1 -1,567 = state-loss oversize (134 vs 33) + missed exit + naked (all since fixed); L2 = S5 mid-bar entry, within stop envelope; recommends fill ledger as single fix; flags unattributable ticket 335622424 | sizing reconstruction + MT5 snapshots + equity trail; corrects 'pre-existing' claim | (see git) |
+| 2026-07-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | a8e2623 |
+| 2026-07-10 | Obsidian Bridge / automated | Bookkeeping: changelog for losing-trade forensics [bridge-auto] | git post-commit hook | 6039c5b |
+| 2026-07-10 | Obsidian Bridge / automated | Fill ledger: record every order at the place_order_safe boundary (logging only) | git post-commit hook | 14c10e6 |
