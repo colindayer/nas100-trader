@@ -92,3 +92,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-11 | Obsidian Bridge / automated | tools/audit_signal_parity.py: day-by-day expected vs live signal counts (S1/S... | git post-commit hook | 1557811 |
 | 2026-07-11 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | c346b7a |
 | 2026-07-11 | Obsidian Bridge / automated | Macro regime survey: 6 filter families reviewed, 1 survivor (VIX term-structu... | git post-commit hook | 2d97b34 |
+| 2026-07-11 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 87e98ae |
+| 2026-07-11 | Obsidian Bridge / automated | EXP-20260711-01 run: VIX term-structure gate — S1 no value; S5 beats level ga... | git post-commit hook | 2f623e8 |

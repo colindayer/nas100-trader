@@ -89,14 +89,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+2f623e8  EXP-20260711-01 run: VIX term-structure gate — S1 no value; S5 beats level gate 6/6 splits (1.50 vs 1.04); current level gate HURTS S5 (awaiting review)
+87e98ae  Obsidian bridge auto-sync [bridge-auto]
 2d97b34  Macro regime survey: 6 filter families reviewed, 1 survivor (VIX term-structure gate); 2 paper notes + 1 idea
 c346b7a  Obsidian bridge auto-sync [bridge-auto]
 1557811  tools/audit_signal_parity.py: day-by-day expected vs live signal counts (S1/S5), DOWN/MISS/OK verdicts
 b8fc385  Obsidian bridge auto-sync [bridge-auto]
 18322de  Setup-supply analysis: setups at 3y highs (96th pct), filters not over-rejecting; drought was operational
 77d6191  Obsidian bridge auto-sync [bridge-auto]
-af5a494  tools/analyze_execution.py: execution-quality analytics over logs/fills.csv (CSV+MD, graceful when empty)
-b71c8cb  Bookkeeping: changelog + state for fill ledger [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
