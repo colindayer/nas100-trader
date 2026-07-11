@@ -1,4 +1,4 @@
-# CURRENT PROJECT STATE — 2026-07-11
+# CURRENT PROJECT STATE — 2026-07-12
 
 _Onboarding snapshot for any agent/human joining. Sources: LIVE_TRADING_PARITY,
 PRODUCTION_READINESS_REVIEW, NEXT_30_DAY_MONITORING_PLAN, LIVE_TRADE_REVIEW,
@@ -89,14 +89,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+e99c0dd  Evidence cycle: ETF review VALIDATED_FOR_FORWARD_SHADOW (9 survivors, corr 0.13, pooled 2.26); shadow logger + macro-state dataset live via router
+9de8b8a  Obsidian bridge auto-sync [bridge-auto]
 1a7174c  Head of Research program: universe expansion (11 keepers, pooled 2.32, corr 0.14), macro segmentation (3 NEEDS_MORE_EVIDENCE), TSMOM candidate (ETF-only; CFD killed by financing)
 d9df262  Obsidian bridge auto-sync [bridge-auto]
 d1ba90c  EXP-20260711-01 adversarial review: VALIDATED_FOR_FORWARD_SHADOW — look-ahead found+corrected (C 1.39 vs B 1.02, 6/6), survives episode leave-outs + 2x costs; level gate confirmed harmful to S5
 703cbd0  Obsidian bridge auto-sync [bridge-auto]
 2f623e8  EXP-20260711-01 run: VIX term-structure gate — S1 no value; S5 beats level gate 6/6 splits (1.50 vs 1.04); current level gate HURTS S5 (awaiting review)
 87e98ae  Obsidian bridge auto-sync [bridge-auto]
-2d97b34  Macro regime survey: 6 filter families reviewed, 1 survivor (VIX term-structure gate); 2 paper notes + 1 idea
-c346b7a  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

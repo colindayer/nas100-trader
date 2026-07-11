@@ -104,3 +104,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-11 | Obsidian Bridge / automated | EXP-20260711-01 adversarial review: VALIDATED_FOR_FORWARD_SHADOW — look-ahead... | git post-commit hook | d1ba90c |
 | 2026-07-11 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | d9df262 |
 | 2026-07-11 | Obsidian Bridge / automated | Head of Research program: universe expansion (11 keepers, pooled 2.32, corr 0... | git post-commit hook | 1a7174c |
+| 2026-07-11 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 9de8b8a |
+| 2026-07-12 | Obsidian Bridge / automated | Evidence cycle: ETF review VALIDATED_FOR_FORWARD_SHADOW (9 survivors, corr 0.... | git post-commit hook | e99c0dd |
