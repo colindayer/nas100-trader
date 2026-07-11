@@ -102,3 +102,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-11 | Obsidian Bridge / automated | EXP-20260711-01 run: VIX term-structure gate — S1 no value; S5 beats level ga... | git post-commit hook | 2f623e8 |
 | 2026-07-11 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 703cbd0 |
 | 2026-07-11 | Obsidian Bridge / automated | EXP-20260711-01 adversarial review: VALIDATED_FOR_FORWARD_SHADOW — look-ahead... | git post-commit hook | d1ba90c |
+| 2026-07-11 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | d9df262 |
+| 2026-07-11 | Obsidian Bridge / automated | Head of Research program: universe expansion (11 keepers, pooled 2.32, corr 0... | git post-commit hook | 1a7174c |
