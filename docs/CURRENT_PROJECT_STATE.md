@@ -89,14 +89,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+489a709  Monthly evidence committee report (--committee mode): research vs shadow vs live vs execution vs parity, per-strategy recommendation (PROMOTE structurally blocked during window; REJECT/INVESTIGATE rule-driven); day-2 report generated honestly (all CONTINUE)
+c408307  Router state + execution-analysis placeholder (residue) [bridge-auto]
+ce8e406  State: standing directive -- evidence month [bridge-auto]
+84f7a01  Obsidian bridge auto-sync [bridge-auto]
 29c30cc  Evidence month: EVIDENCE_LEDGER (daily/weekly) + MONTH_1_LIVE_REPORT comparator; router-wired (evidence_report action); promotes nothing to live
 a3796c1  Obsidian bridge auto-sync [bridge-auto]
 0a74e18  Survey triage: #1 citation verified REAL but mechanism stated backwards (intraday, not overnight, carries momentum); survey blind to fresh Part C TSMOM; 1 idea created, 7 rejected with reasons
 0688da5  Obsidian bridge auto-sync [bridge-auto]
-9541f4e  ATR compression filter: REJECT (adversarial review) — look-ahead + post-hoc selection; lagged version hurts everywhere
-b6f294c  Obsidian bridge auto-sync [bridge-auto]
-e99c0dd  Evidence cycle: ETF review VALIDATED_FOR_FORWARD_SHADOW (9 survivors, corr 0.13, pooled 2.26); shadow logger + macro-state dataset live via router
-9de8b8a  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

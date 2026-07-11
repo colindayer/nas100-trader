@@ -112,3 +112,7 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-12 | Obsidian Bridge / automated | Survey triage: #1 citation verified REAL but mechanism stated backwards (intr... | git post-commit hook | 0a74e18 |
 | 2026-07-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | a3796c1 |
 | 2026-07-12 | Obsidian Bridge / automated | Evidence month: EVIDENCE_LEDGER (daily/weekly) + MONTH_1_LIVE_REPORT comparat... | git post-commit hook | 29c30cc |
+| 2026-07-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 84f7a01 |
+| 2026-07-12 | Obsidian Bridge / automated | State: standing directive -- evidence month [bridge-auto] | git post-commit hook | ce8e406 |
+| 2026-07-12 | Obsidian Bridge / automated | Router state + execution-analysis placeholder (residue) [bridge-auto] | git post-commit hook | c408307 |
+| 2026-07-12 | Obsidian Bridge / automated | Monthly evidence committee report (--committee mode): research vs shadow vs l... | git post-commit hook | 489a709 |
