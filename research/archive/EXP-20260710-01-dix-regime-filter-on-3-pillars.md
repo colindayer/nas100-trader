@@ -2,7 +2,7 @@
 type: experiment
 id: EXP-20260710-01
 title: "DIX regime filter on 3 pillars"
-status: queued          # queued -> running -> gauntlet -> rejected | validated
+status: rejected          # promoted 2026-07-12
 created: 2026-07-10
 idea: "2026-07-10-dark-pool-dix-regime-filter"
 paper: "zarattini-2024-orb-stocks-in-play"
