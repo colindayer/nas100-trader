@@ -124,3 +124,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-12 | Obsidian Bridge / automated | Prop readiness: design ready, evidence not — 8 blockers ranked; decision belo... | git post-commit hook | b86a445 |
 | 2026-07-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | cb3c5d2 |
 | 2026-07-12 | Obsidian Bridge / automated | S5 re-entry divergence quantified: KEEP — 12 extra trades/7.5y, breakeven, de... | git post-commit hook | e839f8b |
+| 2026-07-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 23a1351 |
+| 2026-07-12 | Obsidian Bridge / automated | Research freeze: backlog triaged — 3 SHADOW, 5 WAITING, 5 REJECTED (incl. moo... | git post-commit hook | 699bbc6 |

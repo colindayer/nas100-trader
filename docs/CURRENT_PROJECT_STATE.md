@@ -89,14 +89,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+699bbc6  Research freeze: backlog triaged — 3 SHADOW, 5 WAITING, 5 REJECTED (incl. moot DIX exp closed via lifecycle), 8 ARCHIVED, READY empty by design
+23a1351  Obsidian bridge auto-sync [bridge-auto]
 e839f8b  S5 re-entry divergence quantified: KEEP — 12 extra trades/7.5y, breakeven, deltas within noise; drift blocker closed as accepted
 cb3c5d2  Obsidian bridge auto-sync [bridge-auto]
 b86a445  Prop readiness: design ready, evidence not — 8 blockers ranked; decision belongs to the month-end report (~08-11), not today
 155d5b8  Obsidian bridge auto-sync [bridge-auto]
 674315e  Graveyard audit: 33 rejections reviewed — 30 STAND, 2 refined/partially superseded (via pipeline, not nostalgia), CFD-financing law identified as most re-confirmed pattern
 33e5cec  Obsidian bridge auto-sync [bridge-auto]
-e3f5d8f  Overnight momentum review: REJECT — RFS mechanism replicates at ETF level but breadth-starved and CFD-dead; idea closed, graveyard updated
-55ea5d2  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
