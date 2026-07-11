@@ -126,3 +126,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-12 | Obsidian Bridge / automated | Overnight momentum review: REJECT — RFS mechanism replicates at ETF level but... | git post-commit hook | e3f5d8f |
 | 2026-07-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 33e5cec |
 | 2026-07-12 | Obsidian Bridge / automated | Graveyard audit: 33 rejections reviewed — 30 STAND, 2 refined/partially super... | git post-commit hook | 674315e |
+| 2026-07-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 155d5b8 |
+| 2026-07-12 | Obsidian Bridge / automated | Prop readiness: design ready, evidence not — 8 blockers ranked; decision belo... | git post-commit hook | b86a445 |

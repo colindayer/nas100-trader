@@ -89,14 +89,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+b86a445  Prop readiness: design ready, evidence not — 8 blockers ranked; decision belongs to the month-end report (~08-11), not today
+155d5b8  Obsidian bridge auto-sync [bridge-auto]
 674315e  Graveyard audit: 33 rejections reviewed — 30 STAND, 2 refined/partially superseded (via pipeline, not nostalgia), CFD-financing law identified as most re-confirmed pattern
 33e5cec  Obsidian bridge auto-sync [bridge-auto]
 e3f5d8f  Overnight momentum review: REJECT — RFS mechanism replicates at ETF level but breadth-starved and CFD-dead; idea closed, graveyard updated
 55ea5d2  Obsidian bridge auto-sync [bridge-auto]
 e0ea784  Macro filter review: ts corroborated (6/6), DXY parked (6/6 but era-lumpy, -58% trades), curve/netliq/HY rejected (0/6) — no adoption, evidence month respected
 2b67146  Obsidian bridge auto-sync [bridge-auto]
-ddb02a0  Drift investigation: sizing verified clean (display-rounding false alarm), re-entry divergence ranked #1, bracket-close ledger hole found; ONE investigation recommended (quantify re-entry in replay)
-13f8c05  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
