@@ -1,7 +1,7 @@
 ---
 type: research-idea
 title: "Intraday return momentum decomposition"
-status: idea            # idea -> experiment -> gauntlet -> rejected | validated
+status: rejected      # 2026-07-12 OVERNIGHT_MOMENTUM_REVIEW: mechanism replicates (0.40 > 0.20 > -0.22 ordering) but below gauntlet bar at 8-ETF breadth; CFD-dead on financing
 created: 2026-07-12
 source: "survey_triage #1 (Barardehi/Bogousslavsky/Muravyev RFS 2026, mechanism corrected)"
 tags: [research, idea]

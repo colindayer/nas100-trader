@@ -626,3 +626,4 @@ vol spikes, it stays spiked). No whipsaw risk in regime-based rules.
 
 **ATR compression filter (2026-07-12): REJECTED by adversarial review.** Claimed S1 'compressed_only 2.04 vs 1.12' was look-ahead (same-day ATR pctl) + post-hoc threshold selection. Lagged: hurts at all 8 thresholds, 0/6 splits, negative LOYO everywhere, no incremental info over VIX/TS/GEX gates. research/results/atr_compression_REVIEW.md
 **Macro gates (2026-07-12): curve/netliq/HY REJECTED as incremental gates (0/6 splits vs existing VIX gate); DXY parked NEEDS_MORE_EVIDENCE (post-window battery); ts corroborated 6/6 (already in shadow). docs/MACRO_FILTER_REVIEW.md**
+**Intraday-return momentum (RFS 2026 mechanism), 2026-07-12: REJECTED for this shop.** Replicates at ETF level (intraday 0.40 > total 0.20 > overnight -0.22) but breadth-starved at 8 ETFs (<0.5 bar), CFD financing kills it (-0.26). Real mechanism, no edge for us. docs/OVERNIGHT_MOMENTUM_REVIEW.md
