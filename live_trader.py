@@ -119,7 +119,7 @@ RISK_S3 = 0.0040
 RISK_S4 = 0.0040
 RISK_S5 = 0.0075
 STOP_S1 = 0.015; RR_S1 = 3.0
-STOP_S2 = 0.015; RR_S2 = 3.0
+STOP_S2 = 0.012; RR_S2 = 2.0  # ported to VALIDATED daily-FVG lineage (full_yearly; hourly variant was structurally inert -- FINDINGS 2026-07-12, human-authorized)
 STOP_S3 = 0.020; HOLD_S3 = 5
 STOP_S4 = 0.015; RR_S4 = 3.0
 STOP_S5 = 0.010; RR_S5 = 3.0
@@ -396,75 +396,52 @@ def run_s1(broker, equity, open_syms, vix_ma21, spy_bull, vix_mult):
         print(f"  No signal (close={data['Close'].iloc[-1]:.2f}, AsianLow={al:.2f}{gex_note})")
 
 # -- STRATEGY S2: Gold London FVG ---------------------------------------------
-def run_s2(broker, equity, open_syms, vix_mult):
+def run_s2(broker, equity, open_syms, vix_mult, spy_bull=True):
+    """S2 Gold FVG -- VALIDATED daily-bar lineage (full_yearly), ported 2026-07-12.
+
+    The previous hourly-London-FVG variant was structurally inert live: a true
+    price gap between hourly bars essentially never occurs on contiguous data
+    (0 fires in 75 days, FINDINGS 2026-07-12). The validated version uses DAILY
+    bars where overnight gaps are real: FVG_Up = today's Low > High two days ago,
+    green candle, SPY-bull regime. Long-only. Enter next day, broker bracket
+    -1.2% / 2:1 (the lineage's own validated stop/RR). Replay on current data:
+    ~16 trades/yr, Sharpe 1.58 (OOS 1.79), MaxDD -3.3%.
+    """
     logger.info("SESSION S2 start")
-    print("\n-- S2: GOLD LONDON FVG (GLD) --")
+    print("\n-- S2: GOLD DAILY FVG (GLD) --")
     if "GLD" in open_syms:
         logger.info("S2 skip: GLD in position")
         print("  GLD already in position - skip"); return
     if vix_mult == 0:
         logger.info("S2 pause: VIX too high")
         print("  PAUSED - VIX too high"); return
+    if not spy_bull:
+        logger.info("S2 skip: SPY bear regime (validated bull filter)")
+        print("  SPY bear regime - skip (validated filter)"); return
 
-    data = broker.get_bars("GLD", "1Hour", 1200)
-    if data is None or data.empty:
-        logger.warning("S2: no bar data for GLD, skipping")
-        print("  No data for GLD - skip"); return
-    data["Date"] = data.index.date
-
-    def is_asian(idx): return idx.hour >= 18 or idx.hour < 2
-    def sess_date(idx): return (idx + timedelta(days=1)).date() if idx.hour >= 18 else idx.date()
-
-    data["Asian"]       = data.index.map(is_asian)
-    data["SessionDate"] = data.index.map(sess_date)
-    ab = data[data["Asian"]]
-    data["AsianHigh"] = data["SessionDate"].map(ab.groupby("SessionDate")["High"].max())
-    data["AsianLow"]  = data["SessionDate"].map(ab.groupby("SessionDate")["Low"].min())
-    data["InLondon"]  = data.index.map(lambda x: 2 <= x.hour < 5)
-
-    cr = (data["High"]-data["Low"]).replace(0, 0.001)
-    data["StrongCandle"] = (data["Close"]-data["Open"]).abs() / cr > 0.6
-    data["FVG_Up"]   = data["Low"]  > data["High"].shift(2)
-    data["FVG_Down"] = data["High"] < data["Low"].shift(2)
-    data["SweepHigh"] = (data["High"] > data["AsianHigh"]) & (data["Close"] < data["AsianHigh"])
-    data["SweepLow"]  = (data["Low"]  < data["AsianLow"])  & (data["Close"] > data["AsianLow"])
-
-    sh_active = [False]*len(data); sl_active = [False]*len(data); bh = bl = -999
-    for i in range(len(data)):
-        if data["SweepHigh"].iloc[i]: bh = i
-        if data["SweepLow"].iloc[i]:  bl = i
-        sh_active[i] = (i-bh) <= 10; sl_active[i] = (i-bl) <= 10
-    data["SweepHighActive"] = sh_active; data["SweepLowActive"] = sl_active
-
-    daily_close = data[data.index.hour == 16][["Close"]].copy()
-    daily_close.index = daily_close.index.date
-    daily_close = daily_close[~daily_close.index.duplicated(keep="last")]
-    data["DailyEMA50"] = data["Date"].map(
-        daily_close["Close"].ewm(span=50).mean().to_dict())
-
-    long_cond  = (data["SweepLowActive"]  & data["InLondon"] & data["StrongCandle"] &
-                  data["FVG_Up"]   & (data["Close"] > data["DailyEMA50"]) & data["AsianLow"].notna())
-    short_cond = (data["SweepHighActive"] & data["InLondon"] & data["StrongCandle"] &
-                  data["FVG_Down"] & (data["Close"] < data["DailyEMA50"]) & data["AsianHigh"].notna())
-
-    recent = data.tail(4)
-    price  = float(data["Close"].iloc[-1])
-    shares = (equity * RISK_S2 * vix_mult * broker.RISK_SCALE) / (price * STOP_S2)
-    if long_cond[recent.index].any():
-        logger.info(f"S2 SIGNAL GLD long price={price:.2f} shares={shares:.1f}")
-        print("  SIGNAL: GLD London FVG long")
+    daily = broker.get_bars("GLD", "1Day", 30)
+    if daily is None or len(daily) < 5:
+        logger.warning("S2: insufficient daily bars for GLD, skipping")
+        print("  No daily data for GLD - skip"); return
+    # evaluate on the last COMPLETED daily bar (exclude today's forming bar)
+    today = now_et().date()
+    done = daily[[d.date() < today for d in daily.index]]
+    if len(done) < 3:
+        print("  Not enough completed daily bars - skip"); return
+    y = done.iloc[-1]                       # yesterday (completed)
+    fvg_up = (y["Low"] > done["High"].iloc[-3]) and (y["Close"] > y["Open"])
+    if fvg_up:
+        price  = float(broker.get_bars("GLD", "1Hour", 3)["Close"].iloc[-1])
+        shares = (equity * RISK_S2 * vix_mult * broker.RISK_SCALE) / (price * STOP_S2)
+        logger.info(f"S2 SIGNAL GLD daily-FVG long price={price:.2f} shares={shares:.1f}")
+        print(f"  SIGNAL: GLD daily FVG up (gap over {done['High'].iloc[-3]:.2f}) -> LONG")
         broker.place_order_safe("GLD", shares, "buy", "S2",
                                 sl=price*(1-STOP_S2), tp=price*(1+STOP_S2*RR_S2),
                                 signal_price=price)
-    elif short_cond[recent.index].any():
-        logger.info(f"S2 SIGNAL GLD short price={price:.2f} shares={shares:.1f}")
-        print("  SIGNAL: GLD London FVG short")
-        broker.place_order_safe("GLD", shares, "sell", "S2",
-                                sl=price*(1+STOP_S2), tp=price*(1-STOP_S2*RR_S2),
-                                signal_price=price)
     else:
-        logger.info("S2 no signal")
-        print("  No signal")
+        logger.info(f"S2 no signal: yLow={y['Low']:.2f} vs High[-3]={done['High'].iloc[-3]:.2f}")
+        print(f"  No signal (no daily FVG: yLow {y['Low']:.2f} <= High-2d {done['High'].iloc[-3]:.2f})")
+
 
 # -- STRATEGY S3: Abnormal Volume (end of day) ---------------------------------
 def run_s3(broker, equity, open_syms, vix_mult):
@@ -1119,7 +1096,7 @@ except Exception:
 
 if args.session == "asian":
     run_s1(broker, equity, open_syms, vix_ma21, spy_bull, vix_mult)
-    run_s2(broker, equity, open_syms, vix_mult)
+    run_s2(broker, equity, open_syms, vix_mult, spy_bull)
     run_s4(broker, equity, open_syms, spy_bull, vix_mult)
 elif args.session == "orb":
     run_s5(broker, equity, open_syms, vix_ma21, spy_bull, qqq_bear200)
@@ -1137,7 +1114,7 @@ elif args.session == "sweep":
     run_sweep_basket(broker, equity, open_syms, spy_bull, vix_mult)
 elif args.session == "all":
     run_s1(broker, equity, open_syms, vix_ma21, spy_bull, vix_mult)
-    run_s2(broker, equity, open_syms, vix_mult)
+    run_s2(broker, equity, open_syms, vix_mult, spy_bull)
     run_s4(broker, equity, open_syms, spy_bull, vix_mult)
     run_s5(broker, equity, open_syms, vix_ma21, spy_bull, qqq_bear200)
     run_s3(broker, equity, open_syms, vix_mult)

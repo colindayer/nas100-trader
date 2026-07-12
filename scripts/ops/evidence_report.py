@@ -179,7 +179,7 @@ def month_end():
 # Validated research expectations, trades/day (source: FINDINGS/master lineage:
 # S1~11/yr, S4~27/180d, S5~1.5 raw pre-filter -> ~0.8 taken, S2/S3 sparse,
 # BTC occasional, OVN 2/wk by calendar). Used for expected-vs-actual only.
-EXPECTED_PER_DAY = {"S1": 0.044, "S2": 0.0,  # S2 structurally inert live (FINDINGS 07-12)
+EXPECTED_PER_DAY = {"S1": 0.044, "S2": 0.063,  # daily-FVG lineage ported 07-12 (~16/yr); S2 clock starts 07-14
                     "S3": 0.03, "S4": 0.15,
                     "S5": 0.8, "SWEEP": 0.1, "BTC": 0.08, "OVN": 0.4, "BTCTREND": 0.05}
 WINDOW_START = date(2026, 7, 9)          # parity commit 236abe3 -- clean-window anchor

@@ -640,3 +640,10 @@ S2 has been evaluating honestly and printing "No signal" since go-live -- dead c
 POST-WINDOW decision required (strategy surgery = clock reset): port back to daily
 FVG (the validated lineage) or retire S2. Until then: expected S2 trades = 0, and the
 committee report's S2 expectation should read 0, not 0.05/day.
+
+### S2 FIXED: ported to validated daily-FVG lineage (2026-07-12, human-authorized)
+Replaced the structurally-inert hourly-London-FVG with full_yearly's validated daily
+version: daily FVG_Up + green + SPY-bull, long-only, stop 1.2% / RR 2.0 (lineage's own
+params). Replay on current data: ~16 tr/yr, 56% win, Sharpe 1.58 (OOS 1.79), DD -3.3%.
+S2's evidence clock restarts at its first post-deploy trading day (~07-14); all other
+strategies' window evidence is UNAFFECTED (S2 contributed zero trades before the fix).
