@@ -142,3 +142,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-12 | Obsidian Bridge / automated | FIX S2: port to validated daily-FVG lineage (human-authorized) | git post-commit hook | 614e1ba |
 | 2026-07-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 0ea4154 |
 | 2026-07-12 | Obsidian Bridge / automated | Strategy Validation Audit: 8 questions x 8 strategies — S3 provenance drift f... | git post-commit hook | a219f81 |
+| 2026-07-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | ac0491d |
+| 2026-07-12 | Obsidian Bridge / automated | Cockpit upgrade: 9-page decision dashboard — status cards, AI Commander (rule... | git post-commit hook | f34575b |

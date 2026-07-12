@@ -89,14 +89,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+f34575b  Cockpit upgrade: 9-page decision dashboard — status cards, AI Commander (rule-derived, max 3 recs), strategy cards (validation-audit-sourced), colored shadow comparison, pipeline counts, searchable graveyard, execution charts, Obsidian buttons, readiness progress widgets, refresh toggle. Read-only; VPS-blind cells say 'Available on VPS'.
+ac0491d  Obsidian bridge auto-sync [bridge-auto]
 a219f81  Strategy Validation Audit: 8 questions x 8 strategies — S3 provenance drift found (live rule = strict subset, 4/yr vs validated 15/yr), S5-on-CFD premise flagged, BTC venue swap flagged; committee expectations corrected
 0ea4154  Obsidian bridge auto-sync [bridge-auto]
 614e1ba  FIX S2: port to validated daily-FVG lineage (human-authorized)
 26ab180  Obsidian bridge auto-sync [bridge-auto]
 70b8487  FINDING: S2 gold FVG structurally inert live — daily-gap concept on hourly bars fires 0/75 days; London window is 1 bar on Alpaca feed. Post-window decision queued; committee expectation corrected to 0
 5e7fb88  Obsidian bridge auto-sync [bridge-auto]
-115f30d  Streamlit dashboard v2: 7 pages (HOME/LIVE/SHADOW/RESEARCH/EVIDENCE/LOGS/SETTINGS), read-only view layer over existing artifacts
-428c8da  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
