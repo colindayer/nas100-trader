@@ -89,14 +89,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+614e1ba  FIX S2: port to validated daily-FVG lineage (human-authorized)
+26ab180  Obsidian bridge auto-sync [bridge-auto]
 70b8487  FINDING: S2 gold FVG structurally inert live — daily-gap concept on hourly bars fires 0/75 days; London window is 1 bar on Alpaca feed. Post-window decision queued; committee expectation corrected to 0
 5e7fb88  Obsidian bridge auto-sync [bridge-auto]
 115f30d  Streamlit dashboard v2: 7 pages (HOME/LIVE/SHADOW/RESEARCH/EVIDENCE/LOGS/SETTINGS), read-only view layer over existing artifacts
 428c8da  Obsidian bridge auto-sync [bridge-auto]
 a655536  Command Center: one-page operational dashboard (7 sections, summarizes existing artifacts, idempotent, graceful on missing files) — answers 'what should I do today'
 3443134  Obsidian bridge auto-sync [bridge-auto]
-699bbc6  Research freeze: backlog triaged — 3 SHADOW, 5 WAITING, 5 REJECTED (incl. moot DIX exp closed via lifecycle), 8 ARCHIVED, READY empty by design
-23a1351  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

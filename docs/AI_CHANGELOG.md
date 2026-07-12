@@ -132,3 +132,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-12 | Obsidian Bridge / automated | Streamlit dashboard v2: 7 pages (HOME/LIVE/SHADOW/RESEARCH/EVIDENCE/LOGS/SETT... | git post-commit hook | 115f30d |
 | 2026-07-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 5e7fb88 |
 | 2026-07-12 | Obsidian Bridge / automated | FINDING: S2 gold FVG structurally inert live — daily-gap concept on hourly ba... | git post-commit hook | 70b8487 |
+| 2026-07-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 26ab180 |
+| 2026-07-12 | Obsidian Bridge / automated | FIX S2: port to validated daily-FVG lineage (human-authorized) | git post-commit hook | 614e1ba |
