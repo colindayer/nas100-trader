@@ -7,6 +7,9 @@ PRODUCTION_READINESS_REVIEW.md (blockers #1–2) and LIVE_TRADING_PARITY.md
 (fill-timing gaps to watch). **Monitoring only — no strategy changes during the
 window.** A mid-month code change resets the clock._
 
+> **CLOCK RESET 2026-07-14.** Commit 614e1ba (S2 ported to daily-FVG lineage) changed live strategy entry logic mid-window. Per the rule below, the clock resets. New anchor: first full trading day the corrected code is active = **2026-07-14**. Committee shifts 2026-08-11 -> **2026-08-16** (same 33-day span). Prior anchor 2026-07-09/236abe3 is void; ledger lines before 07-14 are pre-reset and do not count toward the clean month.
+
+
 ---
 
 ## 0. What "clean" means

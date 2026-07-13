@@ -17,8 +17,8 @@ import streamlit as st
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "scripts" / "ops"))
-MONTH_END = date(2026, 8, 11)
-WINDOW_START = date(2026, 7, 9)
+MONTH_END = date(2026, 8, 16)   # committee (reset from 08-11 by S2 fix 614e1ba)
+WINDOW_START = date(2026, 7, 14)  # clock RESET by signal-touching S2 fix 614e1ba (was 07-09)
 
 st.set_page_config(page_title="NAS100 Trading OS", page_icon="📈", layout="wide")
 

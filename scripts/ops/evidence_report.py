@@ -182,7 +182,7 @@ def month_end():
 EXPECTED_PER_DAY = {"S1": 0.044, "S2": 0.063,  # daily-FVG lineage ported 07-12 (~16/yr); S2 clock starts 07-14
                     "S3": 0.016,  # live variant is a strict subset ~4/yr (VALIDATION_AUDIT 07-12) "S4": 0.15,
                     "S5": 0.8, "SWEEP": 0.1, "BTC": 0.08, "OVN": 0.4, "BTCTREND": 0.05}
-WINDOW_START = date(2026, 7, 9)          # parity commit 236abe3 -- clean-window anchor
+WINDOW_START = date(2026, 7, 14)         # RESET by S2 fix 614e1ba (signal-touching) -- prior anchor 2026-07-09/236abe3
 
 
 def _trading_days_since(d0):
@@ -230,7 +230,7 @@ def committee():
             spread = f"{sp.mean():.1f} bps avg"
 
     out = [f"# MONTHLY EVIDENCE COMMITTEE REPORT -- {date.today().isoformat()}",
-           f"\n_Clean window day {days} (anchor 2026-07-09 / parity 236abe3). Shadow days: "
+           f"\n_Clean window day {days} (anchor 2026-07-14 / RESET by S2 fix 614e1ba; prior 2026-07-09). Shadow days: "
            f"{shadow_days}. Host: local Mac -- MT5 fills live on the VPS ledger; cells that "
            f"need VPS data say so. NOTHING is promoted while the 30-day window runs "
            f"(clock rule) -- PROMOTE is structurally unavailable until the window closes._",

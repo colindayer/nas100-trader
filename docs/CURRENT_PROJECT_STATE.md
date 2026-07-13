@@ -41,7 +41,8 @@ live_trader.py / broker.py / mt5_broker.py. Working tree clean at time of writin
   correct). The Alpaca −1.5% is pre-existing account history, NOT system losses.
 - Parity with the validated backtests was restored on 2026-07-09 (get_bars unit
   bug, 30-bar filter starvation, DAY→GTC brackets). **The clean 30-day statistics
-  window starts with the first trading day after commit 236abe3 — it is running now.**
+  window was RESET on 2026-07-14 by the signal-touching S2 fix (614e1ba); the
+  original 2026-07-09/236abe3 anchor is void. New anchor 2026-07-14, committee 2026-08-16.**
   Governing doc: NEXT_30_DAY_MONITORING_PLAN.md.
 
 ## Confirmed remaining blockers

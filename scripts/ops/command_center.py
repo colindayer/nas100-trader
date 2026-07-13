@@ -15,7 +15,7 @@ from datetime import date
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(REPO, "dashboard", "COMMAND_CENTER.md")
 TODAY = date.today()
-MONTH_END = date(2026, 8, 11)
+MONTH_END = date(2026, 8, 16)   # reset from 08-11 by S2 fix 614e1ba
 SHADOW_MIN_DAYS = 15
 
 
