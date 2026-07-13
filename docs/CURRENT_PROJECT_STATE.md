@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+be98a67  Alpha Leak Audit: forensic implementation-drift pass over all 8 strategies — 13 ranked findings, alpha-leak report, parity-only recommendations. Dominant leak = ETF-validated edge on CFD cost stack + live throttle (est 25-40% haircut); S3 -73% frequency. Read-only, no code change
+d9e4c58  Obsidian bridge auto-sync [bridge-auto]
 d07c49f  Trading OS.app: native macOS launcher shell (presentation+launcher only)
 6ff1252  Obsidian bridge auto-sync [bridge-auto]
 6d96c65  Trade Explorer page: investigate any trade in <30s (read-only view layer)
 244b855  Obsidian bridge auto-sync [bridge-auto]
 ec52a14  Project Constitution: single authoritative survival document (10 sections — purpose, architecture, strategy register, research + data governance, operations, knowledge map, current state, roadmap, lessons). Documentation only; links verified
 2d2af0a  Obsidian bridge auto-sync [bridge-auto]
-b519749  Dashboard cockpit v3 + vault backlinks + repo/data audits (docs+view only)
-5b98cfa  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
