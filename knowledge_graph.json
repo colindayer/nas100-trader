@@ -1,0 +1,621 @@
+{
+  "generated": "2026-07-13",
+  "note": "Documentation only. Nodes/edges over the trading OS.",
+  "node_count": 62,
+  "edge_count": 56,
+  "nodes": [
+    {
+      "id": "S1",
+      "type": "strategy",
+      "name": "Asian Sweep",
+      "validation": "YES",
+      "production": "LIVE"
+    },
+    {
+      "id": "S2",
+      "type": "strategy",
+      "name": "Gold FVG",
+      "validation": "FIXED",
+      "production": "LIVE",
+      "clock": "restarted 2026-07-14"
+    },
+    {
+      "id": "S3",
+      "type": "strategy",
+      "name": "Abnormal Volume",
+      "validation": "PARTIAL",
+      "production": "LIVE"
+    },
+    {
+      "id": "S4",
+      "type": "strategy",
+      "name": "Multi-Sweep",
+      "validation": "YES",
+      "production": "LIVE"
+    },
+    {
+      "id": "S5",
+      "type": "strategy",
+      "name": "ORB",
+      "validation": "PARTIAL-CFD",
+      "production": "LIVE"
+    },
+    {
+      "id": "OVN",
+      "type": "strategy",
+      "name": "Overnight Drift",
+      "validation": "YES",
+      "production": "LIVE"
+    },
+    {
+      "id": "BTC",
+      "type": "strategy",
+      "name": "BTC Sweep",
+      "validation": "PARTIAL",
+      "production": "LIVE"
+    },
+    {
+      "id": "BTCTREND",
+      "type": "strategy",
+      "name": "BTC Trend / XSMOM",
+      "validation": "YES",
+      "production": "LIVE-off-funded"
+    },
+    {
+      "id": "EXP_universe",
+      "type": "experiment",
+      "file": "research/experiments/part_a_universe.py"
+    },
+    {
+      "id": "EXP_macro",
+      "type": "experiment",
+      "file": "research/experiments/part_b_macro_regimes.py"
+    },
+    {
+      "id": "EXP_tsmom",
+      "type": "experiment",
+      "file": "research/experiments/part_c_tsmom.py"
+    },
+    {
+      "id": "EXP_vixts",
+      "type": "experiment",
+      "file": "research/experiments/vix_ts_gate_test.py"
+    },
+    {
+      "id": "EXP_atr",
+      "type": "experiment",
+      "file": "research/experiments/atr_compression_review.py"
+    },
+    {
+      "id": "EXP_weekend",
+      "type": "experiment",
+      "file": "research/experiments/weekend_exposure_test.py"
+    },
+    {
+      "id": "EXP_reentry",
+      "type": "experiment",
+      "file": "S5 re-entry replay (docs/S5_REENTRY_REVIEW.md)"
+    },
+    {
+      "id": "EXP_dix",
+      "type": "experiment",
+      "file": "research/archive/EXP-20260710-01-dix-regime-filter-on-3-pillars.md",
+      "status": "rejected"
+    },
+    {
+      "id": "REV_parity",
+      "type": "review",
+      "file": "docs/LIVE_TRADING_PARITY.md"
+    },
+    {
+      "id": "REV_valaudit",
+      "type": "review",
+      "file": "docs/STRATEGY_VALIDATION_AUDIT.md"
+    },
+    {
+      "id": "REV_weekend",
+      "type": "review",
+      "file": "docs/WEEKEND_EXPOSURE_AUDIT.md"
+    },
+    {
+      "id": "REV_s3",
+      "type": "review",
+      "file": "docs/S3_VALIDATION_REVIEW.md"
+    },
+    {
+      "id": "REV_reentry",
+      "type": "review",
+      "file": "docs/S5_REENTRY_REVIEW.md"
+    },
+    {
+      "id": "REV_drift",
+      "type": "review",
+      "file": "docs/LIVE_RESEARCH_DRIFT.md"
+    },
+    {
+      "id": "REV_shadow",
+      "type": "review",
+      "file": "docs/ETF_FORWARD_SHADOW_REVIEW.md"
+    },
+    {
+      "id": "REV_vixts",
+      "type": "review",
+      "file": "research/results/vix_ts_gate_REVIEW.md"
+    },
+    {
+      "id": "REV_atr",
+      "type": "review",
+      "file": "research/results/atr_compression_REVIEW.md"
+    },
+    {
+      "id": "REV_ovn",
+      "type": "review",
+      "file": "docs/OVERNIGHT_MOMENTUM_REVIEW.md"
+    },
+    {
+      "id": "REV_macrofilter",
+      "type": "review",
+      "file": "docs/MACRO_FILTER_REVIEW.md"
+    },
+    {
+      "id": "REV_graveyard",
+      "type": "review",
+      "file": "docs/RESEARCH_GRAVEYARD_AUDIT.md"
+    },
+    {
+      "id": "IDEA_dix",
+      "type": "idea",
+      "file": "research/ideas/2026-07-10-dark-pool-dix-regime-filter.md",
+      "status": "rejected"
+    },
+    {
+      "id": "IDEA_vixts",
+      "type": "idea",
+      "file": "research/ideas/2026-07-11-vix-term-structure-regime-gate.md",
+      "status": "shadow"
+    },
+    {
+      "id": "IDEA_intraday",
+      "type": "idea",
+      "file": "research/ideas/2026-07-12-intraday-return-momentum-decomposition.md",
+      "status": "rejected"
+    },
+    {
+      "id": "FIND_s2inert",
+      "type": "finding",
+      "note": "S2 hourly-FVG structurally inert (0/75d)"
+    },
+    {
+      "id": "FIND_s3drift",
+      "type": "finding",
+      "note": "S3 live rule = strict subset ~4/yr vs 15/yr"
+    },
+    {
+      "id": "FIND_cfdfin",
+      "type": "finding",
+      "note": "CFD financing ~3bps/day kills slow/monthly holds"
+    },
+    {
+      "id": "FIND_weekend",
+      "type": "finding",
+      "note": "S5 benefits from weekend holds; S3 harmed"
+    },
+    {
+      "id": "FIND_reentry",
+      "type": "finding",
+      "note": "S5 same-day re-entry breakeven, accepted"
+    },
+    {
+      "id": "RPT_month1",
+      "type": "report",
+      "file": "docs/MONTH_1_LIVE_REPORT.md"
+    },
+    {
+      "id": "RPT_committee",
+      "type": "report",
+      "file": "docs/MONTHLY_EVIDENCE_COMMITTEE.md"
+    },
+    {
+      "id": "RPT_readiness",
+      "type": "report",
+      "file": "docs/PROP_READINESS.md"
+    },
+    {
+      "id": "RPT_ledger",
+      "type": "report",
+      "file": "docs/EVIDENCE_LEDGER.md"
+    },
+    {
+      "id": "RPT_clockreset",
+      "type": "report",
+      "file": "docs/CLOCK_RESETS.md"
+    },
+    {
+      "id": "RPT_backlog",
+      "type": "report",
+      "file": "docs/RESEARCH_BACKLOG.md"
+    },
+    {
+      "id": "RPT_monitor",
+      "type": "report",
+      "file": "docs/NEXT_30_DAY_MONITORING_PLAN.md"
+    },
+    {
+      "id": "RPT_vpsfix",
+      "type": "report",
+      "file": "docs/VPS_UPDATE_FIX.md"
+    },
+    {
+      "id": "DASH_HOME",
+      "type": "dashboard_page",
+      "name": "HOME"
+    },
+    {
+      "id": "DASH_STRATEGIES",
+      "type": "dashboard_page",
+      "name": "STRATEGIES"
+    },
+    {
+      "id": "DASH_SHADOW",
+      "type": "dashboard_page",
+      "name": "SHADOW"
+    },
+    {
+      "id": "DASH_RESEARCH",
+      "type": "dashboard_page",
+      "name": "RESEARCH"
+    },
+    {
+      "id": "DASH_GRAVEYARD",
+      "type": "dashboard_page",
+      "name": "GRAVEYARD"
+    },
+    {
+      "id": "DASH_EXECUTION",
+      "type": "dashboard_page",
+      "name": "EXECUTION"
+    },
+    {
+      "id": "DASH_EVIDENCE",
+      "type": "dashboard_page",
+      "name": "EVIDENCE"
+    },
+    {
+      "id": "DASH_LOGS",
+      "type": "dashboard_page",
+      "name": "LOGS"
+    },
+    {
+      "id": "DASH_SETTINGS",
+      "type": "dashboard_page",
+      "name": "SETTINGS"
+    },
+    {
+      "id": "OBS_S1",
+      "type": "obsidian_note",
+      "file": "vault/03-Validated-Strategies/S1 Asian Sweep.md"
+    },
+    {
+      "id": "OBS_S2",
+      "type": "obsidian_note",
+      "file": "vault/03-Validated-Strategies/S2 Gold FVG.md"
+    },
+    {
+      "id": "OBS_S3",
+      "type": "obsidian_note",
+      "file": "vault/03-Validated-Strategies/S3 Abnormal Volume.md"
+    },
+    {
+      "id": "OBS_S4",
+      "type": "obsidian_note",
+      "file": "vault/03-Validated-Strategies/S4 Multi Sweep.md"
+    },
+    {
+      "id": "OBS_S5",
+      "type": "obsidian_note",
+      "file": "vault/03-Validated-Strategies/S5 ORB.md"
+    },
+    {
+      "id": "OBS_OVN",
+      "type": "obsidian_note",
+      "file": "vault/03-Validated-Strategies/Overnight Drift.md"
+    },
+    {
+      "id": "OBS_BTC",
+      "type": "obsidian_note",
+      "file": "vault/03-Validated-Strategies/BTC Sweep.md"
+    },
+    {
+      "id": "OBS_BTCTREND",
+      "type": "obsidian_note",
+      "file": "vault/03-Validated-Strategies/BTC Trend.md"
+    },
+    {
+      "id": "KG",
+      "type": "report",
+      "file": "docs/KNOWLEDGE_GRAPH.md"
+    }
+  ],
+  "edges": [
+    {
+      "source": "S1",
+      "target": "REV_parity",
+      "rel": "validated_by"
+    },
+    {
+      "source": "S4",
+      "target": "REV_parity",
+      "rel": "validated_by"
+    },
+    {
+      "source": "S2",
+      "target": "FIND_s2inert",
+      "rel": "validated_by"
+    },
+    {
+      "source": "S5",
+      "target": "REV_reentry",
+      "rel": "validated_by"
+    },
+    {
+      "source": "S1",
+      "target": "REV_valaudit",
+      "rel": "reviewed_by"
+    },
+    {
+      "source": "S2",
+      "target": "REV_valaudit",
+      "rel": "reviewed_by"
+    },
+    {
+      "source": "S3",
+      "target": "REV_valaudit",
+      "rel": "reviewed_by"
+    },
+    {
+      "source": "S4",
+      "target": "REV_valaudit",
+      "rel": "reviewed_by"
+    },
+    {
+      "source": "S5",
+      "target": "REV_valaudit",
+      "rel": "reviewed_by"
+    },
+    {
+      "source": "BTC",
+      "target": "REV_valaudit",
+      "rel": "reviewed_by"
+    },
+    {
+      "source": "S3",
+      "target": "REV_s3",
+      "rel": "reviewed_by"
+    },
+    {
+      "source": "S5",
+      "target": "REV_drift",
+      "rel": "reviewed_by"
+    },
+    {
+      "source": "S1",
+      "target": "REV_weekend",
+      "rel": "reviewed_by"
+    },
+    {
+      "source": "S3",
+      "target": "REV_weekend",
+      "rel": "reviewed_by"
+    },
+    {
+      "source": "S5",
+      "target": "REV_weekend",
+      "rel": "reviewed_by"
+    },
+    {
+      "source": "OVN",
+      "target": "REV_ovn",
+      "rel": "reviewed_by"
+    },
+    {
+      "source": "FIND_s2inert",
+      "target": "S2",
+      "rel": "superseded_by"
+    },
+    {
+      "source": "IDEA_vixts",
+      "target": "EXP_vixts",
+      "rel": "superseded_by"
+    },
+    {
+      "source": "REV_valaudit",
+      "target": "REV_parity",
+      "rel": "contradicts"
+    },
+    {
+      "source": "FIND_weekend",
+      "target": "S3",
+      "rel": "contradicts"
+    },
+    {
+      "source": "S3",
+      "target": "S3",
+      "rel": "depends_on"
+    },
+    {
+      "source": "BTC",
+      "target": "S1",
+      "rel": "depends_on"
+    },
+    {
+      "source": "S4",
+      "target": "S1",
+      "rel": "depends_on"
+    },
+    {
+      "source": "EXP_reentry",
+      "target": "S5",
+      "rel": "depends_on"
+    },
+    {
+      "source": "RPT_month1",
+      "target": "RPT_ledger",
+      "rel": "depends_on"
+    },
+    {
+      "source": "EXP_weekend",
+      "target": "REV_weekend",
+      "rel": "feeds"
+    },
+    {
+      "source": "REV_weekend",
+      "target": "FIND_weekend",
+      "rel": "feeds"
+    },
+    {
+      "source": "EXP_reentry",
+      "target": "REV_reentry",
+      "rel": "feeds"
+    },
+    {
+      "source": "REV_reentry",
+      "target": "FIND_reentry",
+      "rel": "feeds"
+    },
+    {
+      "source": "EXP_universe",
+      "target": "REV_shadow",
+      "rel": "feeds"
+    },
+    {
+      "source": "EXP_vixts",
+      "target": "REV_vixts",
+      "rel": "feeds"
+    },
+    {
+      "source": "EXP_atr",
+      "target": "REV_atr",
+      "rel": "feeds"
+    },
+    {
+      "source": "EXP_tsmom",
+      "target": "REV_graveyard",
+      "rel": "feeds"
+    },
+    {
+      "source": "FIND_s3drift",
+      "target": "REV_valaudit",
+      "rel": "feeds"
+    },
+    {
+      "source": "REV_valaudit",
+      "target": "RPT_committee",
+      "rel": "feeds"
+    },
+    {
+      "source": "REV_shadow",
+      "target": "RPT_month1",
+      "rel": "feeds"
+    },
+    {
+      "source": "RPT_clockreset",
+      "target": "RPT_monitor",
+      "rel": "feeds"
+    },
+    {
+      "source": "OBS_S1",
+      "target": "S1",
+      "rel": "documents"
+    },
+    {
+      "source": "OBS_S2",
+      "target": "S2",
+      "rel": "documents"
+    },
+    {
+      "source": "OBS_S3",
+      "target": "S3",
+      "rel": "documents"
+    },
+    {
+      "source": "OBS_S4",
+      "target": "S4",
+      "rel": "documents"
+    },
+    {
+      "source": "OBS_S5",
+      "target": "S5",
+      "rel": "documents"
+    },
+    {
+      "source": "OBS_OVN",
+      "target": "OVN",
+      "rel": "documents"
+    },
+    {
+      "source": "OBS_BTC",
+      "target": "BTC",
+      "rel": "documents"
+    },
+    {
+      "source": "OBS_BTCTREND",
+      "target": "BTCTREND",
+      "rel": "documents"
+    },
+    {
+      "source": "DASH_STRATEGIES",
+      "target": "S1",
+      "rel": "documents"
+    },
+    {
+      "source": "DASH_GRAVEYARD",
+      "target": "REV_graveyard",
+      "rel": "documents"
+    },
+    {
+      "source": "DASH_EVIDENCE",
+      "target": "RPT_committee",
+      "rel": "documents"
+    },
+    {
+      "source": "DASH_SHADOW",
+      "target": "REV_shadow",
+      "rel": "documents"
+    },
+    {
+      "source": "KG",
+      "target": "S1",
+      "rel": "documents"
+    },
+    {
+      "source": "S1",
+      "target": "REV_shadow",
+      "rel": "shadowed_by"
+    },
+    {
+      "source": "S5",
+      "target": "REV_shadow",
+      "rel": "shadowed_by"
+    },
+    {
+      "source": "S5",
+      "target": "IDEA_vixts",
+      "rel": "shadowed_by"
+    },
+    {
+      "source": "EXP_dix",
+      "target": "S1",
+      "rel": "contradicts"
+    },
+    {
+      "source": "IDEA_intraday",
+      "target": "BTCTREND",
+      "rel": "contradicts"
+    },
+    {
+      "source": "EXP_atr",
+      "target": "S5",
+      "rel": "contradicts"
+    }
+  ]
+}
