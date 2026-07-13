@@ -123,6 +123,45 @@ def kg_validation():
     return {n["id"]: n.get("validation", "?") for n in kg()["nodes"] if n["type"] == "strategy"}
 
 
+# ---- static reconstruction tables (documentation of known logic, not strategy code) --
+# entry gate chain each strategy requires, for plain-English "why the trade existed".
+# Source: live_trader run_s* + STRATEGY_VALIDATION_AUDIT. Read-only reference.
+GATES = {
+    "S1": ["Asian-low swept then reclaimed", "in session window", "close > VWAP",
+           "close > EMA50", "not high-vol regime", "GEX gate passed", "VIX gate passed"],
+    "S2": ["daily FVG gap-up (low > high 2 days ago)", "green daily candle",
+           "SPY bullish regime", "VIX gate passed"],
+    "S3": ["abnormal volume (z-score/1.3x MA20)", "green close", "VIX gate passed"],
+    "S4": ["QQQ+SPY dual sweep", "EMA200 regime aligned", "VIX gate passed"],
+    "S5": ["opening-range breakout (close > 9:00 high)", "in 10-13 ET window",
+           "volume > 0.6x ORB volume", "SPY bullish", "not QQQ-bear200", "VIX gate passed"],
+    "OVN": ["overnight window", "calendar entry near close", "5% catastrophe stop set"],
+    "BTC": ["BTC Asian sweep + reclaim (S1 ported)", "24/7 session", "reconcile guard clear"],
+    "BTCTREND": ["daily trend/XSMOM rebalance signal", "no broker stop (rebalance-managed)"],
+}
+# expected research metrics per strategy: (trades/yr, Sharpe, win%, avgR, source)
+EXPECTED = {
+    "S5": (50, 0.88, 0.358, 0.432, "WEEKEND_EXPOSURE_AUDIT (A hold)"),
+    "S1": (47, 0.23, 0.336, 0.342, "WEEKEND_EXPOSURE_AUDIT (A hold)"),
+    "S3": (4, 0.06, 0.577, 0.109, "STRATEGY_VALIDATION_AUDIT (live subset)"),
+    "S2": (16, 1.58, 0.560, None, "FINDINGS (daily-FVG replay)"),
+    "S4": (55, None, None, None, "archetype of S1"),
+    "OVN": (100, None, None, None, "OVERNIGHT_MOMENTUM_REVIEW"),
+    "BTC": (15, None, None, None, "STRATEGY_VALIDATION_AUDIT (venue caveat)"),
+    "BTCTREND": (12, None, None, None, "part_c_tsmom"),
+}
+OBS_NOTE = {"S1": "S1 Asian Sweep", "S2": "S2 Gold FVG", "S3": "S3 Abnormal Volume",
+            "S4": "S4 Multi Sweep", "S5": "S5 ORB", "OVN": "Overnight Drift",
+            "BTC": "BTC Sweep", "BTCTREND": "BTC Trend"}
+
+
+def num(v, nd=2):
+    try:
+        return f"{float(v):.{nd}f}"
+    except (TypeError, ValueError):
+        return "—"
+
+
 def explain(strat):
     """Plain-English rule chain: why is this strategy quiet/active right now."""
     mech, unit = STRAT[strat]
@@ -179,7 +218,7 @@ def ticker():
 
 
 # ------------------------------------------------------------------ pages --
-PAGES = ["HOME", "STRATEGIES", "SHADOW", "RESEARCH", "GRAVEYARD",
+PAGES = ["HOME", "STRATEGIES", "TRADE EXPLORER", "SHADOW", "RESEARCH", "GRAVEYARD",
          "EXECUTION", "EVIDENCE", "TIMELINE", "LOGS", "SETTINGS"]
 page = st.sidebar.radio("Cockpit", PAGES)
 auto = st.sidebar.toggle("Auto-refresh 60 s", value=True)
@@ -265,6 +304,176 @@ elif page == "STRATEGIES":
                     obsidian_button(f"{s} note", f"vault/03-Validated-Strategies/{obs}.md")
     st.caption("Status is rule-derived from expected rate x window days vs logged fills + "
                "knowledge-graph validation. No AI. See docs/KNOWLEDGE_GRAPH.md.")
+
+elif page == "TRADE EXPLORER":
+    st.subheader("Trade Explorer — investigate any trade in <30s")
+    all_rows = csv_rows("logs/fills.csv")
+    if not all_rows:
+        st.info("**No trades in the ledger yet.** logs/fills.csv is empty — the "
+                "explorer lights up automatically as the system logs fills (real on "
+                "the VPS; dry-run rows appear here too). Everything below is ready.")
+    else:
+        # -------- SEARCH / filters --------
+        with st.container(border=True):
+            c = st.columns(4)
+            strat = c[0].selectbox("strategy", ["(any)"] + sorted({r.get("strategy", "") for r in all_rows}))
+            sym = c[1].selectbox("symbol", ["(any)"] + sorted({r.get("symbol", "") for r in all_rows}))
+            outcome = c[2].selectbox("outcome", ["(any)", "winner", "loser", "open"])
+            tag = c[3].selectbox("tag", ["(any)", "weekend hold", "overnight", "partial-validation", "dry-run", "real"])
+            q = st.text_input("free search (date / symbol / order id)", "")
+
+        def achieved_r(r):
+            """R from the row if a stop is known; entry-only rows -> None (bracket
+            closes are broker-side; blocker #3). Read-only derivation."""
+            try:
+                fp, sp = float(r["fill_price"]), float(r["stop_price"])
+                exitp = r.get("exit_price") or r.get("close_price")
+                if exitp and fp != sp:
+                    return (float(exitp) - fp) / abs(fp - sp) * (1 if r.get("side") == "buy" else -1)
+            except (TypeError, ValueError, KeyError):
+                pass
+            return None
+
+        def is_weekend(r):
+            try:
+                return pd.Timestamp(r["timestamp_utc"]).weekday() == 4
+            except Exception:
+                return False
+
+        import pandas as pd
+        rows = all_rows
+        if strat != "(any)":
+            rows = [r for r in rows if r.get("strategy") == strat]
+        if sym != "(any)":
+            rows = [r for r in rows if r.get("symbol") == sym]
+        if outcome != "(any)":
+            def oc(r):
+                ar = achieved_r(r)
+                return "open" if ar is None else ("winner" if ar > 0 else "loser")
+            rows = [r for r in rows if oc(r) == outcome]
+        if tag == "weekend hold":
+            rows = [r for r in rows if is_weekend(r)]
+        elif tag == "overnight":
+            rows = [r for r in rows if r.get("strategy") == "OVN"]
+        elif tag == "partial-validation":
+            pv = {k for k, v in kg_validation().items() if v.startswith("PARTIAL")}
+            rows = [r for r in rows if r.get("strategy") in pv]
+        elif tag == "dry-run":
+            rows = [r for r in rows if str(r.get("dry_run", "")).lower() == "true"]
+        elif tag == "real":
+            rows = [r for r in rows if str(r.get("dry_run", "")).lower() != "true"]
+        if q:
+            rows = [r for r in rows if any(q.lower() in str(v).lower() for v in r.values())]
+
+        st.caption(f"{len(rows)} of {len(all_rows)} trades match")
+        if not rows:
+            st.warning("No trades match the filters.")
+        else:
+            labels = [f"{i}: {r.get('timestamp_utc','?')[:16]} {r.get('strategy','?')} "
+                      f"{r.get('symbol','?')} {r.get('side','?')}" for i, r in enumerate(rows)]
+            pick = st.selectbox("select a trade", range(len(rows)), format_func=lambda i: labels[i])
+            r = rows[pick]
+            s = r.get("strategy", "")
+            ar = achieved_r(r)
+            status = "OPEN" if ar is None else ("WIN" if ar > 0 else "LOSS")
+
+            # -------- HEADER --------
+            h = st.columns(6)
+            h[0].metric("strategy", s); h[1].metric("ticker", r.get("symbol", "—"))
+            h[2].metric("direction", r.get("side", "—")); h[3].markdown(f"**status**\n\n{badge(status if status!='LOSS' else 'INVESTIGATE')}", unsafe_allow_html=True)
+            h[4].metric("risk %", num(float(r["risk_scale"]) * 0.7, 2) + "%" if r.get("risk_scale") else "—")
+            h[5].metric("R", num(ar) if ar is not None else "open")
+            st.caption(f"entry {r.get('timestamp_utc','—')} · signal {r.get('signal_timestamp','—')} · "
+                       f"exit {r.get('exit_price') and r.get('timestamp_utc') or 'in ledger: not recorded (bracket closes are broker-side)'}")
+
+            colA, colB = st.columns(2)
+            # -------- WHY THE TRADE EXISTED --------
+            with colA:
+                st.markdown("**Why the trade existed** (rule reconstruction)")
+                for g in GATES.get(s, ["(no gate chain on file for this strategy)"]):
+                    st.markdown(f"- {g}")
+                if r.get("risk_scale"):
+                    st.markdown(f"- risk throttle: {r['risk_scale']}")
+                st.caption("Reconstructed from live_trader gate chain + this fill's logged "
+                           "context. No AI. Confirm against the raw log (button below).")
+            # -------- RESEARCH CONTEXT --------
+            with colB:
+                st.markdown("**Research context**")
+                val = kg_validation().get(s, "?")
+                fr, sh, wn, avgr, src = EXPECTED.get(s, (None,)*5)
+                st.markdown(f"- validated strategy? **{val}**")
+                st.markdown(f"- expected freq: **{fr or '—'}/yr** · Sharpe **{sh or '—'}** · "
+                            f"win **{f'{wn:.0%}' if wn else '—'}** ({src})")
+                pv = "live rule = strict subset" if s == "S3" else (
+                     "CFD opening-range premise weak" if s == "S5" else (
+                     "venue swap (Binance→CFD)" if s == "BTC" else "none"))
+                st.markdown(f"- known validation issues: {pv}")
+                st.markdown(f"- committee notes: decision deferred to {MONTH_END:%d %b} "
+                            f"(see MONTHLY_EVIDENCE_COMMITTEE)")
+
+            # -------- EXECUTION --------
+            st.markdown("**Execution**")
+            e = st.columns(6)
+            e[0].metric("entry/fill", num(r.get("fill_price"), 5))
+            e[1].metric("stop", num(r.get("stop_price"), 5))
+            e[2].metric("target", num(r.get("target_price"), 5))
+            e[3].metric("slippage bps", num(r.get("slippage_bps")))
+            e[4].metric("spread bps", num(r.get("spread_bps")))
+            e[5].metric("broker sym", r.get("symbol", "—"))
+            st.caption(f"broker: {r.get('broker','—')} · account: {r.get('account','—')} · "
+                       f"commission/swap: not in ledger (broker-side; export MT5 history) · "
+                       f"weekend hold: {'YES' if is_weekend(r) else 'no'} · "
+                       f"overnight financing: {'~3bps/day (CFD)' if r.get('broker')=='mt5' else 'n/a (ETF)'}")
+
+            # -------- CHART --------
+            st.markdown("**Chart**")
+            csv_name = f"{r.get('symbol','').lower()}_hourly_7y.csv"
+            plotted = False
+            if (REPO / csv_name).exists() and r.get("timestamp_utc"):
+                try:
+                    d = pd.read_csv(REPO / csv_name)
+                    tcol = "timestamp" if "timestamp" in d.columns else d.columns[0]
+                    d[tcol] = pd.to_datetime(d[tcol], utc=True, errors="coerce")
+                    t0 = pd.Timestamp(r["timestamp_utc"], tz="UTC")
+                    win = d[(d[tcol] >= t0 - pd.Timedelta(days=3)) & (d[tcol] <= t0 + pd.Timedelta(days=3))]
+                    if len(win):
+                        cc = "close" if "close" in win.columns else win.columns[-2]
+                        st.line_chart(win.set_index(tcol)[cc]); plotted = True
+                except Exception:
+                    pass
+            if not plotted:
+                st.info("No chart available (no covering candle history for this window).")
+
+            # -------- TIMELINE --------
+            st.markdown("**Timeline** (decisions from logs around this fill)")
+            key = f"{s}|{r.get('symbol','')}"
+            day = (r.get("timestamp_utc") or "")[:10]
+            hits = [l for l in tail("logs/trader.log", 2000)
+                    if day and day in l and (s in l or r.get("symbol", "") in l)][:25]
+            st.code("\n".join(hits) or "(no matching log lines on this host — VPS logs hold MT5 session detail)")
+
+            # -------- DIAGNOSTICS --------
+            st.markdown("**Diagnostics**")
+            fr, sh, wn, exp_r, _ = EXPECTED.get(s, (None, None, None, None, None))
+            dg = st.columns(4)
+            dg[0].metric("research exp R", num(exp_r) if exp_r else "—")
+            dg[1].metric("live achieved R", num(ar) if ar is not None else "open")
+            dg[2].metric("R difference", num(ar - exp_r) if (ar is not None and exp_r) else "—")
+            dg[3].metric("validation", kg_validation().get(s, "?"))
+            st.caption(f"research version: master_backtest/full_yearly lineage · production: "
+                       f"live_trader run_{s.lower() if s.startswith('S') else s} · "
+                       f"parity: see LIVE_TRADING_PARITY · hold time: "
+                       f"{'exit not in ledger' if ar is None else 'from fill pair'}")
+
+            # -------- BONUS --------
+            b = st.columns(3)
+            with b[0]:
+                if OBS_NOTE.get(s):
+                    obsidian_button("related Obsidian note", f"vault/03-Validated-Strategies/{OBS_NOTE[s]}.md")
+            with b[1]:
+                obsidian_button("research review", "docs/STRATEGY_VALIDATION_AUDIT.md")
+            with b[2]:
+                obsidian_button("raw log", "logs/trader.log")
 
 elif page == "TIMELINE":
     st.subheader("Timeline — window, resets, incidents, commits")
