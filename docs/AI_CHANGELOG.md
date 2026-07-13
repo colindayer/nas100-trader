@@ -154,3 +154,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-13 | Obsidian Bridge / automated | Knowledge graph: KNOWLEDGE_GRAPH.md (8 strategies x 11 facets) + knowledge_gr... | git post-commit hook | 634eb49 |
 | 2026-07-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 5b98cfa |
 | 2026-07-13 | Obsidian Bridge / automated | Dashboard cockpit v3 + vault backlinks + repo/data audits (docs+view only) | git post-commit hook | b519749 |
+| 2026-07-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 2d2af0a |
+| 2026-07-13 | Obsidian Bridge / automated | Project Constitution: single authoritative survival document (10 sections — p... | git post-commit hook | ec52a14 |
