@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+b519749  Dashboard cockpit v3 + vault backlinks + repo/data audits (docs+view only)
+5b98cfa  Obsidian bridge auto-sync [bridge-auto]
 634eb49  Knowledge graph: KNOWLEDGE_GRAPH.md (8 strategies x 11 facets) + knowledge_graph.json (62 nodes/56 edges, generator-built, 0 dangling). Documentation only
 65b05c9  Obsidian bridge auto-sync [bridge-auto]
 96d8ed3  Validation Audit #2 (weekend exposure): S5 benefits from weekend holds, S3 harmed, S1 marginal; CFD financing doesn't flip S5/S1; ETF/CFD agree. Evidence only, no production change
 d4eba05  Obsidian bridge auto-sync [bridge-auto]
 bcbedfc  Fix nas100-update task (0x800710E0/4320): run as SYSTEM + non-hanging git pull
 9ff3654  Obsidian bridge auto-sync [bridge-auto]
-0e13cbd  Decision log: S3 drift KEEP AS-IS (human 2026-07-13) — safe subset, defer to 08-16 committee; no code change
-cb605dd  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

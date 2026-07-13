@@ -152,3 +152,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-13 | Obsidian Bridge / automated | Validation Audit #2 (weekend exposure): S5 benefits from weekend holds, S3 ha... | git post-commit hook | 96d8ed3 |
 | 2026-07-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 65b05c9 |
 | 2026-07-13 | Obsidian Bridge / automated | Knowledge graph: KNOWLEDGE_GRAPH.md (8 strategies x 11 facets) + knowledge_gr... | git post-commit hook | 634eb49 |
+| 2026-07-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 5b98cfa |
+| 2026-07-13 | Obsidian Bridge / automated | Dashboard cockpit v3 + vault backlinks + repo/data audits (docs+view only) | git post-commit hook | b519749 |
