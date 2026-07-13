@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+6d96c65  Trade Explorer page: investigate any trade in <30s (read-only view layer)
+244b855  Obsidian bridge auto-sync [bridge-auto]
 ec52a14  Project Constitution: single authoritative survival document (10 sections — purpose, architecture, strategy register, research + data governance, operations, knowledge map, current state, roadmap, lessons). Documentation only; links verified
 2d2af0a  Obsidian bridge auto-sync [bridge-auto]
 b519749  Dashboard cockpit v3 + vault backlinks + repo/data audits (docs+view only)
 5b98cfa  Obsidian bridge auto-sync [bridge-auto]
 634eb49  Knowledge graph: KNOWLEDGE_GRAPH.md (8 strategies x 11 facets) + knowledge_graph.json (62 nodes/56 edges, generator-built, 0 dangling). Documentation only
 65b05c9  Obsidian bridge auto-sync [bridge-auto]
-96d8ed3  Validation Audit #2 (weekend exposure): S5 benefits from weekend holds, S3 harmed, S1 marginal; CFD financing doesn't flip S5/S1; ETF/CFD agree. Evidence only, no production change
-d4eba05  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
