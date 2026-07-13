@@ -158,3 +158,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-13 | Obsidian Bridge / automated | Project Constitution: single authoritative survival document (10 sections — p... | git post-commit hook | ec52a14 |
 | 2026-07-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 244b855 |
 | 2026-07-13 | Obsidian Bridge / automated | Trade Explorer page: investigate any trade in <30s (read-only view layer) | git post-commit hook | 6d96c65 |
+| 2026-07-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 6ff1252 |
+| 2026-07-13 | Obsidian Bridge / automated | Trading OS.app: native macOS launcher shell (presentation+launcher only) | git post-commit hook | d07c49f |
