@@ -320,6 +320,60 @@ def test_qwen() -> str:
         return f"qwen test failed: {e}"
 
 
+def _evidence_dir() -> str:
+    return os.environ.get("LIVE_EVIDENCE_DIR", str(Path.home() / "nas100-live-evidence"))
+
+
+def evidence_status() -> str:
+    """Freshness of the latest live-evidence snapshot (read-only)."""
+    import json
+    ev = Path(_evidence_dir())
+    if not (ev / ".git").exists():
+        return f"evidence repo not cloned ({ev})"
+    days = sorted((ev / "daily").glob("*")) if (ev / "daily").is_dir() else []
+    if not days:
+        return "no snapshots yet"
+    m = days[-1] / "manifest.json"
+    if not m.exists():
+        return f"latest {days[-1].name}: manifest missing"
+    try:
+        d = json.loads(m.read_text())
+        return f"{days[-1].name}: {d.get('status')} counts={d.get('row_counts')}"
+    except Exception as e:
+        return f"manifest read error: {e}"
+
+
+def pull_evidence() -> str:
+    try:
+        r = subprocess.run(["bash", "scripts/ops/pull_live_evidence.sh"], cwd=str(repo()),
+                           capture_output=True, text=True, timeout=60)
+        return (r.stdout or r.stderr).strip()[-300:]
+    except Exception as e:
+        return f"pull failed: {e}"
+
+
+def open_latest_evidence() -> None:
+    ev = Path(_evidence_dir())
+    rep = ev / "reports"
+    ptr = rep / "latest"
+    target = rep / ptr.read_text().strip() if ptr.exists() else rep
+    subprocess.run(["open", str(target)], capture_output=True)
+
+
+def run_reconciliation() -> str:
+    ev = Path(_evidence_dir())
+    days = sorted((ev / "daily").glob("*")) if (ev / "daily").is_dir() else []
+    if not days:
+        return "no snapshot to reconcile"
+    try:
+        r = subprocess.run(["python3", "scripts/ops/reconcile_live_evidence.py",
+                            "--snapshot", str(days[-1]), "--repo", str(ev)],
+                           cwd=str(repo()), capture_output=True, text=True, timeout=60)
+        return (r.stdout or r.stderr).strip()[-300:]
+    except Exception as e:
+        return f"reconcile failed: {e}"
+
+
 def test_glm() -> str:
     import tempfile
     try:
