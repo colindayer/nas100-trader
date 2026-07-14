@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+26bebf0  Forensic Pipeline Audit (5 phases): end-to-end trace, signal audit (every missing trade explained), parity audit, execution audit (live metrics flagged INSUFFICIENT DATA — need VPS fills), one ranked governance-tagged fix table. No new strategies; parity-restoration prioritized. Read-only
+0d59b39  Obsidian bridge auto-sync [bridge-auto]
 a6c2c8a  Fix overnight CRASH (NoneType format): broker.py place_order_safe logged TP={tp:.2f} when tp=None
 996aee8  Obsidian bridge auto-sync [bridge-auto]
 534d2f6  Forensic Investigation: Phase 1 production forensics + Phase 2 regime audit + Phase 3 governance. Evidence: S5 gate funnel (gates not over-rejecting), regime conditionality (risk-on, mostly explanatory). 5 ranked reports + exec summary. Highest-EV = re-cost validation + venue routing + S3 parity, not new strategies. Read-only
 912a570  Obsidian bridge auto-sync [bridge-auto]
 be98a67  Alpha Leak Audit: forensic implementation-drift pass over all 8 strategies — 13 ranked findings, alpha-leak report, parity-only recommendations. Dominant leak = ETF-validated edge on CFD cost stack + live throttle (est 25-40% haircut); S3 -73% frequency. Read-only, no code change
 d9e4c58  Obsidian bridge auto-sync [bridge-auto]
-d07c49f  Trading OS.app: native macOS launcher shell (presentation+launcher only)
-6ff1252  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

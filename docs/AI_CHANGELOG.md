@@ -166,3 +166,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-13 | Obsidian Bridge / automated | Forensic Investigation: Phase 1 production forensics + Phase 2 regime audit +... | git post-commit hook | 534d2f6 |
 | 2026-07-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 996aee8 |
 | 2026-07-14 | Obsidian Bridge / automated | Fix overnight CRASH (NoneType format): broker.py place_order_safe logged TP={... | git post-commit hook | a6c2c8a |
+| 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 0d59b39 |
+| 2026-07-14 | Obsidian Bridge / automated | Forensic Pipeline Audit (5 phases): end-to-end trace, signal audit (every mis... | git post-commit hook | 26bebf0 |
