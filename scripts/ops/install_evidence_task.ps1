@@ -25,7 +25,17 @@ if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -Scope Global -Er
   $PSNativeCommandUseErrorActionPreference = $false   # PS7-safe; no-op on 5.1
 }
 $sync = Join-Path $Repo "scripts\ops\sync_mt5_evidence.ps1"
-$action = "powershell -ExecutionPolicy Bypass -File `"$sync`" -Repo `"$Repo`" -Evidence `"$Evidence`" -Python `"$Python`""
+# schtasks /tr is capped at 261 chars; the full 'powershell ... -File ... -Repo ...
+# -Evidence ... -Python ...' command exceeds it with these long paths. Write a short
+# launcher .cmd (in the user profile -- NOT inside a git repo, so it never dirties a
+# working tree) that holds the long command, and point the task at that short path.
+$launcher = Join-Path $env:USERPROFILE "nas100-evidence-task.cmd"
+@"
+@echo off
+powershell -ExecutionPolicy Bypass -File "$sync" -Repo "$Repo" -Evidence "$Evidence" -Python "$Python"
+"@ | Out-File -FilePath $launcher -Encoding ascii -Force
+Write-Host "  launcher: $launcher" -ForegroundColor DarkGray
+$action = "`"$launcher`""   # short -> well under the 261-char /tr limit
 
 # /IT = run only when $RunUser is logged on (interactive) -> NO stored password needed
 # and matches MT5's need for the live desktop session (same mode as the trading tasks).
