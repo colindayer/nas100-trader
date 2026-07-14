@@ -172,3 +172,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-14 | Obsidian Bridge / automated | Multi-model bridge: one-command delegate + bridge-status (reuses llm_bridge/r... | git post-commit hook | 87ce725 |
 | 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 670154c |
 | 2026-07-14 | Obsidian Bridge / automated | Infra: fix dashboard :8501 reliability + finish bridge status + AI-infra doc | git post-commit hook | 08fb5b5 |
+| 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 51a2c87 |
+| 2026-07-14 | Obsidian Bridge / automated | Operational readiness audit: 15 ranked ops-failure risks (P*I) + tiered remed... | git post-commit hook | c075c01 |

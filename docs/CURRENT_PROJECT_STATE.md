@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+c075c01  Operational readiness audit: 15 ranked ops-failure risks (P*I) + tiered remediation checklist. Top: daily kill-switch inert by default (session_start_equity=0), no MT5 reconnect, silent alerts, single-VPS no watchdog. Audit-only, no trading logic changed
+51a2c87  Obsidian bridge auto-sync [bridge-auto]
 08fb5b5  Infra: fix dashboard :8501 reliability + finish bridge status + AI-infra doc
 670154c  Obsidian bridge auto-sync [bridge-auto]
 87ce725  Multi-model bridge: one-command delegate + bridge-status (reuses llm_bridge/router/handoffs/state)
 21b7283  Obsidian bridge auto-sync [bridge-auto]
 26bebf0  Forensic Pipeline Audit (5 phases): end-to-end trace, signal audit (every missing trade explained), parity audit, execution audit (live metrics flagged INSUFFICIENT DATA — need VPS fills), one ranked governance-tagged fix table. No new strategies; parity-restoration prioritized. Read-only
 0d59b39  Obsidian bridge auto-sync [bridge-auto]
-a6c2c8a  Fix overnight CRASH (NoneType format): broker.py place_order_safe logged TP={tp:.2f} when tp=None
-996aee8  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
