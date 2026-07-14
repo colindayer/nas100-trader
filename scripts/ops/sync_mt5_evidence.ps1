@@ -44,6 +44,11 @@ try {
   # 3-7. commit ONLY the new evidence dir to the private repo (empty-repo safe)
   Push-Location $Evidence
   try {
+    # git writes NORMAL status to stderr ("Already on 'main'", "Switched to branch",
+    # "Everything up-to-date"). Under Stop, 2>&1 turns those into terminating errors and
+    # the outer catch reports a false "ERROR: Already on 'main'". Drop to Continue for the
+    # git block -- real failures are caught explicitly via $LASTEXITCODE below.
+    $ErrorActionPreference = 'Continue'
     # ensure a commit identity exists (a freshly cloned empty repo has none).
     # capture with 2>$null so an unset key (exit 1) never surfaces as an error.
     if ([string]::IsNullOrWhiteSpace((git config user.email 2>$null))) { git config user.email "evidence-bot@nas100.local" | Out-Null }
