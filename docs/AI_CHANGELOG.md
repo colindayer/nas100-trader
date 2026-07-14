@@ -218,3 +218,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-14 | Obsidian Bridge / automated | install task: work around schtasks /tr 261-char limit via a short launcher .cmd | git post-commit hook | 4830659 |
 | 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 3878a9a |
 | 2026-07-14 | Obsidian Bridge / automated | dashboard: compact 'Latest fills' table (fix 27-col header wrap) | git post-commit hook | 4ceb778 |
+| 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 06f8455 |
+| 2026-07-14 | Obsidian Bridge / automated | Audit HKUDS/Vibe-Trading vs NAS100 system (read-only, no merge) | git post-commit hook | 38b82f6 |

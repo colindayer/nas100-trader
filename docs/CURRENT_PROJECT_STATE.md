@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+38b82f6  Audit HKUDS/Vibe-Trading vs NAS100 system (read-only, no merge)
+06f8455  Obsidian bridge auto-sync [bridge-auto]
 4ceb778  dashboard: compact 'Latest fills' table (fix 27-col header wrap)
 3878a9a  Obsidian bridge auto-sync [bridge-auto]
 4830659  install task: work around schtasks /tr 261-char limit via a short launcher .cmd
 2f7d647  Obsidian bridge auto-sync [bridge-auto]
 42e4afb  install task: treat 'schtasks /query task-not-found' as normal, not an error
 0e942aa  Obsidian bridge auto-sync [bridge-auto]
-b90f628  sync: stop git's stderr status messages from being reported as errors
-09c9f0c  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
