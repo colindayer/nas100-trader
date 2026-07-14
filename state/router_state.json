@@ -154,19 +154,19 @@
  ],
  "delegations": {
   "last_success": {
-   "task": "TASK-20260710-02",
-   "backend": "glm",
-   "model": "glm-5.2",
-   "start": "2026-07-14T14:15:18",
+   "task": "TASK-20260710-03",
+   "backend": "qwen-deep",
+   "model": "qwen2.5-coder:14b",
+   "start": "2026-07-14T14:23:11",
    "routing_reason": "explicit --backend",
    "retry_count": 0,
-   "brief": "research/handoffs/GLM/TASK-20260710-02-BRIEF.md",
-   "reply": "research/handoffs/GLM/TASK-20260710-02-REPLY.md",
-   "stderr": "research/handoffs/GLM/TASK-20260710-02-STDERR.log",
-   "duration": 85.0,
+   "brief": "research/handoffs/Qwen/TASK-20260710-03-BRIEF.md",
+   "reply": "research/handoffs/Qwen/TASK-20260710-03-REPLY.md",
+   "stderr": "research/handoffs/Qwen/TASK-20260710-03-STDERR.log",
+   "duration": 186.0,
    "exit_code": 0,
-   "cmd": "/Users/colindayer/.nvm/versions/node/v24.18.0/bin/openclaw agent --model glm-5.2 --message-file /Users/colindayer/nas100_backtest/research/handoffs/GLM/TASK-20260710-02-BRIEF.md --json --session-key delegate-TASK-20260710-02",
-   "recommendation": "NO_ACTION",
+   "cmd": "/opt/homebrew/bin/ollama run qwen2.5-coder:14b",
+   "recommendation": "REJECT",
    "validation": "ok"
   }
  }

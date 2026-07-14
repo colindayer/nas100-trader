@@ -302,6 +302,7 @@ def bridge_status():
     S = lambda b: ("UP" if b else "DOWN")
     lines = [
         "=== BRIDGE STATUS ===",
+        f"Claude (lead/rev)  : {S(bool(shutil.which('claude')))} (never auto-delegated)",
         f"Ollama daemon      : {S(up)} ({OLLAMA_API})",
         f"Qwen 7B available  : {S(have('qwen2.5-coder:7b') or (up and 'qwen2.5-coder' in ' '.join(tags)))}",
         f"Qwen 14B available : {S(have('qwen2.5-coder:14b'))}" + ("" if up else " (daemon down -- from disk on start)"),

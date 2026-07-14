@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import time
 import urllib.request
@@ -30,6 +31,7 @@ DEFAULTS = {
     "vault_path": str(REPO / "vault"),
     "dashboard_url": "http://localhost:8501",
     "dashboard_port": 8501,
+    "streamlit_bin": "",   # auto-resolved to a streamlit that actually imports (conda/venv)
     "auto_launch_dashboard": True,
     "auto_open_browser": True,
     "launch_vscode": True,
@@ -90,7 +92,35 @@ def dashboard_running() -> bool:
     return dashboard_health() == "GREEN"
 
 
-def start_dashboard(wait_secs: int = 10) -> str:
+def resolve_streamlit() -> str | None:
+    """Find a streamlit executable that actually runs (its shebang points at the
+    python that has streamlit) -- NOT bare `python3 -m streamlit`, which resolves to
+    /usr/bin/python3 (no streamlit) and silently refuses :8501. Deterministic order;
+    result is pinned back into settings.json so future launches skip the search."""
+    s = settings()
+    pinned = s.get("streamlit_bin")
+    cands = ([pinned] if pinned else []) + [
+        shutil.which("streamlit"),
+        str(REPO / ".venv" / "bin" / "streamlit"),
+        "/opt/anaconda3/bin/streamlit", "/opt/miniconda3/bin/streamlit",
+        os.path.expanduser("~/miniconda3/bin/streamlit"),
+        os.path.expanduser("~/anaconda3/bin/streamlit"),
+    ]
+    for c in cands:
+        if c and os.path.exists(c) and os.access(c, os.X_OK):
+            if c != pinned:  # pin the discovery for determinism
+                try:
+                    cfg = json.loads(SETTINGS_FILE.read_text()) if SETTINGS_FILE.exists() else {}
+                    cfg["streamlit_bin"] = c
+                    SETTINGS_FILE.write_text(json.dumps(cfg, indent=2))
+                    log(f"pinned streamlit_bin = {c}")
+                except Exception as e:
+                    log(f"could not pin streamlit_bin: {e}")
+            return c
+    return None
+
+
+def start_dashboard(wait_secs: int = 12) -> str:
     """Reuse a running dashboard; only launch if none is healthy. Never duplicates."""
     if dashboard_running():
         log("dashboard already running -- reusing")
@@ -100,13 +130,18 @@ def start_dashboard(wait_secs: int = 10) -> str:
     if not app.exists():
         log(f"dashboard app missing: {app}")
         return "MISSING"
+    sbin = resolve_streamlit()
+    if not sbin:
+        log("no streamlit executable found (install into a venv/conda, or set "
+            "streamlit_bin in settings.json)")
+        return "MISSING"
     try:
         subprocess.Popen(
-            ["python3", "-m", "streamlit", "run", str(app),
-             "--server.headless", "true", "--server.port", str(s["dashboard_port"])],
+            [sbin, "run", str(app), "--server.headless", "true",
+             "--server.port", str(s["dashboard_port"])],
             cwd=str(repo()), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
             start_new_session=True)
-        log("launched streamlit dashboard")
+        log(f"launched streamlit dashboard via {sbin}")
     except Exception as e:
         log(f"dashboard launch failed: {e}")
         return "RED"
