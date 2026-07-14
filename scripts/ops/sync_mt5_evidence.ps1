@@ -12,6 +12,12 @@ param(
   [Parameter(Mandatory=$true)][string]$Python      # interpreter proven to reach MT5 (Phase 1)
 )
 $ErrorActionPreference = "Stop"
+# git legitimately returns non-zero for detection (e.g. 'no HEAD yet'). Under Stop +
+# PS7's native-error preference that would THROW ('fatal: Needed a single revision')
+# and abort the bootstrap. Decouple native exit codes from Stop so WE check $LASTEXITCODE.
+if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -Scope Global -ErrorAction SilentlyContinue) {
+  $PSNativeCommandUseErrorActionPreference = $false
+}
 $env:GIT_TERMINAL_PROMPT = "0"           # never block on credentials
 $log = Join-Path $Evidence "sync.log"
 function Log($m){ "$(Get-Date -Format s)  $m" | Tee-Object -FilePath $log -Append }
@@ -38,13 +44,16 @@ try {
   # 3-7. commit ONLY the new evidence dir to the private repo (empty-repo safe)
   Push-Location $Evidence
   try {
-    # ensure a commit identity exists (a freshly cloned empty repo has none)
-    if (-not (git config user.email)) { git config user.email "evidence-bot@nas100.local" | Out-Null }
-    if (-not (git config user.name))  { git config user.name  "nas100-evidence-bot"      | Out-Null }
+    # ensure a commit identity exists (a freshly cloned empty repo has none).
+    # capture with 2>$null so an unset key (exit 1) never surfaces as an error.
+    if ([string]::IsNullOrWhiteSpace((git config user.email 2>$null))) { git config user.email "evidence-bot@nas100.local" | Out-Null }
+    if ([string]::IsNullOrWhiteSpace((git config user.name  2>$null))) { git config user.name  "nas100-evidence-bot"      | Out-Null }
 
-    # does the LOCAL repo have any commit yet?
-    git rev-parse --verify HEAD *> $null
-    $hasCommits = ($LASTEXITCODE -eq 0)
+    # does the LOCAL repo have any commit yet?  --quiet -> NO 'fatal: Needed a single
+    # revision' on an unborn HEAD (returns empty + exit 1 silently). This is the ONLY
+    # revision-aware command, and it is now safe.
+    $head = (git rev-parse --quiet --verify HEAD 2>$null)
+    $hasCommits = -not [string]::IsNullOrWhiteSpace($head)
 
     if (-not $hasCommits) {
       # ---- EMPTY REPO: bootstrap main with the initial commit, then push ----
