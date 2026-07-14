@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+155ed21  Fill<->broker<->research reconciliation (measured, n=2): both live S5 fills match MT5 exactly; spread ~0.34bps, slippage 0.13-0.37bps, commission 0; measured swap -18.29 (~1.7bps/day, BELOW the 3bps model); venue=NAS100 CFD not QQQ ETF; #1 weekend-stopped. No missing/dup. n=2 -> expectancy INSUFFICIENT_DATA. Evidence only, no code change
+573cc60  Add MT5 account history
+4a43c4a  Add live fills
+fcf94d5  Obsidian bridge auto-sync [bridge-auto]
 c60c8ab  Live evidence reconciliation: VPS inputs absent -> live legs INSUFFICIENT_DATA (exact export steps given, Mac logs not substituted). MEASURED A/B/C/D re-cost: ETF faithful, CFD financing = dominant leak (-0.51 Sharpe), throttle neutral. Per-strategy status assigned. Read-only
 2d66153  Obsidian bridge auto-sync [bridge-auto]
 d5f6249  Research->Live forensics: per-strategy pipeline + 5 Q's + ranked expectancy-loss table. Gates NOT too restrictive (S1/S5 funnels: mechanism is the filter); strategies fundamentally sound; no strategy lost validity (S3=validated subset). Loss = CFD cost + risk overlay + downtime. Read-only
 427e2ad  Obsidian bridge auto-sync [bridge-auto]
-e413cd4  Ops Tier-0 #4: external dead-man's-switch watchdog (detect a dead VPS)
-7491109  Obsidian bridge auto-sync [bridge-auto]
-27a56bb  Ops #2 follow-up: reconnect tests (8 cases) + clear 'connection down -> no submit' guard
-6b90a3d  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

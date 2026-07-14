@@ -194,3 +194,7 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-14 | Obsidian Bridge / automated | Research->Live forensics: per-strategy pipeline + 5 Q's + ranked expectancy-l... | git post-commit hook | d5f6249 |
 | 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 2d66153 |
 | 2026-07-14 | Obsidian Bridge / automated | Live evidence reconciliation: VPS inputs absent -> live legs INSUFFICIENT_DAT... | git post-commit hook | c60c8ab |
+| 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | fcf94d5 |
+| 2026-07-14 | Obsidian Bridge / automated | Add live fills | git post-commit hook | 4a43c4a |
+| 2026-07-14 | Obsidian Bridge / automated | Add MT5 account history | git post-commit hook | 573cc60 |
+| 2026-07-14 | Obsidian Bridge / automated | Fill<->broker<->research reconciliation (measured, n=2): both live S5 fills m... | git post-commit hook | 155ed21 |
