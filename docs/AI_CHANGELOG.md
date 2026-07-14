@@ -210,3 +210,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-14 | Obsidian Bridge / automated | sync_mt5_evidence.ps1: robust empty-repo bootstrap (creates initial commit + ... | git post-commit hook | 0401892 |
 | 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | bfda6a9 |
 | 2026-07-14 | Obsidian Bridge / automated | sync: fix 'fatal: Needed a single revision' aborting the empty-repo bootstrap | git post-commit hook | d693c97 |
+| 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 09c9f0c |
+| 2026-07-14 | Obsidian Bridge / automated | sync: stop git's stderr status messages from being reported as errors | git post-commit hook | b90f628 |

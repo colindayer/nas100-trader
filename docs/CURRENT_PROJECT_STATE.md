@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+b90f628  sync: stop git's stderr status messages from being reported as errors
+09c9f0c  Obsidian bridge auto-sync [bridge-auto]
 d693c97  sync: fix 'fatal: Needed a single revision' aborting the empty-repo bootstrap
 bfda6a9  Obsidian bridge auto-sync [bridge-auto]
 0401892  sync_mt5_evidence.ps1: robust empty-repo bootstrap (creates initial commit + main before any pull)
 8ccb523  Obsidian bridge auto-sync [bridge-auto]
 cff2eed  Evidence bridge: operational fixes (empty-repo sync, fresh-machine scheduler, verified reconcile)
 d702a3d  Obsidian bridge auto-sync [bridge-auto]
-f064059  Evidence bridge: real VPS path + 4-stage latency reconciliation + tests
-1f55285  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
