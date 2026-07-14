@@ -30,6 +30,12 @@ FIELDS = [
     "requested_price", "fill_price", "slippage", "slippage_bps",
     "stop_price", "target_price", "account_equity", "risk_scale",
     "order_id", "position_id", "dry_run", "status", "error",
+    # 4-timestamp execution schema (telemetry; blank until captured). Latencies:
+    #   signal_bar -> decision (staleness), decision -> submission (processing),
+    #   submission -> fill (broker round-trip). fill_timestamp here is the bot's
+    #   post-return wall clock; the TRUE broker fill time comes from the deal at
+    #   reconciliation and overrides it.
+    "signal_bar_timestamp", "decision_timestamp", "submission_timestamp", "fill_timestamp",
 ]
 
 # Session-level context, set once per run by live_trader (session name, equity,

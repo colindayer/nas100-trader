@@ -96,7 +96,8 @@ class Broker:
 
     def place_order_safe(self, symbol: str, qty: float, side: str, tag: str,
                          max_retries: int = 3, sl: float = None, tp: float = None,
-                         signal_price: float = None, signal_ts: str = None):
+                         signal_price: float = None, signal_ts: str = None,
+                         signal_bar_ts: str = None, decision_ts: str = None):
         """Retry-with-backoff wrapper. Never double-sends on repeated failure.
         sl/tp are absolute PRICE levels attached broker-side at entry, so the stop
         is enforced by the broker even if the bot/VPS goes offline. Brokers that
@@ -114,17 +115,24 @@ class Broker:
             bid, ask = self.quote(symbol)
         except Exception:
             bid, ask = (None, None)
+        from datetime import datetime as _dt, timezone as _tz
+        decision_ts = decision_ts or signal_ts  # decision time (from the strategy)
         for attempt in range(max_retries):
             try:
+                submission_ts = _dt.now(_tz.utc).isoformat(timespec="seconds")  # just before send
                 try:
                     result = self.place_order(symbol, qty, side, tag, sl=sl, tp=tp)
                 except TypeError:
                     result = self.place_order(symbol, qty, side, tag)
+                fill_ts = _dt.now(_tz.utc).isoformat(timespec="seconds")  # post-return
                 logger.info(f"FILL {tag} {side.upper()} {qty:.1f} {symbol}{brk}")
                 alerts.send(f"FILL {tag} {side.upper()} {qty:.1f} {symbol}{brk}")
                 lf = getattr(self, "LAST_FILL", {}) or {}
                 self._ledger(strategy=tag, symbol=symbol, side=side, quantity=qty,
-                             signal_price=signal_price, signal_timestamp=signal_ts or "",
+                             signal_price=signal_price, signal_timestamp=decision_ts or "",
+                             signal_bar_timestamp=signal_bar_ts or "",
+                             decision_timestamp=decision_ts or "",
+                             submission_timestamp=submission_ts, fill_timestamp=fill_ts,
                              bid_at_submission=bid, ask_at_submission=ask,
                              requested_price=lf.get("requested_price"),
                              fill_price=lf.get("fill_price"),
