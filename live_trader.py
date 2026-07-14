@@ -147,7 +147,7 @@ def update_risk_state(equity, broker_name="default"):
     # Guard against zero or negative equity from broker API
     if equity <= 0:
         logger.warning(f"update_risk_state: equity <= 0 (equity={equity}); not updating risk state for {broker_name}")
-        return 1.0, 0.0, 0.0, 0.0
+        return 1.0, 0.0, 0.0, 0.0, float(equity)
     state_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               "logs", f"risk_state_{broker_name}.json")
     st = {}
@@ -167,6 +167,14 @@ def update_risk_state(equity, broker_name="default"):
         st["month_start_equity"] = equity
     m_start = float(st.get("month_start_equity", equity))
     month_pnl_pct = (equity - m_start) / max(m_start, 1)
+    # day-start equity (arms the daily kill-switch) - reset on new ET calendar day,
+    # same pattern as the month anchor above. Persisted per broker so it survives
+    # the many intraday session runs.
+    dkey = now_et().strftime("%Y-%m-%d")
+    if st.get("day_key") != dkey:
+        st["day_key"] = dkey
+        st["day_start_equity"] = equity
+    day_start = float(st.get("day_start_equity", equity))
     st["peak_equity"] = peak
     try:
         os.makedirs(os.path.dirname(state_path), exist_ok=True)
@@ -174,7 +182,7 @@ def update_risk_state(equity, broker_name="default"):
             json.dump(st, f)
     except Exception:
         pass
-    return scale, cur_dd, peak, month_pnl_pct
+    return scale, cur_dd, peak, month_pnl_pct, day_start
 
 # -- BROKER FACTORY ------------------------------------------------------------
 def make_broker(name: str):
@@ -1054,7 +1062,7 @@ open_syms = broker.get_positions()
 vix_ma21, spy_bull, vix_mult, qqq_bear200 = get_regime()
 
 # -- Conformal DD-throttle: scale RISK_SCALE by live drawdown headroom --
-_throttle, _cur_dd, _peak, _month_pnl = update_risk_state(equity, args.broker)
+_throttle, _cur_dd, _peak, _month_pnl, _day_start = update_risk_state(equity, args.broker)
 broker.RISK_SCALE *= _throttle
 logger.info(f"DD-throttle: peak=${_peak:,.0f} dd={_cur_dd:+.1%} "
             f"throttle={_throttle:.2f} -> RISK_SCALE={broker.RISK_SCALE:.2f} "
@@ -1069,7 +1077,10 @@ if _month_pnl <= -MONTHLY_KILL_PCT:
 
 # -- Kill-switch: daily loss check --
 _risk_cfg = load_config("risk")
-daily_start_equity = float(_risk_cfg.get("session_start_equity", str(equity)))
+# daily kill-switch anchor: use the persisted day-start equity (arms the switch by
+# default). An explicit session_start_equity > 0 in config still overrides it.
+_cfg_sse = float(_risk_cfg.get("session_start_equity", "0") or 0)
+daily_start_equity = _cfg_sse if _cfg_sse > 0 else _day_start
 daily_pnl_pct = (equity - daily_start_equity) / max(daily_start_equity, 1)
 if daily_pnl_pct <= -DAILY_KILL_PCT:
     msg = (f"KILL SWITCH: daily loss {daily_pnl_pct:.1%} exceeds limit "
