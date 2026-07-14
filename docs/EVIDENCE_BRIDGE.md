@@ -3,6 +3,8 @@
 _Measurement automation. Strictly READ-ONLY toward MT5. Raw evidence lives ONLY in the
 private `nas100-live-evidence` repo — never in the public `nas100-trader` repo._
 
+**Configured VPS evidence path:** `C:\Users\Administrator\Documents\nas100-live-evidence`
+
 ## Flow
 ```
 MT5 VPS → export_mt5_evidence.py (read-only) → private repo nas100-live-evidence
@@ -12,7 +14,7 @@ MT5 VPS → export_mt5_evidence.py (read-only) → private repo nas100-live-evid
 
 ## One-time setup
 1. **Create the private GitHub repo** `nas100-live-evidence` (PRIVATE). Clone it on both:
-   - VPS: `git clone <url> C:\Users\Administrator\nas100-live-evidence`
+   - VPS: `git clone <url> C:\Users\Administrator\Documents\nas100-live-evidence`
    - Mac: `git clone <url> ~/nas100-live-evidence`  (or set `LIVE_EVIDENCE_DIR`)
 2. **Phase-1 probe (VPS, once):** run `python scripts/ops/probe_vps_env.py` **as the
    scheduler account** and paste the JSON back. It reveals the exact repo path, the
@@ -21,7 +23,7 @@ MT5 VPS → export_mt5_evidence.py (read-only) → private repo nas100-live-evid
 3. **Install the scheduler (VPS, Admin PowerShell):**
    ```
    powershell -ExecutionPolicy Bypass -File scripts\ops\install_evidence_task.ps1 `
-     -Repo "<repo>" -Evidence "<evidence repo>" -Python "<mt5 python.exe>" -RunUser "ALPHAZONE\Administrator"
+     -Repo "C:\Users\Administrator\Documents\nas100-trader" -Evidence "C:\Users\Administrator\Documents\nas100-live-evidence" -Python "<mt5 python.exe>" -RunUser "ALPHAZONE\Administrator"
    ```
    Registers `nas100-evidence-export` — INDEPENDENT of trading / nas100-update / watchdog.
 
@@ -40,6 +42,18 @@ MT5 VPS → export_mt5_evidence.py (read-only) → private repo nas100-live-evid
 `manifest.json` (generated_at_utc, hostname, **masked account hash only**, source commit,
 row counts, SHA-256 per file, exporter version, success). No login/password/server/token
 ever leaves the VPS — `verify_manifest.py` refuses to commit any file matching a secret.
+
+
+## Execution-timestamp schema (4-stage latency)
+The fill ledger records four distinct stamps so latency is decomposable (UNKNOWN when
+a stamp is blank -- never estimated):
+| stamp | captured where | measures with the next |
+|---|---|---|
+| `signal_bar_timestamp` | strategy: the triggering bar's close (S5 live; others follow the pattern) | -> decision = signal STALENESS |
+| `decision_timestamp` | strategy: `now_et()` at signal detection | -> submission = PROCESSING |
+| `submission_timestamp` | broker: just before the order send | -> fill = BROKER round-trip |
+| `fill_timestamp` | broker: post-return wall clock; reconciler overrides with the true MT5 deal time | (end of chain) |
+The reconciler emits `latency_staleness_s`, `latency_processing_s`, `latency_broker_s`.
 
 ## Reconciliation statuses
 `HEALTHY` · `INCOMPLETE_DATA` · `EXECUTION_ANOMALY` · `EXPORT_FAILED` · `INSUFFICIENT_SAMPLE`.

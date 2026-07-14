@@ -8,7 +8,7 @@
 #       -Python "C:\path\to\python.exe"
 param(
   [Parameter(Mandatory=$true)][string]$Repo,       # trading repo (source of exporter)
-  [Parameter(Mandatory=$true)][string]$Evidence,   # PRIVATE evidence repo (git clone)
+  [string]$Evidence = "C:\Users\Administrator\Documents\nas100-live-evidence",   # PRIVATE evidence repo (git clone)
   [Parameter(Mandatory=$true)][string]$Python      # interpreter proven to reach MT5 (Phase 1)
 )
 $ErrorActionPreference = "Stop"

@@ -83,8 +83,28 @@ def reconcile(snap):
             rec["realized_R"] = "UNKNOWN (open)"
         else:
             rec["state"] = "UNKNOWN"; rec["realized_R"] = "UNKNOWN"
-        # latency (signal_ts -> submission). blank signal_ts -> UNKNOWN
-        rec["signal_to_submit_latency"] = "UNKNOWN" if not f.get("signal_timestamp") else "measurable"
+        # 4-stage latency: signal_bar -> decision -> submission -> fill. Prefer the
+        # TRUE broker deal time for fill; UNKNOWN whenever a stamp is blank (never est.)
+        def _dt(v):
+            try:
+                return datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+            except (TypeError, ValueError):
+                return None
+        sb, dc, sub = _dt(f.get("signal_bar_timestamp")), _dt(f.get("decision_timestamp")), _dt(f.get("submission_timestamp"))
+        broker_fill_t = _dt(entry_deal.get("time")) if entry_deal else None
+        fil = broker_fill_t or _dt(f.get("fill_timestamp"))
+
+        def _lat(a, b):
+            if a and b:
+                try:
+                    return round((b - a).total_seconds(), 1)
+                except Exception:
+                    return "UNKNOWN"
+            return "UNKNOWN"
+        rec["latency_staleness_s"] = _lat(sb, dc)      # bar close -> decision
+        rec["latency_processing_s"] = _lat(dc, sub)    # decision -> submission
+        rec["latency_broker_s"] = _lat(sub, fil)       # submission -> fill
+        rec["signal_to_submit_latency"] = "UNKNOWN" if not f.get("decision_timestamp") else _lat(dc, sub)
         # duplicate detection
         if len([d for d in md if str(d.get("entry")) in ("0", "in", "DEAL_ENTRY_IN")]) > 1:
             anomalies.append(f"DUPLICATE FILL: order {f.get('order_id')} has >1 entry deal")

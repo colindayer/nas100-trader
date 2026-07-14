@@ -8,7 +8,7 @@
 #       -Python "C:\...\python.exe" -RunUser "ALPHAZONE\Administrator"
 param(
   [Parameter(Mandatory=$true)][string]$Repo,
-  [Parameter(Mandatory=$true)][string]$Evidence,
+  [string]$Evidence = "C:\Users\Administrator\Documents\nas100-live-evidence",
   [Parameter(Mandatory=$true)][string]$Python,
   [Parameter(Mandatory=$true)][string]$RunUser,   # account proven to reach MT5 (Phase 1)
   [string]$Time1 = "16:20",                        # after the final US session

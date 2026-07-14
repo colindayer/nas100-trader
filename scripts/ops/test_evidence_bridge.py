@@ -177,13 +177,47 @@ class Telemetry(unittest.TestCase):
     def test_19b_signal_ts_is_arg_only_no_logic_change(self):
         # prove signal_ts was added ONLY as a place_order_safe argument in live_trader
         src = open(os.path.join(HERE, "..", "..", "live_trader.py")).read()
-        adds = re.findall(r"signal_ts=now_et\(\)\.isoformat\(\)", src)
-        self.assertGreaterEqual(len(adds), 8, "signal_ts added at entry sites")
+        adds = re.findall(r"decision_ts=now_et\(\)\.isoformat\(\)", src)
+        self.assertGreaterEqual(len(adds), 8, "decision_ts added at entry sites")
         # it appears only inside place_order_safe calls (never in a conditional/sizing line)
-        for m in re.finditer(r"^.*signal_ts=now_et.*$", src, re.M):
+        for m in re.finditer(r"^.*decision_ts=now_et.*$", src, re.M):
             self.assertIn("signal_price=price", m.group(0),
                           "signal_ts only rides alongside signal_price on order calls")
 
+
+class FourTimestamps(unittest.TestCase):
+    def test_schema_has_four_stamps(self):
+        import importlib, os as _os, sys as _s
+        _s.path.insert(0, _os.path.join(HERE, "..", ".."))
+        fl = importlib.import_module("fill_ledger")
+        for k in ("signal_bar_timestamp", "decision_timestamp", "submission_timestamp", "fill_timestamp"):
+            self.assertIn(k, fl.FIELDS)
+
+    def test_telemetry_is_arg_only(self):
+        # live_trader entry sites carry decision_ts (+ signal_bar_ts on S5); nothing else
+        src = open(os.path.join(HERE, "..", "..", "live_trader.py")).read()
+        self.assertGreaterEqual(src.count("decision_ts=now_et().isoformat()"), 8)
+        self.assertEqual(src.count("signal_bar_ts=cur.index[-1].isoformat()"), 2)  # S5 long+short
+        for m in re.finditer(r"^.*(decision_ts|signal_bar_ts)=.*$", src, re.M):
+            self.assertIn("place_order_safe", "".join(m.group(0).split()) if False else
+                          ("place_order_safe" if "place_order_safe" in m.group(0) or "signal_price=price" in m.group(0) else ""),
+                          "timestamps only on order calls")
+
+    def test_reconciler_computes_latency_when_present(self):
+        with tempfile.TemporaryDirectory() as d:
+            hdr = FILLS_HDR + ",signal_bar_timestamp,decision_timestamp,submission_timestamp,fill_timestamp"
+            row = (FILL2 + ",2026-07-14T15:45:00+00:00,2026-07-14T15:48:40+00:00,"
+                   "2026-07-14T15:48:48+00:00,2026-07-14T15:48:49+00:00")
+            open(os.path.join(d, "fills.csv"), "w").write(hdr + "\n" + row + "\n")
+            open(os.path.join(d, "deals.csv"), "w").write(
+                "ticket,order,time,symbol,type,entry,volume,price,commission,swap,fee,profit,comment\n"
+                "267936208,341029450,2026-07-14T15:48:49+00:00,NAS100,buy,in,1.1,29636.9,0,0,0,0,S5\n")
+            open(os.path.join(d, "positions.csv"), "w").write("ticket\n")
+            r = RC.reconcile(d)
+            rec = r["records"][0]
+            self.assertEqual(rec["latency_staleness_s"], 220.0)    # 15:45:00 -> 15:48:40
+            self.assertEqual(rec["latency_processing_s"], 8.0)     # 15:48:40 -> 15:48:48
+            self.assertEqual(rec["latency_broker_s"], 1.0)         # 15:48:48 -> broker 15:48:49
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
