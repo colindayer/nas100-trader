@@ -190,3 +190,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-14 | Obsidian Bridge / automated | Ops #2 follow-up: reconnect tests (8 cases) + clear 'connection down -> no su... | git post-commit hook | 27a56bb |
 | 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 7491109 |
 | 2026-07-14 | Obsidian Bridge / automated | Ops Tier-0 #4: external dead-man's-switch watchdog (detect a dead VPS) | git post-commit hook | e413cd4 |
+| 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 427e2ad |
+| 2026-07-14 | Obsidian Bridge / automated | Research->Live forensics: per-strategy pipeline + 5 Q's + ranked expectancy-l... | git post-commit hook | d5f6249 |
