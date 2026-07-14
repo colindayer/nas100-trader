@@ -170,3 +170,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-13 | Obsidian Bridge / automated | Alpha Leak Audit: forensic implementation-drift pass over all 8 strategies — ... | git post-commit hook | be98a67 |
 | 2026-07-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 912a570 |
 | 2026-07-13 | Obsidian Bridge / automated | Forensic Investigation: Phase 1 production forensics + Phase 2 regime audit +... | git post-commit hook | 534d2f6 |
+| 2026-07-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 996aee8 |
+| 2026-07-14 | Obsidian Bridge / automated | Fix overnight CRASH (NoneType format): broker.py place_order_safe logged TP={... | git post-commit hook | a6c2c8a |
