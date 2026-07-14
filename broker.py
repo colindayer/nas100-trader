@@ -106,7 +106,10 @@ class Broker:
         import alerts
         if sl is None:
             logger.warning(f"NAKED ORDER {tag} {symbol} - no stop-loss attached")
-        brk = f" SL={sl:.2f} TP={tp:.2f}" if sl is not None else " (no SL)"
+        # log-only: format each leg independently -- OVN passes sl without tp
+        # (time-exit, no target), so `TP={tp:.2f}` crashed on None. No trade change.
+        brk = ((f" SL={sl:.2f}" if sl is not None else " (no SL)")
+               + (f" TP={tp:.2f}" if tp is not None else ""))
         try:
             bid, ask = self.quote(symbol)
         except Exception:
@@ -198,7 +201,9 @@ class DryRunBroker(Broker):
     def place_order_safe(self, symbol, qty, side, tag, max_retries=3, sl=None, tp=None,
                          signal_price=None, signal_ts=None):
         import alerts
-        brk = f" SL={sl:.2f} TP={tp:.2f}" if sl is not None else " (no SL)"
+        # log-only: same None-safe formatting as the live path (OVN passes sl-only)
+        brk = ((f" SL={sl:.2f}" if sl is not None else " (no SL)")
+               + (f" TP={tp:.2f}" if tp is not None else ""))
         self.place_order(symbol, qty, side, tag)
         print(f"[DRY-RUN] brackets:{brk}")
         alerts.send(
