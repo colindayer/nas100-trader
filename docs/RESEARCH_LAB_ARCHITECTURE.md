@@ -1,132 +1,150 @@
-# RESEARCH LAB — architecture (Phase 1: design for approval)
+# RESEARCH LAB — architecture v2 (Phase 1: design for approval)
 
-_2026-07-14. DESIGN ONLY — no implementation until approved. A SEPARATE research
-system alongside production. Production stays frozen and is the single source of
-truth. Borrows IDEAS from HKUDS/Vibe-Trading (data-quality, validation robustness,
-modular factors, benchmarking, NL→experiment, run cards); rejects its framework
-(React/FastAPI/Docker/13-LLM/broker engines/execution/swarm)._
+_2026-07-14. DESIGN ONLY — no implementation until approved. A SEPARATE, world-class
+quantitative research platform alongside frozen production. Firewall absolute. Optimizes
+for MAXIMUM idea generation / validation / robustness / evidence — not for recreating
+Vibe-Trading. Rejects duplicate INFRASTRUCTURE; embraces every research CAPABILITY._
 
-## 0. The firewall (non-negotiable)
+## 0. Framework vs Capability (the governing principle)
+| REJECT — duplicate infrastructure (production already provides) | EMBRACE — research capability (build to world-class depth) |
+|---|---|
+| execution engine / order routing | large, extensible factor library |
+| broker integrations (MT5/Alpaca/Binance) | multiple data vendors + alternative datasets |
+| production dashboard | benchmark engine |
+| production risk / kill-switches / DD-throttle | robustness: bootstrap CI / Monte-Carlo / permutation / sensitivity / stability |
+| deployment stack (VPS tasks, evidence bridge) | hypothesis registry + experiment tracking + reproducible run cards |
+| a second live-trading system | multi-LLM reviewer panel · MCP integration |
+| — | literature ingestion / academic paper mining |
+| — | automated idea generation · feature engineering · factor discovery |
+| — | research knowledge graph |
+Research reuses production's proven parts ONLY as **read-only inputs or patterns**
+(price snapshots, the Research-OS governance shape, the local LLM bridge) — never imports
+its code.
+
+## 1. The firewall (non-negotiable, enforced)
 ```
 ~/Trading/
-  nas100-trader/     PRODUCTION (frozen)   -- never imports research
-  research-lab/      RESEARCH (new repo)    -- never executes trades
+  nas100-trader/   PRODUCTION (frozen, single source of truth) — never imports research
+  research-lab/    RESEARCH (new repo) — never executes trades
 ```
-- **Research imports NOTHING from production** (no live_trader/broker/mt5/risk).
-- **Research contains NO broker, order, or risk-execution code.** A CI test greps the
-  tree and FAILS the build if it finds `order_send`, `place_order`, `import MetaTrader5`,
-  `import.*broker`, or any live-trading symbol.
-- **Only bridge between the two is a HUMAN.** A research "Live Candidate" is hand-carried
-  into production's existing Research-OS queue; research code never writes to production.
-- Data flows one way: production's frozen price CSVs are COPIED (read-only snapshots)
-  into `research-lab/data/`; research never reads a live broker feed.
+- Research imports NOTHING from production; contains NO broker/order/risk-execution code.
+- **CI firewall test** greps the tree and FAILS on `order_send|place_order|import MetaTrader5|
+  broker|risk_state|kill.?switch` — research literally cannot trade.
+- Only bridge to production is a HUMAN moving a "Live Candidate" into production's existing
+  Research-OS queue, which then obeys production's shadow/committee/clock governance.
+- Data is one-way: production price CSVs are COPIED (hash-stamped snapshots) into
+  `research-lab/data/`; research reads no live feed.
 
-## 1. Folder structure
+## 2. Folder structure
 ```
 research-lab/
-  README.md  ARCHITECTURE.md  pyproject.toml
   data/
-    prices/          read-only snapshots (qqq_hourly_7y.csv, ...) copied from prod
-    quality/         data-quality reports (generated)
-  lab/                         the library (pure, importable, no side effects)
-    dataquality/     missing/dup/OHLC/timestamp/NaN/session-gap checks  (build #1)
-    registry/        idea registry: ID/desc/author/date/status          (build #2)
-    engine/          SIMPLE research backtest core (vectorized; NO broker) (build #3)
-    experiments/     runner: grid, walk-forward, CV, rolling, sweeps      (build #3)
-    validation/      bootstrap CI, Monte Carlo, permutation, sensitivity, stability (#4)
-    benchmark/       vs Buy&Hold / QQQ / NASDAQ / prop-target / risk-free (#5)
-    reporting/       markdown notebook + charts + run_card.json          (#6)
-    factors/         modular factor plugins (trend/vol/breadth/season/macro) (#7)
-    nl/              natural-language -> structured experiment spec       (#9)
-  experiments/       run artifacts, one dir per run (spec/results/report/charts)
-  registry/ideas/    one markdown+frontmatter file per hypothesis
-  dashboard/app.py   SEPARATE Streamlit research dashboard (port 8502)    (#8)
-  cli.py             `lab research "..."`, `lab run EXP-...`, `lab promote ...`
-  tests/             incl. the firewall test (no trading symbols)
+    vendors/         multi-vendor loaders + fallback chain (yfinance, Stooq, Tiingo, FMP,
+                     AlphaVantage, Polygon, CCXT/crypto, FRED/macro, ...) -- read-only
+    altdata/         alt-data adapters (options/GEX, sentiment, positioning, calendar)
+    quality/         data-quality gate + reports
+    snapshots/       hash-stamped frozen inputs (reproducibility)
+  lab/
+    dataquality/     missing/dup/OHLC/timestamp/NaN/session-gap/corporate-action checks
+    registry/        hypothesis registry (ID/desc/author/date/status/lineage)
+    engine/          research backtest core (vectorized + event; NO broker)
+    experiments/     runner: grid / walk-forward / CV / rolling / purged-KFold / sweeps
+    validation/      bootstrap CI · Monte-Carlo · permutation · sensitivity · stability · DSR/PBO
+    benchmark/       vs Buy&Hold / QQQ / NDX / prop-target / risk-free / factor benchmarks
+    factors/         LARGE modular factor library (families + plug-in `@factor`), IC/decay tooling
+    discovery/       factor discovery + feature engineering + automated idea generation
+    reviewers/       multi-LLM reviewer panel (Qwen/GLM/Claude) — reviewer-diversity voting
+    literature/      paper mining (arXiv/SSRN) -> hypotheses -> registry
+    kg/              research knowledge graph (factors↔ideas↔experiments↔papers↔regimes↔results)
+    reporting/       markdown notebooks + charts + run_card.json
+    nl/              natural-language -> ExperimentSpec (LLM, human-confirmed)
+    mcp/             MCP: expose research tools + consume external MCP data tools
+  experiments/       run artifacts (one dir per run)
+  registry/ideas/    one file per hypothesis
+  dashboard/app.py   SEPARATE research dashboard (port 8502) — NOT the production one
+  cli.py             lab research/run/promote/mine/discover/review
+  tests/             incl. firewall test
 ```
 
-## 2. Modules & interfaces (what each exposes)
-| module | interface | reuses |
-|---|---|---|
-| `dataquality` | `check(df) -> QualityReport(ok, issues[])` | Vibe idea; new code |
-| `registry` | `Idea(id,desc,author,date,status)`; `create/advance/list` | your **Research-OS pattern** (ideas/experiments/graveyard) |
-| `engine` | `run(signals_df, prices, costs) -> equity, trades` | your validated engine *pattern* (re-implemented, no broker) |
-| `experiments` | `ExperimentSpec` -> `Result(metrics, folds, artifacts)` | grid/WF/CV — Vibe idea |
-| `validation` | `bootstrap_ci / monte_carlo / permutation / sensitivity / stability(result)` | Vibe idea (the quality differentiator) |
-| `benchmark` | `compare(equity) -> {buyhold, qqq, ndx, prop_target, rf}` | Vibe idea |
-| `reporting` | `report(result) -> report.md + run_card.json + charts/` | Vibe "run cards" idea |
-| `factors` | plugin registry: `@factor def trend(df)->series` (small, modular, NOT 461) | Vibe idea, minimal |
-| `nl` | `parse("test RSI+vol filter") -> ExperimentSpec` via **your llm_bridge** (Qwen/GLM/Ollama), human-confirmed | your **delegation bridge** |
+## 3. Capability depth (how each goes BEYOND a minimal version)
+- **Factor library** — not "small," not "461 hardcoded": a *taxonomy* (trend, momentum,
+  volatility, mean-reversion, breadth/internals, seasonality, calendar, macro, microstructure,
+  options-derived) with a plug-in `@factor` registry that scales to hundreds+, each with
+  PIT-safety, IC/IR, decay and orthogonalization tooling. Grows unbounded; stays modular.
+- **Data** — a multi-vendor layer with an intelligent fallback chain + per-vendor quality
+  scoring + alt-data adapters; every load hash-stamped for reproducibility.
+- **Robustness** — the full battery: bootstrap CI, Monte-Carlo path/resample, permutation
+  (shuffled-label & random-entry nulls), sensitivity, parameter-stability surfaces, and
+  overfitting metrics (Deflated Sharpe, Probability of Backtest Overfitting).
+- **Reviewer panel** — multiple LLMs review each candidate on DIFFERENT lenses (Qwen:
+  extraction/repro; GLM: literature/stats; Claude: final adjudication) with reviewer≠author
+  and a majority/veto rule. Reuses the existing local bridge; adds no API providers you lack.
+- **Literature mining** — pull papers, extract testable hypotheses + reported effect sizes,
+  auto-register them, and cross-check the KG so nothing already-graveyarded is re-proposed.
+- **Automated idea generation** — proposes hypotheses from (factor combinations × literature
+  × regime gaps × past graveyard), scored and DEDUPed against the KG; ALWAYS human-gated
+  before a run. Volume of ideas up; false-discovery controlled by the validation battery.
+- **Knowledge graph** — extends your production `knowledge_graph.json` idea to research:
+  links every factor, hypothesis, experiment, paper, regime and result, powering discovery,
+  dedup, and "what's promising / what's dead."
+- **MCP** — the lab both exposes its tools over MCP and consumes external MCP data tools,
+  so the platform is scriptable and extensible without a bespoke API server.
 
-## 3. Data flow
+## 4. Data flow
 ```
-NL request ("test RSI + vol filter")
-  -> nl.parse (local Qwen/GLM, human-confirms the spec)      [never auto-runs]
-  -> dataquality.check on the input snapshot                 [gate: bad data -> stop]
-  -> experiments.run (grid / walk-forward / CV / sweep)
-  -> validation battery (bootstrap CI, MC, permutation, sensitivity, stability)
-  -> benchmark.compare (vs QQQ / buy&hold / prop target / rf)
-  -> reporting.report -> experiments/EXP-.../report.md + run_card.json + charts
-  -> registry entry (status: Rejected | Shadow | Validated | Archived | Live Candidate)
-  -> [HUMAN REVIEW] -> hand-carry a Live Candidate into production's Research-OS queue
+literature mining + factor library + KG + regime gaps
+     -> automated idea generation (scored, deduped) --[HUMAN GATE]-->
+NL / manual ExperimentSpec
+     -> data-quality gate (bad data -> stop)
+     -> experiment runner (grid / walk-forward / purged-CV / sweeps)
+     -> robustness battery (bootstrap/MC/permutation/sensitivity/stability/DSR/PBO)
+     -> benchmark engine (QQQ/NDX/buy&hold/prop-target/rf)
+     -> multi-LLM reviewer panel (diverse lenses, reviewer≠author, veto)
+     -> reporting (report.md + run_card.json + charts) + registry status + KG update
+     -> [HUMAN REVIEW] -> Live Candidate -> production Research-OS queue (prod governs from here)
 ```
-Every run writes a `run_card.json` (spec hash, data snapshot hash, seed, git commit,
-metrics) so **every result is reproducible** — re-running the card reproduces the numbers.
+Every run's `run_card.json` (spec hash, data-snapshot hash, seed, git commit, full metrics)
+makes every result reproducible.
 
-## 4. Validation pipeline (the quality upgrade)
-Each candidate must clear, in order (fail-fast):
-1. **Data quality** — no bad bars in the tested window.
-2. **In/out-of-sample** walk-forward (your gauntlet discipline).
-3. **Bootstrap CI** — is the edge's 95% CI above zero net of costs?
-4. **Monte-Carlo / permutation** — beat shuffled-label / random-entry nulls?
-5. **Sensitivity + parameter-stability** — edge survives ±param perturbation (no cliff).
-6. **Benchmark** — beats QQQ buy-hold and clears the prop target on a risk-adjusted basis.
-A result that fails any step is registered `Rejected` with the reason (the graveyard rule).
+## 5. Promotion pipeline (unchanged firewall)
+`Research → Validation → Walk-Forward → Shadow → HUMAN REVIEW → Production`.
+The Lab owns Research→Validation→Walk-Forward and produces the Shadow SPEC; it STOPS at a
+human-reviewed Live Candidate. Production's existing shadow/committee/clock-reset pipeline
+owns everything downstream. The Lab never promotes.
 
-## 5. Promotion pipeline (nothing reaches production automatically)
-```
-Research -> Validation -> Walk-Forward -> Shadow -> HUMAN REVIEW -> Production
-```
-Research Lab OWNS: Research, Validation, Walk-Forward, and producing the Shadow SPEC.
-It STOPS at "Live Candidate + human review." Production's EXISTING pipeline (forward
-shadow, committee, clock-reset governance) owns everything from Shadow onward. The lab
-never promotes; a human moves the candidate, and it then obeys production's clock/committee.
+## 6. Feature ranking & phased build
+| capability | Research Value | Impl Cost | Complexity | Impact | Phase |
+|---|---|---|---|---|---|
+| Data layer (multi-vendor) + data-quality gate | HIGH | MED | MED | HIGH | **A — foundations** |
+| Research engine + experiment runner (grid/WF/CV) | HIGH | MED | MED | HIGH | **A** |
+| Hypothesis registry + reproducible run cards | HIGH | LOW | LOW | HIGH | **A** |
+| Robustness battery (bootstrap/MC/perm/sens/stability/DSR/PBO) | VERY HIGH | MED | MED-HIGH | VERY HIGH | **B — evidence** |
+| Benchmark engine | MED-HIGH | LOW | LOW | MED-HIGH | **B** |
+| Factor library (large, modular) + IC/decay tooling | HIGH | MED-HIGH | MED | HIGH | **C — discovery** |
+| Feature engineering + factor discovery | HIGH | HIGH | HIGH | HIGH | **C** |
+| Research knowledge graph | HIGH | MED | MED | HIGH | **D — intelligence** |
+| Multi-LLM reviewer panel | MED-HIGH | MED | MED | HIGH (quality/dedup) | **D** |
+| Literature ingestion / paper mining | MED-HIGH | MED | MED | MED-HIGH | **D** |
+| Automated idea generation | HIGH | MED-HIGH | HIGH | HIGH (throughput) | **D** |
+| MCP integration | MED | MED | MED | MED (extensibility) | **D** |
+| NL research interface | MED | MED | MED-HIGH | MED (UX) | **D** |
+| Research dashboard (separate :8502) | MED | MED | MED | MED | **D** |
 
-## 6. Feature ranking (Research Value / Impl Cost / Complexity / Expected Impact)
-| # | Feature | Research Value | Impl Cost | Complexity | Expected Impact | Build order |
-|---|---|---|---|---|---|---|
-| 1 | Data-quality checks | HIGH | LOW | LOW | HIGH (protects every result) | **1st** |
-| 2 | Idea registry | HIGH | LOW | LOW | HIGH (reproducible, tracked) | **2nd** |
-| 3 | Experiment runner (grid/WF/CV) + research engine | HIGH | MED | MED | HIGH (the core capability) | **3rd** |
-| 4 | Validation battery (bootstrap/MC/perm/sensitivity/stability) | HIGH | MED | MED-HIGH | HIGH (the quality differentiator) | **4th** |
-| 5 | Benchmarking | MED | LOW | LOW | MED | 5th |
-| 6 | Reporting / run cards | MED | LOW-MED | LOW | MED (reproducibility) | 6th |
-| 7 | Modular factor engine | MED-HIGH | MED | MED | MED (enables discovery) | 7th |
-| 8 | Promotion pipeline (process + manual hand-off) | HIGH | LOW | LOW | HIGH (keeps prod disciplined) | 8th (mostly docs) |
-| 9 | Research dashboard (separate, :8502) | MED | MED | MED | MED | 9th |
-| 10 | Natural-language research | MED | MED | MED-HIGH | MED (UX; misparse risk -> human-gated) | **last** |
+**Phase A** is the bedrock everything else stands on (data + engine + registry +
+reproducibility). **Phase B** makes results trustworthy (the robustness/evidence edge that
+makes this better than a naive backtester). **Phase C** supplies ideas at scale (factors +
+discovery). **Phase D** is the intelligence layer (KG + reviewer panel + literature +
+auto-ideas + MCP + NL + dashboard) that turns it into a self-compounding research desk.
 
-**Recommended MVP (first approval slice):** #1 data-quality + #2 registry + #3 runner +
-#4 validation. That is a working quant desk: pose an experiment spec, run it walk-forward,
-get bootstrap/MC-validated metrics + a reproducible run card + a registry entry. Benchmark,
-reporting, factors, dashboard, and NL layer on top later. NL is LAST (highest UX risk,
-lowest core value) and always human-confirms before running.
-
-## 7. What we deliberately do NOT build (per the brief)
-React frontend · FastAPI backend · Docker stack · 13 LLM providers (reuse your local
-Qwen/GLM/Ollama bridge) · any broker/execution/order code · a second risk engine · a
-duplicate production dashboard · 461 hardcoded factors (small modular plugins instead) ·
-swarm multi-agent orchestration.
-
-## 8. Interfaces to existing assets (reuse, not rebuild)
-- **LLM:** the research `nl` module SHELLS the same local models via the existing bridge
-  pattern (Qwen 7B/14B, GLM) — no new providers, no API keys in research.
-- **Governance:** the registry statuses and promotion mirror your Research-OS
-  (ideas/experiments/graveyard/committee), so a promoted candidate lands in a pipeline
-  you already run.
-- **Data:** read-only price snapshots copied from production; a snapshot hash in every
-  run card ties results to exact inputs.
+## 7. What we still do NOT build (framework only)
+React frontend · FastAPI backend · Docker stack · any broker/execution/order code · a
+second risk engine · a duplicate production dashboard · a second live-trading system ·
+new LLM API providers (reuse the local Qwen/GLM bridge; Claude as adjudicator). Capability
+is unbounded; infrastructure is not duplicated.
 
 ## Approval gate
-This is the Phase-1 architecture. **No code is written until you approve.** On approval,
-I implement the MVP slice (#1–#4) as the new `research-lab/` repo — production untouched.
+This is the Phase-1 architecture v2. **No code until you approve.** Suggested first slice:
+**Phase A** (data + quality + engine + runner + registry + run cards) — the reproducible
+foundation — with the CI firewall test from commit one. Then B (robustness) delivers the
+world-class evidence layer. Confirm scope/phasing and I begin Phase A in the new repo,
+production untouched.
