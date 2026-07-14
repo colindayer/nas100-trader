@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+4830659  install task: work around schtasks /tr 261-char limit via a short launcher .cmd
+2f7d647  Obsidian bridge auto-sync [bridge-auto]
 42e4afb  install task: treat 'schtasks /query task-not-found' as normal, not an error
 0e942aa  Obsidian bridge auto-sync [bridge-auto]
 b90f628  sync: stop git's stderr status messages from being reported as errors
 09c9f0c  Obsidian bridge auto-sync [bridge-auto]
 d693c97  sync: fix 'fatal: Needed a single revision' aborting the empty-repo bootstrap
 bfda6a9  Obsidian bridge auto-sync [bridge-auto]
-0401892  sync_mt5_evidence.ps1: robust empty-repo bootstrap (creates initial commit + main before any pull)
-8ccb523  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

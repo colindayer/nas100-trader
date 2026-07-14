@@ -214,3 +214,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-14 | Obsidian Bridge / automated | sync: stop git's stderr status messages from being reported as errors | git post-commit hook | b90f628 |
 | 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 0e942aa |
 | 2026-07-14 | Obsidian Bridge / automated | install task: treat 'schtasks /query task-not-found' as normal, not an error | git post-commit hook | 42e4afb |
+| 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 2f7d647 |
+| 2026-07-14 | Obsidian Bridge / automated | install task: work around schtasks /tr 261-char limit via a short launcher .cmd | git post-commit hook | 4830659 |
