@@ -14,7 +14,16 @@ param(
   [string]$Time1 = "16:20",                        # after the final US session
   [string]$Time2 = "23:20"                         # optional, after overnight
 )
-$ErrorActionPreference = "Stop"
+# schtasks legitimately returns non-zero for the FIRST install: `schtasks /query /tn <name>`
+# on a not-yet-existing task exits 1 + writes "ERROR: The system cannot find the task
+# specified" to stderr. Under Stop (Windows PowerShell 5.1) that native stderr/non-zero
+# THREW and aborted the bootstrap. Use Continue so 'task not found' is the normal case and
+# WE decide via $LASTEXITCODE; the explicit `throw` on a genuine create failure still fires
+# (throw is always terminating regardless of $ErrorActionPreference).
+$ErrorActionPreference = "Continue"
+if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -Scope Global -ErrorAction SilentlyContinue) {
+  $PSNativeCommandUseErrorActionPreference = $false   # PS7-safe; no-op on 5.1
+}
 $sync = Join-Path $Repo "scripts\ops\sync_mt5_evidence.ps1"
 $action = "powershell -ExecutionPolicy Bypass -File `"$sync`" -Repo `"$Repo`" -Evidence `"$Evidence`" -Python `"$Python`""
 
@@ -22,8 +31,13 @@ $action = "powershell -ExecutionPolicy Bypass -File `"$sync`" -Repo `"$Repo`" -E
 # and matches MT5's need for the live desktop session (same mode as the trading tasks).
 # /RL LIMITED = no elevation (read-only export). Idempotent: delete then create /f.
 function New-EvidenceTask($name, $time) {
+  # exit 0 = task exists (delete first); non-zero = 'not found' = normal first install
   schtasks /query /tn $name *> $null
-  if ($LASTEXITCODE -eq 0) { schtasks /delete /tn $name /f *> $null }
+  if ($LASTEXITCODE -eq 0) {
+    schtasks /delete /tn $name /f *> $null
+  } else {
+    Write-Host "  $name not present yet -- creating fresh (normal on first install)" -ForegroundColor DarkGray
+  }
   schtasks /create /tn $name /sc DAILY /st $time /ru $RunUser /it /rl LIMITED /tr $action /f
   if ($LASTEXITCODE -ne 0) {
     Write-Host "  /it create failed for $name; retrying without /rl..." -ForegroundColor Yellow
