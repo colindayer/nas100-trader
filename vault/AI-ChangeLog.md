@@ -192,3 +192,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-14 | Obsidian Bridge / automated | Ops Tier-0 #4: external dead-man's-switch watchdog (detect a dead VPS) | git post-commit hook | e413cd4 |
 | 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 427e2ad |
 | 2026-07-14 | Obsidian Bridge / automated | Research->Live forensics: per-strategy pipeline + 5 Q's + ranked expectancy-l... | git post-commit hook | d5f6249 |
+| 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 2d66153 |
+| 2026-07-14 | Obsidian Bridge / automated | Live evidence reconciliation: VPS inputs absent -> live legs INSUFFICIENT_DAT... | git post-commit hook | c60c8ab |
