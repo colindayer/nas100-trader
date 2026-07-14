@@ -168,3 +168,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-14 | Obsidian Bridge / automated | Fix overnight CRASH (NoneType format): broker.py place_order_safe logged TP={... | git post-commit hook | a6c2c8a |
 | 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 0d59b39 |
 | 2026-07-14 | Obsidian Bridge / automated | Forensic Pipeline Audit (5 phases): end-to-end trace, signal audit (every mis... | git post-commit hook | 26bebf0 |
+| 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 21b7283 |
+| 2026-07-14 | Obsidian Bridge / automated | Multi-model bridge: one-command delegate + bridge-status (reuses llm_bridge/r... | git post-commit hook | 87ce725 |
