@@ -193,7 +193,8 @@ class MT5Broker(Broker):
 
     def place_order(self, symbol: str, qty: float, side: str, tag: str,
                     sl: float = None, tp: float = None):
-        self._ensure_connected()
+        if not self._ensure_connected():
+            raise RuntimeError("MT5 connection down; order NOT submitted")
         m = self._mt5; sym = self.map(symbol); self._ensure_symbol(sym)
         lots = self._units_to_lots(sym, qty)
         tick = m.symbol_info_tick(sym)
@@ -232,7 +233,8 @@ class MT5Broker(Broker):
         return res.order
 
     def close_position(self, symbol: str):
-        self._ensure_connected()
+        if not self._ensure_connected():
+            raise RuntimeError("MT5 connection down; close NOT submitted")
         m = self._mt5; sym = self.map(symbol)
         positions = [p for p in (m.positions_get(symbol=sym) or [])]
         if not positions:
