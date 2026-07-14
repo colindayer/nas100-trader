@@ -212,3 +212,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-14 | Obsidian Bridge / automated | sync: fix 'fatal: Needed a single revision' aborting the empty-repo bootstrap | git post-commit hook | d693c97 |
 | 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 09c9f0c |
 | 2026-07-14 | Obsidian Bridge / automated | sync: stop git's stderr status messages from being reported as errors | git post-commit hook | b90f628 |
+| 2026-07-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 0e942aa |
+| 2026-07-14 | Obsidian Bridge / automated | install task: treat 'schtasks /query task-not-found' as normal, not an error | git post-commit hook | 42e4afb |
