@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+8443c1e  docs: RT6 correction -- R1 floor bounds normal catastrophe, not gap-through slippage Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+1cc120f  Obsidian bridge auto-sync [bridge-auto]
 2c2f432  Fix BTCTREND hedging-account rebalance: broker is source of truth, reduce by closing into tickets
 b736d2c  Obsidian bridge auto-sync [bridge-auto]
 84d4932  R1: broker-side emergency floor for BTCTREND (evidence-selected fixed 20%, ratcheted)
 62957de  Obsidian bridge auto-sync [bridge-auto]
 8d22f84  docs: C3 production execution architecture (design only, no code)
 7f788c1  Obsidian bridge auto-sync [bridge-auto]
-18c8ce9  Research Lab v3 approved + Phase A built in separate research-lab repo (design-record update)
-540b573  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
