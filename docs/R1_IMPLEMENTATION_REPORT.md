@@ -37,8 +37,9 @@ Research study (research-lab `experiments/r1_emergency_stop/`, BTC daily OHLC 20
 - **Fixed 20% selected**: statistically transparent (CAGR/Sharpe/MaxDD identical to no-stop
   to reported precision; challenge simulation pass-rate 0.282 vs 0.283, DD-violation
   probability unchanged), fires 0.4×/yr and only in genuine −20% crashes, caps the dead-bot
-  giveback at −20% from the last daily ratchet vs **−25.9% worst observed** unmanaged
-  in-trend giveback (unbounded in a future crash). Requires no volatility input →
+  giveback near −20% from the last daily ratchet (a stop is a market order on trigger —
+  gap-through slippage can fill below the level; jump-stress research is the C3.5 answer)
+  vs **−25.9% worst observed** unmanaged in-trend giveback (unbounded in a future crash). Requires no volatility input →
   immune to the NaN-ATR failure mode by construction.
 - No take-profit added (no evidence for one; R1 mandate respected).
 
@@ -79,7 +80,7 @@ without re-running the study.
 | Scenario | Before | After |
 |----------|--------|-------|
 | New BTCTREND entry | naked (state-machine exit only) | broker SL at −20% attached atomically; rejection ⇒ no position |
-| Held position, bot/VPS/network dies | unbounded giveback (−25.9% observed worst) | broker enforces −20% floor from last daily ratchet |
+| Held position, bot/VPS/network dies | unbounded giveback (−25.9% observed worst) | broker enforces ~−20% floor from last daily ratchet (gap slippage possible) |
 | Existing naked position at next daily run | stays naked | detected + repaired + verified; alert if repair fails |
 | Existing tighter stop (e.g. sweep bracket) | — | never loosened |
 | Normal Donchian trend exit | rebalance to flat | unchanged (identical signal path) |
