@@ -254,10 +254,15 @@ class MT5Broker(Broker):
             n += p.volume * cs if p.type == m.POSITION_TYPE_BUY else -p.volume * cs
         return round(n, 8)
 
-    def close_into(self, symbol: str, qty_units: float, close_side: str, tag: str = None) -> float:
+    def close_into(self, symbol: str, qty_units, close_side: str, tag: str = None,
+                   tickets=None) -> float:
         """Reduce exposure by closing up to qty_units INTO existing positions of
-        close_side ('long' closes buys, 'short' closes sells). Partial closes allowed.
-        Returns units actually closed. Never opens a new position."""
+        close_side ('long' closes buys, 'short' closes sells). qty_units=None closes the
+        ENTIRE matching side (used before opening the opposite direction -- a strategy
+        that never hedges must fully flatten opposition first). `tickets`: extra position
+        tickets owned by the caller (state-file registry) -- matched even if the broker
+        rewrote the comment. Partial closes allowed. Returns units actually closed.
+        Never opens a new position."""
         if not self._ensure_connected():
             raise RuntimeError("MT5 connection down; close NOT submitted")
         m = self._mt5; sym = self.map(symbol)
@@ -265,11 +270,17 @@ class MT5Broker(Broker):
         cs = getattr(info, "trade_contract_size", 1.0) or 1.0
         step = getattr(info, "volume_step", 0.01) or 0.01
         want_type = m.POSITION_TYPE_BUY if close_side == "long" else m.POSITION_TYPE_SELL
-        remaining = abs(qty_units); closed = 0.0
-        for p in self.tagged_positions(symbol, tag):
+        remaining = float("inf") if qty_units is None else abs(qty_units)
+        closed = 0.0
+        owned = {p.ticket for p in self.tagged_positions(symbol, tag)}
+        if tickets:
+            owned |= {p.ticket for p in (m.positions_get(symbol=sym) or [])
+                      if p.ticket in set(tickets)}
+        for p in [p for p in (m.positions_get(symbol=sym) or []) if p.ticket in owned]:
             if p.type != want_type or remaining <= 0:
                 continue
-            lots = min(p.volume, round((remaining / cs) / step) * step)
+            lots = p.volume if remaining == float("inf") else \
+                min(p.volume, round((remaining / cs) / step) * step)
             if lots < step:
                 continue
             tick = m.symbol_info_tick(sym)

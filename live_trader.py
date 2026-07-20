@@ -939,15 +939,39 @@ def run_btc_trend(broker, equity, open_syms):
         print("  within tolerance, no rebalance")
         return
     side = "buy" if delta > 0 else "sell"
+    my_tickets = list(st.get("tickets", []))   # ticket registry: ownership survives
+                                               # broker comment rewrites (RT5)
     if side == "buy":
-        # Hedging-safe: first BUY-CLOSE any stray opposing short legs (increases net
-        # exposure without opening new positions), then market-buy the remainder.
-        rest = abs(delta)
+        # BTCTREND never hedges (long/flat by design). Before ANY buy:
+        # close ALL owned short legs -> VERIFY none remain -> only then submit the buy.
+        # If verification fails, ABORT the entry (log + alert) rather than ever holding
+        # simultaneous long+short exposure.
         if _mt5b is not None:
-            closed = _mt5b.close_into("BTC", rest, "short", tag="BTCTREND")
+            closed = _mt5b.close_into("BTC", None, "short", tag="BTCTREND",
+                                      tickets=my_tickets)
             if closed:
-                print(f"  closed stray short leg: {closed} BTC")
-                rest = round(rest - closed, 8)
+                print(f"  closed opposing short leg(s): {closed} BTC")
+            m = _mt5b._mt5
+            shorts_left = [p for p in m.positions_get(symbol=_mt5b.map("BTC")) or []
+                           if p.type == m.POSITION_TYPE_SELL
+                           and ("BTCTREND" in (getattr(p, "comment", "") or "")
+                                or p.ticket in my_tickets)]
+            if shorts_left:
+                msg = (f"BTCTREND: {len(shorts_left)} short leg(s) could not be closed "
+                       f"(tickets {[p.ticket for p in shorts_left]}) -- ABORTING buy to "
+                       "avoid simultaneous long+short exposure")
+                logger.error(msg)
+                try:
+                    import alerts
+                    alerts.send(f"ALERT {msg}")
+                except Exception:
+                    pass
+                return
+            # closing shorts raised net exposure -> recompute the remaining delta
+            cur2 = _mt5b.net_qty("BTC", tag="BTCTREND")
+            rest = round(target_qty - cur2, 5)
+        else:
+            rest = abs(delta)
         if rest * price >= max(10, equity * 0.01):
             # R1: mandatory broker-side emergency floor attached WITH the entry (atomic).
             # Catastrophe protection only -- the Donchian exit above is unchanged. If the
@@ -955,13 +979,19 @@ def run_btc_trend(broker, equity, open_syms):
             from emergency_protection import emergency_floor
             broker.place_order_safe("BTC", rest, side, "BTCTREND",
                                     sl=emergency_floor(price, "long"))
+            lf = getattr(broker, "LAST_FILL", None) or {}
+            if lf.get("position_id") or lf.get("order_id"):
+                my_tickets.append(lf.get("position_id") or lf.get("order_id"))
     else:
         # Hedging-safe reduction: close INTO existing long tickets (position=<ticket>),
         # never send a plain opposite deal that would open a short on a hedging account.
         # BTCTREND is long/flat by design -- it must NEVER hold a net short.
         rest = abs(delta)
         if _mt5b is not None:
-            closed = _mt5b.close_into("BTC", rest, "long", tag="BTCTREND")
+            # partial reduction of LONG legs is the vol-target rebalance (by design);
+            # a SELL order is never submitted on MT5 -- long/flat invariant.
+            closed = _mt5b.close_into("BTC", rest, "long", tag="BTCTREND",
+                                      tickets=my_tickets)
             rest = round(rest - closed, 8)
             if rest * price >= max(10, equity * 0.01):
                 logger.warning(f"BTCTREND: could not fully reduce (remaining {rest}); "
@@ -969,8 +999,12 @@ def run_btc_trend(broker, equity, open_syms):
         else:
             # netting brokers (paper/alpaca) reduce correctly with a plain sell
             broker.place_order_safe("BTC", rest, side, "BTCTREND")
+    if _mt5b is not None:   # prune registry to tickets still open at the broker
+        open_now = {p.ticket for p in _mt5b._mt5.positions_get(
+            symbol=_mt5b.map("BTC")) or []}
+        my_tickets = [t for t in my_tickets if t in open_now]
     with open(_btctrend_state, "w") as f:
-        json.dump({"qty": target_qty, "price": price}, f)
+        json.dump({"qty": target_qty, "price": price, "tickets": my_tickets}, f)
 
 
 # -- PILLAR: S1 sweep on a WIDER validated universe -----------------------------

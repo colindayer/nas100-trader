@@ -111,15 +111,86 @@ class WiringLocks(unittest.TestCase):
         self.assertIn('close_into("BTC", rest, "long"', seg)    # reductions close into longs
         self.assertIn("NOT opening a short", seg)               # long/flat invariant kept
 
-    def test_buy_path_heals_stray_short_then_buys_with_sl(self):
+    def test_buy_path_closes_ALL_shorts_verifies_then_buys_with_sl(self):
         seg = SRC[SRC.index("def run_btc_trend"):SRC.index("SWEEP_BASKET")]
-        self.assertIn('close_into("BTC", rest, "short"', seg)
-        self.assertLess(seg.index('close_into("BTC", rest, "short"'),
-                        seg.index('sl=emergency_floor'))        # heal first, then protected buy
+        self.assertIn('close_into("BTC", None, "short"', seg)   # ALL shorts, not delta-capped
+        self.assertIn("ABORTING buy", seg)                      # verify-then-abort
+        self.assertLess(seg.index('close_into("BTC", None, "short"'),
+                        seg.index('sl=emergency_floor'))        # flatten first, then protected buy
 
     def test_donchian_signal_still_untouched(self):
         self.assertIn('H = close.rolling(20).max().shift(1); L = close.rolling(10).min().shift(1)', SRC)
         self.assertIn('BTC_TREND_VOLTARGET = 0.20', SRC)
+
+
+
+
+class NeverHedgeInvariant(unittest.TestCase):
+    """Investigation 2026-07-20: the mission's required scenarios. BTCTREND must never
+    hold simultaneous long+short exposure, on hedge OR netting semantics."""
+
+    def _b(self, m):
+        return _broker(m)
+
+    def test_close_all_mode_closes_entire_short_side(self):
+        # D-A regression: delta smaller than the short must still flatten ALL shorts
+        m = FakeMT5Hedging(positions=[_tagged(1, 0.05, "short"), _tagged(2, 0.02, "short")])
+        closed = self._b(m).close_into("BTC", None, "short", tag="BTCTREND")
+        self.assertAlmostEqual(closed, 0.07)
+        self.assertEqual(m.positions, [])
+
+    def test_ticket_registry_matches_rewritten_comment(self):
+        # D-C / RT5 regression: broker rewrote the comment -> ticket registry still owns it
+        p = _tagged(9, 0.03, "short", comment="to #342163006")   # rewritten
+        m = FakeMT5Hedging(positions=[p])
+        closed = self._b(m).close_into("BTC", None, "short", tag="BTCTREND", tickets=[9])
+        self.assertAlmostEqual(closed, 0.03)
+
+    def test_foreign_positions_never_touched(self):
+        # safety: other strategies / manual trades (different comment, not in registry)
+        m = FakeMT5Hedging(positions=[_tagged(5, 0.10, "short", comment="BTC"),
+                                      _tagged(6, 0.10, "short", comment="")])
+        closed = self._b(m).close_into("BTC", None, "short", tag="BTCTREND", tickets=[])
+        self.assertEqual(closed, 0.0)
+        self.assertEqual(len(m.positions), 2)
+
+    def test_close_failure_leaves_position_and_reports_zero(self):
+        m = FakeMT5Hedging(positions=[_tagged(1, 0.05, "short")], reject=True)
+        closed = self._b(m).close_into("BTC", None, "short", tag="BTCTREND")
+        self.assertEqual(closed, 0.0)                    # honest: nothing closed
+        self.assertEqual(len(m.positions), 1)            # caller must abort the buy
+
+    def test_partial_close_artifact_covered_next_run(self):
+        # partial fill leaves 0.02; a second (retry/daily) run flattens the remainder
+        m = FakeMT5Hedging(positions=[_tagged(1, 0.05, "short")])
+        b = self._b(m)
+        b.close_into("BTC", 0.03, "long" if False else "short", tag="BTCTREND")  # partial
+        self.assertAlmostEqual(m.positions[0].volume, 0.02)
+        b.close_into("BTC", None, "short", tag="BTCTREND")                        # rerun
+        self.assertEqual(m.positions, [])
+
+    def test_long_reduction_never_opens_short(self):
+        # reversal path: reducing 0.05 from a 0.03 long closes 0.03 and STOPS
+        m = FakeMT5Hedging(positions=[_tagged(1, 0.03)])
+        closed = self._b(m).close_into("BTC", 0.05, "long", tag="BTCTREND")
+        self.assertAlmostEqual(closed, 0.03)
+        self.assertEqual(m.positions, [])                # flat; no short ever created
+
+    def test_repeated_daily_runs_idempotent(self):
+        m = FakeMT5Hedging(positions=[_tagged(1, 0.04), _tagged(2, 0.01, "short")])
+        b = self._b(m)
+        b.close_into("BTC", None, "short", tag="BTCTREND")
+        b.close_into("BTC", None, "short", tag="BTCTREND")   # duplicate execution
+        longs = [p for p in m.positions if p.type == FakeMT5.POSITION_TYPE_BUY]
+        shorts = [p for p in m.positions if p.type == FakeMT5.POSITION_TYPE_SELL]
+        self.assertEqual(len(shorts), 0)
+        self.assertEqual(len(longs), 1)                  # longs untouched
+
+    def test_netting_semantics_also_safe(self):
+        # on a netting account the same ticket-targeted close reduces the single position
+        m = FakeMT5Hedging(positions=[_tagged(1, 0.05, "short")])
+        self._b(m).close_into("BTC", None, "short", tag="BTCTREND")
+        self.assertEqual(m.positions, [])
 
 
 if __name__ == "__main__":
