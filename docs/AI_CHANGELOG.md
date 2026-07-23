@@ -240,3 +240,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-23 | Obsidian Bridge / automated | Add DETERMINISTIC_RISK sizing flag (OFF by default; prop-challenge consistency) | git post-commit hook | e5b354b |
 | 2026-07-23 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 5a15c78 |
 | 2026-07-23 | Obsidian Bridge / automated | Add offline sizing dry-run (watch DETERMINISTIC_RISK before risking anything) | git post-commit hook | 3bb0582 |
+| 2026-07-23 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | b54ea03 |
+| 2026-07-23 | Obsidian Bridge / automated | Add prop_risk_guardian: standalone fail-safe risk supervisor (monitor mode + ... | git post-commit hook | adf4e77 |
