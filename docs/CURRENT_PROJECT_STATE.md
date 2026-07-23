@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+fbdf210  Guardian replay report: proposed limits cut demo drawdown -545 to ~0 on export window (monitor-only, caveated)
+e199c75  Obsidian bridge auto-sync [bridge-auto]
 adf4e77  Add prop_risk_guardian: standalone fail-safe risk supervisor (monitor mode + replay)
 b54ea03  Obsidian bridge auto-sync [bridge-auto]
 3bb0582  Add offline sizing dry-run (watch DETERMINISTIC_RISK before risking anything)
 5a15c78  Obsidian bridge auto-sync [bridge-auto]
 e5b354b  Add DETERMINISTIC_RISK sizing flag (OFF by default; prop-challenge consistency)
 3b66990  Obsidian bridge auto-sync [bridge-auto]
-c859228  BTCTREND never-hedge invariant: close ALL opposite legs, verify, abort on failure
-c749d26  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
