@@ -284,3 +284,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | PHASE 702: wire --demo-limited (the blocker) + auto-populate execution record... | git post-commit hook | d371522 |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 68866ee |
 | 2026-07-25 | Obsidian Bridge / automated | PHASE 701: calendar_provider (5-provider chain), tradingview_bridge (MCP + MT... | git post-commit hook | 5fa3543 |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 52f2579 |
+| 2026-07-25 | Obsidian Bridge / automated | fix: test_intel scanner excluded only its own file; new test_phase701b.py tri... | git post-commit hook | 44bb4ab |

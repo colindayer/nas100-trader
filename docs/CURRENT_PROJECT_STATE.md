@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+44bb4ab  fix: test_intel scanner excluded only its own file; new test_phase701b.py tripped it (test files legitimately contain the banned strings in assertions)
+52f2579  Obsidian bridge auto-sync [bridge-auto]
 5fa3543  PHASE 701: calendar_provider (5-provider chain), tradingview_bridge (MCP + MT5 fallback), telegram_notifier
 68866ee  Obsidian bridge auto-sync [bridge-auto]
 d371522  PHASE 702: wire --demo-limited (the blocker) + auto-populate execution records from MT5
 04bdd13  Obsidian bridge auto-sync [bridge-auto]
 6581b6a  PHASE 702: separate Research vs Operational belief; 5-state promotion; breaks circularity
 50af98b  Obsidian bridge auto-sync [bridge-auto]
-fbc2d18  PHASE 701: auto-calendar API adapter + belief feedback loop + web interface
-6d96262  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
