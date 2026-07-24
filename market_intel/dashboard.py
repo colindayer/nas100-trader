@@ -72,7 +72,29 @@ def render(symbols):
     print("\n OPPORTUNITY REGISTRY: "
           f"{len(opps)} total | shadow-allowed {sum(1 for o in opps if o['status']=='SHADOW_ALLOWED')} "
           f"| rejected {sum(1 for o in opps if o['status']=='REJECTED')}")
-    print(f" GUARDIAN: not wired (fail-closed) | BELIEF GRAPH: not wired (fail-closed)")
+    # PHASE 702.1: query the REAL components instead of asserting "not wired"
+    try:
+        from execution_safety.promotion_pipeline_v2 import evaluate, REQUIREMENTS
+        st = evaluate("portfolio_multisleeve")
+        print(f"\n BELIEF  research {st['research_belief']:.4f} (live bar 0.60) | "
+              f"operational {st['operational_belief']:.4f} (live bar 0.85)")
+        print(f" STATE   {st['state']}  ->  next: {st['next_state']}")
+        print(f"         demo_trades={st['demo_trades']}  position_cap={st['position_cap']}  "
+              f"risk/trade={st['risk_cap_pct']:.2%}")
+        for gate, need in st["blocking"].items():
+            print(f"         blocking {gate}: {'; '.join(need)}")
+        if st["outstanding_defects"]:
+            print(f"         DEFECTS: {len(st['outstanding_defects'])}")
+    except Exception as e:
+        print(f"\n BELIEF  unavailable: {e} (run from the repo root so execution_safety/ is importable)")
+    try:
+        from execution_safety.guardian_bridge import guardian_ok
+        ok, det = guardian_ok()
+        print(f" GUARDIAN {'ALLOW' if ok else 'BLOCK'} — {det.get('reason', 'evaluated live')}")
+    except Exception as e:
+        print(f" GUARDIAN unavailable: {e}")
+    tg = bool(os.environ.get("TELEGRAM_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"))
+    print(f" TELEGRAM {'configured' if tg else 'not configured'}")
     print(f" LOG: {INTEL_LOG}")
     print("=" * 74)
 
