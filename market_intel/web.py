@@ -103,9 +103,56 @@ def page(symbols):
                  f"<small>for: {html.escape(', '.join(o['evidence_supporting']))} | "
                  f"against: {html.escape(', '.join(o['evidence_contradicting']) or 'none')}</small></div>")
 
+    # ---- PHASE 702.1: separate Research vs Operational belief + promotion state ----
+    try:
+        from execution_safety.promotion_pipeline_v2 import evaluate, REQUIREMENTS, STATES
+        st = evaluate("portfolio_multisleeve")
+        rb, ob = st["research_belief"], st["operational_belief"]
+        def bar(v, tgt):
+            pct = int(min(1.0, v) * 100); col = "#3fb950" if v >= tgt else "#d29922"
+            return (f"<div style='background:#21262d;border-radius:4px;height:8px;width:220px;display:inline-block;"
+                    f"vertical-align:middle'><div style='background:{col};height:8px;width:{pct*2.2:.0f}px;"
+                    f"border-radius:4px'></div></div>")
+        h.append("<h2>Belief &amp; promotion</h2><div class='card'>")
+        h.append(f"<b>STATE: {html.escape(st['state'])}</b> &nbsp;"
+                 f"<small>next: {html.escape(str(st['next_state']))}</small><br><br>")
+        h.append(f"Research belief &nbsp;<b>{rb:.4f}</b> {bar(rb,0.60)} <small>live bar 0.60</small><br>")
+        h.append(f"Operational belief <b>{ob:.4f}</b> {bar(ob,0.85)} <small>live bar 0.85</small><br><br>")
+        h.append(f"demo trades: <b>{st['demo_trades']}</b> &nbsp; position cap: {st['position_cap']} "
+                 f"&nbsp; risk/trade: {st['risk_cap_pct']:.2%}<br>")
+        if st["outstanding_defects"]:
+            h.append(f"<br><span class='down'>outstanding defects ({len(st['outstanding_defects'])}):</span> "
+                     f"<small>{html.escape('; '.join(st['outstanding_defects'][:4]))}</small>")
+        h.append("</div>")
+        # remaining requirements for the next two gates
+        h.append("<div class='card'><b>Remaining requirements</b><table>"
+                 "<tr><th>gate</th><th>research</th><th>operational</th><th>demo trades</th><th>status</th></tr>")
+        for gate in ("FULL_DEMO_APPROVED", "LIVE_APPROVED"):
+            r = REQUIREMENTS[gate]
+            met = STATES.index(st["state"]) >= STATES.index(gate)
+            need = st["blocking"].get(gate, [])
+            h.append(f"<tr><td>{gate}</td>"
+                     f"<td class=\"{'up' if rb>=r['research_min'] else 'warn'}\">{rb:.3f} / {r['research_min']}</td>"
+                     f"<td class=\"{'up' if ob>=r['ops_min'] else 'warn'}\">{ob:.3f} / {r['ops_min']}</td>"
+                     f"<td>{st['demo_trades']} / {r['min_demo_trades']}</td>"
+                     f"<td>{'MET' if met else html.escape('; '.join(need) or 'pending')}</td></tr>")
+        h.append("</table></div>")
+        # evidence statistics
+        from execution_safety.belief_graph_v2 import BeliefGraphV2, EVIDENCE_CLASSES
+        sb = BeliefGraphV2().get("portfolio_multisleeve")
+        counts = {c: sb.count(c) for c in EVIDENCE_CLASSES}
+        h.append("<div class='card'><b>Evidence</b><br>" +
+                 " &nbsp; ".join(f"{k}: <b>{v}</b>" for k, v in counts.items() if v) +
+                 (f"<br><small>total {len(sb.evidence)} items</small>" if sb.evidence else
+                  "<small>no evidence recorded</small>") + "</div>")
+    except Exception as e:
+        h.append(f"<div class='card'>belief/promotion unavailable: {html.escape(str(e)[:120])}</div>")
+
+    tg_tok = bool(os.environ.get("TELEGRAM_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"))
     h.append("<h2>Pipeline status</h2><div class='card'>"
-             f"Belief graph: <b>{bdec}</b> <small>{html.escape(json.dumps(bdet))}</small><br>"
+             f"Legacy belief reader: <b>{bdec}</b> <small>{html.escape(json.dumps(bdet))}</small><br>"
              "Guardian: evaluated at order time (fail-closed)<br>"
+             f"Telegram: <b>{'configured' if tg_tok else 'not configured'}</b><br>"
              "Execution: <b class='warn'>SHADOW</b> — this interface can never place a trade"
              "</div>")
     return "".join(h)
