@@ -288,3 +288,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | fix: test_intel scanner excluded only its own file; new test_phase701b.py tri... | git post-commit hook | 44bb4ab |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 2c7a008 |
 | 2026-07-25 | Obsidian Bridge / automated | PHASE 702.1: demo-limited regression tests + belief dashboard + 5 PHASE 701 docs | git post-commit hook | 595654a |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 4f58b4e |
+| 2026-07-25 | Obsidian Bridge / automated | fix: dashboard.py reported 'not wired' via a hardcoded string after the wirin... | git post-commit hook | 6f91fa1 |
