@@ -278,3 +278,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | PHASE 601 gap closure: REAL Belief Graph + REAL Guardian wired (both fail clo... | git post-commit hook | 06631e6 |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 6d96262 |
 | 2026-07-25 | Obsidian Bridge / automated | PHASE 701: auto-calendar API adapter + belief feedback loop + web interface | git post-commit hook | fbc2d18 |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 50af98b |
+| 2026-07-25 | Obsidian Bridge / automated | PHASE 702: separate Research vs Operational belief; 5-state promotion; breaks... | git post-commit hook | 6581b6a |
