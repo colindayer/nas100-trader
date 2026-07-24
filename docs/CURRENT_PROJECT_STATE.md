@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+d371522  PHASE 702: wire --demo-limited (the blocker) + auto-populate execution records from MT5
+04bdd13  Obsidian bridge auto-sync [bridge-auto]
 6581b6a  PHASE 702: separate Research vs Operational belief; 5-state promotion; breaks circularity
 50af98b  Obsidian bridge auto-sync [bridge-auto]
 fbc2d18  PHASE 701: auto-calendar API adapter + belief feedback loop + web interface
 6d96262  Obsidian bridge auto-sync [bridge-auto]
 06631e6  PHASE 601 gap closure: REAL Belief Graph + REAL Guardian wired (both fail closed)
 dfa9979  Obsidian bridge auto-sync [bridge-auto]
-5112bd8  PHASE 701: Live Market Intelligence Engine (evidence only, cannot trade)
-8cd192a  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

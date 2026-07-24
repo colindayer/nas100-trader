@@ -280,3 +280,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | PHASE 701: auto-calendar API adapter + belief feedback loop + web interface | git post-commit hook | fbc2d18 |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 50af98b |
 | 2026-07-25 | Obsidian Bridge / automated | PHASE 702: separate Research vs Operational belief; 5-state promotion; breaks... | git post-commit hook | 6581b6a |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 04bdd13 |
+| 2026-07-25 | Obsidian Bridge / automated | PHASE 702: wire --demo-limited (the blocker) + auto-populate execution record... | git post-commit hook | d371522 |
