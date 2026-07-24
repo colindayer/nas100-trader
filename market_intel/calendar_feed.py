@@ -107,6 +107,10 @@ def from_api(url: str | None = None, token: str | None = None) -> list[Event]:
        Returns [] on any failure -- never fabricates."""
     url = url or os.environ.get("CALENDAR_API_URL")
     token = token or os.environ.get("CALENDAR_API_TOKEN", "")
+    # convenience: a bare FINNHUB_TOKEN is enough -- build the endpoint for the user
+    if not url and os.environ.get("FINNHUB_TOKEN"):
+        url = "https://finnhub.io/api/v1/calendar/economic"
+        token = os.environ["FINNHUB_TOKEN"]
     if not url:
         return []
     try:
