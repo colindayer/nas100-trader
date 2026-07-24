@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+be64a3f  add FRED provider: free, official, no ToS problem (US macro actuals + release calendar)
+afba2ba  Obsidian bridge auto-sync [bridge-auto]
 45ca5d1  add calendar_diag: print RAW provider responses to diagnose empty calendars
 484da6c  Obsidian bridge auto-sync [bridge-auto]
 cf937ef  calendar_feed: honour a bare FINNHUB_TOKEN (dashboard/engine read calendar_feed, not calendar_provider)
 01f671d  Obsidian bridge auto-sync [bridge-auto]
 6f91fa1  fix: dashboard.py reported 'not wired' via a hardcoded string after the wiring shipped
 4f58b4e  Obsidian bridge auto-sync [bridge-auto]
-595654a  PHASE 702.1: demo-limited regression tests + belief dashboard + 5 PHASE 701 docs
-2c7a008  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
