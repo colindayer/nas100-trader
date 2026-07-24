@@ -282,3 +282,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | PHASE 702: separate Research vs Operational belief; 5-state promotion; breaks... | git post-commit hook | 6581b6a |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 04bdd13 |
 | 2026-07-25 | Obsidian Bridge / automated | PHASE 702: wire --demo-limited (the blocker) + auto-populate execution record... | git post-commit hook | d371522 |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 68866ee |
+| 2026-07-25 | Obsidian Bridge / automated | PHASE 701: calendar_provider (5-provider chain), tradingview_bridge (MCP + MT... | git post-commit hook | 5fa3543 |
