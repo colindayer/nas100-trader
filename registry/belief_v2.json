@@ -1,0 +1,33 @@
+{
+ "portfolio_multisleeve": {
+  "strategy_id": "portfolio_multisleeve",
+  "research_prior": 0.25,
+  "ops_prior": 0.2,
+  "evidence": [
+   {
+    "evidence_id": "wf_2012_2026",
+    "evidence_class": "WalkForward",
+    "supports": true,
+    "weight": 2.2,
+    "note": "Sharpe 0.62 active period 2012-2026, 17/22 positive years, sleeve corr ~0, maxDD -18.8%",
+    "ts": 1784934806.6097448
+   },
+   {
+    "evidence_id": "prop_audit",
+    "evidence_class": "Bootstrap",
+    "supports": false,
+    "weight": 0.8,
+    "note": "pass-rate claim overstated: daily-close DD measurement + vol-target selection bias",
+    "ts": 1784934806.610023
+   },
+   {
+    "evidence_id": "shadow_2026_07_25",
+    "evidence_class": "Shadow",
+    "supports": true,
+    "weight": 0.6,
+    "note": "shadow run clean: symbols resolved, sizing fixed, 3 sleeves active, no look-ahead",
+    "ts": 1784934806.610111
+   }
+  ]
+ }
+}
