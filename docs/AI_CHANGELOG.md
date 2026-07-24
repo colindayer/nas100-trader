@@ -292,3 +292,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | fix: dashboard.py reported 'not wired' via a hardcoded string after the wirin... | git post-commit hook | 6f91fa1 |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 01f671d |
 | 2026-07-25 | Obsidian Bridge / automated | calendar_feed: honour a bare FINNHUB_TOKEN (dashboard/engine read calendar_fe... | git post-commit hook | cf937ef |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 484da6c |
+| 2026-07-25 | Obsidian Bridge / automated | add calendar_diag: print RAW provider responses to diagnose empty calendars | git post-commit hook | 45ca5d1 |
