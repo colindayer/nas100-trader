@@ -18,7 +18,7 @@ def test_package_cannot_place_orders():
     """STRUCTURAL: no module in market_intel may reference an order-submission call."""
     banned=["order_send","place_order","TRADE_ACTION_DEAL","positions_get"]
     for f in glob.glob(os.path.join(os.path.dirname(__file__),"*.py")):
-        if f.endswith("test_intel.py"): continue
+        if os.path.basename(f).startswith("test_"): continue   # test files assert on the banned strings
         src=open(f).read()
         for b in banned:
             assert b not in src, f"{os.path.basename(f)} references {b}"
