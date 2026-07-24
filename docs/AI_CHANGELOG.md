@@ -290,3 +290,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | PHASE 702.1: demo-limited regression tests + belief dashboard + 5 PHASE 701 docs | git post-commit hook | 595654a |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 4f58b4e |
 | 2026-07-25 | Obsidian Bridge / automated | fix: dashboard.py reported 'not wired' via a hardcoded string after the wirin... | git post-commit hook | 6f91fa1 |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 01f671d |
+| 2026-07-25 | Obsidian Bridge / automated | calendar_feed: honour a bare FINNHUB_TOKEN (dashboard/engine read calendar_fe... | git post-commit hook | cf937ef |

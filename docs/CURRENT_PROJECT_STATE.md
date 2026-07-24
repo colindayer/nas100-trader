@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+cf937ef  calendar_feed: honour a bare FINNHUB_TOKEN (dashboard/engine read calendar_feed, not calendar_provider)
+01f671d  Obsidian bridge auto-sync [bridge-auto]
 6f91fa1  fix: dashboard.py reported 'not wired' via a hardcoded string after the wiring shipped
 4f58b4e  Obsidian bridge auto-sync [bridge-auto]
 595654a  PHASE 702.1: demo-limited regression tests + belief dashboard + 5 PHASE 701 docs
 2c7a008  Obsidian bridge auto-sync [bridge-auto]
 44bb4ab  fix: test_intel scanner excluded only its own file; new test_phase701b.py tripped it (test files legitimately contain the banned strings in assertions)
 52f2579  Obsidian bridge auto-sync [bridge-auto]
-5fa3543  PHASE 701: calendar_provider (5-provider chain), tradingview_bridge (MCP + MT5 fallback), telegram_notifier
-68866ee  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
