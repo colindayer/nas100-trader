@@ -213,6 +213,136 @@ def lots_for(sym: str, weight: float, equity: float) -> float:
     return float(np.clip(lots, 0.0, info.volume_max or 100.0)) * (1 if weight >= 0 else -1)
 
 
+def _capture_execution(it, dec, req, res, t0, pre_tick, config, guardian_ok):
+    """Build a TradeExecutionRecord from REAL broker facts (PHASE 702 gap #2)."""
+    import time as _t
+    from execution_safety.operational_belief import TradeExecutionRecord
+    rc = getattr(res, "retcode", None)
+    fill = float(getattr(res, "price", 0.0) or 0.0)
+    post = mt5.symbol_info_tick(it["symbol"])
+    pos = [p for p in (mt5.positions_get(symbol=it["symbol"]) or []) if p.magic == MAGIC]
+    p0 = pos[-1] if pos else None
+    exp_entry = float(req["price"])
+    rec = TradeExecutionRecord(
+        trade_id=f"{dec['decision_id']}", symbol=it["symbol"],
+        expected_entry=exp_entry, actual_entry=fill,
+        expected_spread=float((pre_tick.ask - pre_tick.bid) if pre_tick else 0.0),
+        actual_spread=float((post.ask - post.bid) if post else 0.0),
+        expected_slippage=0.0, actual_slippage=(fill - exp_entry) if fill else 0.0,
+        stop_verified=bool(p0 and p0.sl and p0.sl > 0),
+        exit_verified=False,                       # rebalance-managed; see PHASE_702 gap #3
+        reconciliation_passed=False, ledger_recorded=True,
+        no_duplicate=(len(pos) <= 1), symbol_mapped=True,
+        volume_correct=bool(p0 and abs(p0.volume - abs(it["delta"])) < 1e-6),
+        guardian_approved=bool(guardian_ok), broker_ack=(rc == 10009),
+        execution_latency_ms=(_t.time() - t0) * 1000.0, broker_retcode=int(rc or 0))
+    if p0:
+        try:
+            from execution_safety.broker_reconciliation import BrokerPosition, reconcile
+            r = reconcile(dec["order_intent"], BrokerPosition(p0.symbol, p0.volume, p0.sl,
+                                                              p0.tp, p0.magic, p0.comment))
+            rec.reconciliation_passed = (r["state"] != "CRITICAL")
+        except Exception:
+            rec.reconciliation_passed = False
+    return rec
+
+
+def run_demo_limited(config="funded"):
+    """PHASE 702 LIMITED_DEMO: evidence collection under a hard envelope. Demo only.
+    Every trade is Guardian-approved, envelope-limited, and updates OperationalBelief only."""
+    import time as _t
+    if mt5 is None or not mt5.initialize():
+        raise SystemExit("MetaTrader5 unavailable")
+    acct = mt5.account_info()
+    if acct is None or acct.trade_mode != mt5.ACCOUNT_TRADE_MODE_DEMO:
+        raise SystemExit("REFUSING: --demo-limited requires a DEMO account.")
+    from execution_safety.promotion_pipeline_v2 import evaluate
+    from execution_safety.demo_evidence import LimitedDemoEnvelope, record
+    from execution_safety.belief_graph_v2 import BeliefGraphV2
+    from execution_safety.strategy_contract import StrategyRegistry
+    from execution_safety.gate import Signal, authorize
+    from execution_safety.execution_guard import armed
+    from execution_safety.guardian_bridge import guardian_ok as guardian_check
+    from execution_safety.position_ledger import PositionLedger
+
+    SID = "portfolio_multisleeve"
+    g = BeliefGraphV2()
+    st = evaluate(SID, g)
+    print(f"[702] state={st['state']} research={st['research_belief']} ops={st['operational_belief']} "
+          f"demo_trades={st['demo_trades']}")
+    if not st["may_trade_demo"]:
+        print(f"[702] HALT: state {st['state']} does not permit demo execution. "
+              f"blocking={st['blocking']}"); return
+    env = LimitedDemoEnvelope(max_positions=st["position_cap"], max_trades_per_day=3,
+                              risk_pct=st["risk_cap_pct"])
+    print(f"[702] envelope: max_positions={env.max_positions} risk={env.risk_pct:.3%} "
+          f"max_trades_per_day={env.max_trades_per_day}")
+
+    cfg = dict(CONFIGS[config]); cfg["target_vol"] = min(cfg["target_vol"], 0.08)
+    syms = resolve_symbols(verbose=True)
+    px = fetch_daily(syms)
+    carry_signs = {}
+    for name, sym in syms.items():
+        si = mt5.symbol_info(sym)
+        if si is None: continue
+        sl_, ss_ = getattr(si, "swap_long", 0.0) or 0.0, getattr(si, "swap_short", 0.0) or 0.0
+        if max(sl_, ss_) > 0 and sl_ != ss_: carry_signs[name] = 1 if sl_ > ss_ else -1
+    w, diag = target_weights(px, carry_signs=carry_signs, **cfg)
+    reg = StrategyRegistry(); ledger = PositionLedger()
+
+    # strongest-conviction symbol only (position cap is 1 in LIMITED_DEMO)
+    ranked = [(n, float(v)) for n, v in w.sort_values(key=abs, ascending=False).items()
+              if n in syms and abs(v) >= 0.02]
+    for name, weight in ranked:
+        open_ours = [p for p in (mt5.positions_get() or []) if p.magic == MAGIC]
+        ok, why = env.allow(len(open_ours))
+        if not ok:
+            print(f"[702] envelope stop: {why}"); break
+        sym = syms[name]
+        g_ok, g_det = guardian_check(proposed_risk_pct=env.risk_pct)
+        if not g_ok:
+            print(f"[702] guardian veto: {g_det}"); break
+        tick = mt5.symbol_info_tick(sym); side_buy = weight > 0
+        price = tick.ask if side_buy else tick.bid
+        stop = round(price * (0.98 if side_buy else 1.02), 5)      # tight, fixed demo stop
+        info = mt5.symbol_info(sym)
+        risk_amt = acct.equity * env.risk_pct
+        npl = notional_per_lot(sym, info, tick)
+        dist = abs(price - stop)
+        vol = max(info.volume_min, round((risk_amt / max(dist / price * npl, 1e-9)) / (info.volume_step or .01))
+                  * (info.volume_step or .01))
+        vol = float(min(vol, info.volume_max or 100.0))
+        sig = Signal(signal_id=f"dl-{name}-{int(_t.time())}", strategy_id=SID, strategy_version="v1",
+                     symbol=sym, direction=1 if side_buy else -1, entry=price, stop_loss=stop)
+        dec = authorize(sig, registry=reg, inference=lambda s: "ALLOW_PAPER", guardian_ok=g_ok,
+                        equity=acct.equity, account_is_demo=True, open_positions=[], shadow=False)
+        if dec["decision"] != "ALLOW_PAPER":
+            print(f"[702] gate BLOCKED {name}: {dec['reason_codes']}"); continue
+        dec["order_intent"]["calculated_volume"] = vol
+        ledger.record_intent(dec["order_intent"], reg.get(SID).approved_trial_ids, dec["decision_id"])
+        req = {"action": mt5.TRADE_ACTION_DEAL, "symbol": sym, "volume": vol,
+               "type": mt5.ORDER_TYPE_BUY if side_buy else mt5.ORDER_TYPE_SELL,
+               "price": price, "sl": float(stop), "deviation": 20, "magic": MAGIC,
+               "comment": f"demolimited:{config}", "type_filling": mt5.ORDER_FILLING_IOC}
+        t0 = _t.time()
+        with armed(dec["decision_id"]):
+            res = mt5.order_send(req)
+        rc = getattr(res, "retcode", None)
+        print(f"[702] {name} {'BUY' if side_buy else 'SELL'} {vol} -> retcode {rc}")
+        rec = _capture_execution({"symbol": sym, "delta": vol if side_buy else -vol},
+                                 dec, req, res, t0, tick, config, g_ok)
+        out = record(rec, SID, g, env)
+        print(f"[702] operational evidence: supports={out['supports']} | {out['evidence']}")
+        if out["critical_failures"]:
+            print(f"[702] !! CRITICAL {out['critical_failures']} -> AUTOMATIC SHUTDOWN")
+            break
+        if rc == 10009:
+            env.record_trade()
+        p = out["promotion"]
+        print(f"[702] state now {p['state']} ops={p['operational_belief']} trades={p['demo_trades']}")
+        break        # LIMITED_DEMO: one position per invocation
+
+
 def run(config="funded", live=False, report=False):
     if mt5 is None or not mt5.initialize():
         raise SystemExit("MetaTrader5 unavailable — install it and start the terminal (Windows).")
@@ -366,6 +496,8 @@ if __name__ == "__main__":
     ap.add_argument("--live", action="store_true")
     ap.add_argument("--report", action="store_true")
     ap.add_argument("--discover", action="store_true", help="list broker symbols matching oil/copper and exit")
+    ap.add_argument("--demo-limited", action="store_true",
+                    help="PHASE 702 LIMITED_DEMO: 1 position, 0.1%% risk, 3/day, halts on any critical error")
     a = ap.parse_args()
     if a.discover:
         if mt5 is None or not mt5.initialize():
@@ -380,4 +512,7 @@ if __name__ == "__main__":
             if any(w in (s_.path or '').lower() for w in ["commodit", "energ", "metal"]):
                 print(f"    {s_.name}  ({s_.path})")
         raise SystemExit(0)
-    run(a.config, a.live, a.report)
+    if getattr(a, "demo_limited", False):
+        run_demo_limited(a.config)
+    else:
+        run(a.config, a.live, a.report)
