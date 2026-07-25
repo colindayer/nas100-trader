@@ -136,6 +136,15 @@ def from_api(url: str | None = None, token: str | None = None) -> list[Event]:
     return out
 
 
+def from_faireconomy_late() -> list:
+    """FREE published JSON calendar WITH forecasts. Late import avoids the circular dependency."""
+    try:
+        from .faireconomy_provider import load as _ff
+        return _ff()
+    except Exception:
+        return []
+
+
 def from_fred_late() -> list:
     """Late import to avoid a circular import (calendar_provider imports this module).
     Returns EconomicEvent objects -- same duck-typed interface as Event."""
@@ -149,7 +158,8 @@ def from_fred_late() -> list:
 def load() -> list:
     """API (auto) -> MT5 built-in -> FRED (free/official) -> operator CSV -> empty.
     Never fabricates an actual."""
-    return from_api() or from_mt5() or from_fred_late() or from_csv()
+    return (from_faireconomy_late() or from_api() or from_mt5()
+            or from_fred_late() or from_csv())
 
 
 def upcoming(events: list[Event], now: datetime | None = None, hours=24) -> list[Event]:

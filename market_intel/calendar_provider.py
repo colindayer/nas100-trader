@@ -104,12 +104,18 @@ def _from_legacy(fn, provider) -> list[EconomicEvent]:
     return out
 
 
+def from_faireconomy():
+    from .faireconomy_provider import load as _ff
+    return _ff()
+
+
 def from_fred():
     from .fred_provider import load as _fred
     return _fred()
 
 
-PROVIDERS = [("mt5", lambda: _from_legacy(from_mt5, "mt5")), ("finnhub", from_finnhub),
+PROVIDERS = [("faireconomy", from_faireconomy),
+             ("mt5", lambda: _from_legacy(from_mt5, "mt5")), ("finnhub", from_finnhub),
              ("fred", from_fred),
              ("tradingeconomics", from_trading_economics), ("fxstreet", from_fxstreet),
              ("forexfactory", from_forexfactory), ("csv", lambda: _from_legacy(from_csv, "csv"))]

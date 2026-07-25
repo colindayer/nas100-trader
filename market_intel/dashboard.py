@@ -65,8 +65,10 @@ def render(symbols):
         print("\n LATEST RELEASES")
         for e in rel:
             s = e.surprise()
-            print(f"   {e.currency} {e.name}: actual={e.actual} fcst={e.forecast} "
-                  f"surprise={s:+.4g} ({(e.surprise_pct() or 0):+.1%})")
+            sp = e.surprise_pct()
+            surp = (f"surprise={s:+.4g} ({sp:+.1%})" if s is not None and sp is not None
+                    else "surprise=n/a (no consensus forecast)")
+            print(f"   {e.currency} {e.name}: actual={e.actual} fcst={e.forecast} {surp}")
 
     opps = OpportunityRegistry().all()
     print("\n OPPORTUNITY REGISTRY: "
