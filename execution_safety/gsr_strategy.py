@@ -2,6 +2,8 @@
 as a first-class EXECUTABLE strategy. It EMITS Signal objects for the gate; it NEVER calls a broker.
 Whether an emitted signal ever becomes an order is decided entirely by authorize() -> the gate.
 Frozen params = the replicated paper params. Status is governed by its StrategyContract, NOT by code.
+
+[STATUS: UNUSED - no runner invokes this. Kept for traceability only.]
 """
 from __future__ import annotations
 import numpy as np, pandas as pd

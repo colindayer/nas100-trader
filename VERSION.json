@@ -1,0 +1,51 @@
+{
+ "version": "2026.07.25",
+ "commit": "a7e5e3aaaed346bd041e009b01008f07d0e5aa12",
+ "commit_short": "a7e5e3aaaed3",
+ "branch": "phase404-live-demo",
+ "generated": "2026-07-25T01:02:03Z",
+ "components": {
+  "execution_safety": {
+   "modules": 18,
+   "tests": 49,
+   "status": "production"
+  },
+  "market_intel": {
+   "modules": 14,
+   "tests": 15,
+   "status": "production"
+  },
+  "scripts": {
+   "modules": 3,
+   "tests": 8,
+   "status": "production"
+  }
+ },
+ "governance": {
+  "live_research_bar": 0.6,
+  "live_ops_bar": 0.85,
+  "live_demo_trades": 100,
+  "max_exec_research_logodds": 0.35,
+  "immutable": true
+ },
+ "required_files": [
+  "execution_safety/gate.py",
+  "execution_safety/strategy_contract.py",
+  "execution_safety/execution_guard.py",
+  "execution_safety/belief_graph_v2.py",
+  "execution_safety/promotion_pipeline_v2.py",
+  "execution_safety/operational_belief.py",
+  "execution_safety/demo_evidence.py",
+  "execution_safety/position_ledger.py",
+  "execution_safety/broker_reconciliation.py",
+  "execution_safety/guardian_bridge.py",
+  "scripts/prop_risk_guardian.py",
+  "scripts/portfolio_mt5.py",
+  "market_intel/state.py",
+  "market_intel/calendar_feed.py",
+  "market_intel/faireconomy_provider.py",
+  "market_intel/dashboard.py",
+  "market_intel/web.py",
+  "strategy_contracts/portfolio_multisleeve.json"
+ ]
+}

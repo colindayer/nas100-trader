@@ -1,6 +1,8 @@
 """prop_objective.py -- PHASE 601 Stage 5. Firm-configuration abstraction + prop-survival estimates.
 Not one hardcoded firm; versioned configs. A strategy cannot be PAPER_APPROVED for a firm without a
 simulation against that exact config. Fail closed: unknown firm/state => cannot certify.
+
+[STATUS: UNUSED at order time - see ARCHITECTURE_STATE_2026 gap 7.]
 """
 from __future__ import annotations
 import json, os

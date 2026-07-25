@@ -1,6 +1,8 @@
 """belief_reader.py -- PHASE 601 gap closure. Reads the research Belief Graph SNAPSHOT (a data
 artifact, not research code -- the firewall stays intact) and converts a hypothesis posterior into
 an inference decision. FAIL CLOSED: no snapshot, unknown hypothesis, or stale snapshot => BLOCK.
+
+[STATUS: LEGACY v1 belief store. --live still uses it; --demo-limited uses belief_graph_v2.]
 """
 from __future__ import annotations
 import json, math, os, time

@@ -1,6 +1,8 @@
 """promotion_gate.py -- the promotion RULE, defined BEFORE any strategy qualifies. NEEDS_REPLICATION
 -> PAPER_APPROVED requires ALL criteria. Fail closed: missing evidence => not eligible. Nothing is
 promoted because it's exciting; it's promoted because it meets every threshold, provably.
+
+[STATUS: SUPERSEDED by promotion_pipeline_v2.py (5-state). Used only by test_promotion.]
 """
 from __future__ import annotations
 

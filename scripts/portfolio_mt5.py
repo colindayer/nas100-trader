@@ -247,10 +247,21 @@ def _capture_execution(it, dec, req, res, t0, pre_tick, config, guardian_ok):
     return rec
 
 
+def _startup_banner(mode):
+    """Live diagnostics. Never a hardcoded status string."""
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from startup import banner
+        banner(f"PORTFOLIO RUNNER - {mode}")
+    except Exception as e:
+        print(f"[startup] diagnostics unavailable: {type(e).__name__}: {e}")
+
+
 def run_demo_limited(config="funded"):
     """PHASE 702 LIMITED_DEMO: evidence collection under a hard envelope. Demo only.
     Every trade is Guardian-approved, envelope-limited, and updates OperationalBelief only."""
     import time as _t
+    _startup_banner("LIMITED DEMO")
     if mt5 is None or not mt5.initialize():
         raise SystemExit("MetaTrader5 unavailable")
     acct = mt5.account_info()
@@ -314,7 +325,10 @@ def run_demo_limited(config="funded"):
         vol = float(min(vol, info.volume_max or 100.0))
         sig = Signal(signal_id=f"dl-{name}-{int(_t.time())}", strategy_id=SID, strategy_version="v1",
                      symbol=sym, direction=1 if side_buy else -1, entry=price, stop_loss=stop)
-        dec = authorize(sig, registry=reg, inference=lambda s: "ALLOW_PAPER", guardian_ok=g_ok,
+        # PHASE 702 governance: the promotion state IS the belief decision for the demo path.
+        # (Previously a hardcoded "ALLOW_PAPER" -- the demo path was weaker than --live. Fixed.)
+        belief_decision = "ALLOW_PAPER" if st["may_trade_demo"] else "BLOCK"
+        dec = authorize(sig, registry=reg, inference=lambda s: belief_decision, guardian_ok=g_ok,
                         equity=acct.equity, account_is_demo=True, open_positions=[], shadow=False)
         if dec["decision"] != "ALLOW_PAPER":
             print(f"[702] gate BLOCKED {name}: {dec['reason_codes']}"); continue
@@ -344,6 +358,7 @@ def run_demo_limited(config="funded"):
 
 
 def run(config="funded", live=False, report=False):
+    _startup_banner("LIVE" if live else "SHADOW")
     if mt5 is None or not mt5.initialize():
         raise SystemExit("MetaTrader5 unavailable — install it and start the terminal (Windows).")
     acct = mt5.account_info()

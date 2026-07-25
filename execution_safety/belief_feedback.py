@@ -2,6 +2,8 @@
 Reads CLOSED deals for our magic from MT5 history, computes realised expectancy with a bootstrap CI,
 and writes an evidence entry into the belief snapshot. This is the ONLY legitimate way a strategy's
 posterior rises: by producing real, measured results.
+
+[STATUS: ORPHANED - writes the v1 store; no runner calls it. See ARCHITECTURE_STATE_2026 gap 8.]
 """
 from __future__ import annotations
 import json, math, os
