@@ -5,6 +5,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from execution_safety.belief_graph_v2 import BeliefGraphV2, Evidence
 from execution_safety.promotion_pipeline_v2 import evaluate, REQUIREMENTS
 from execution_safety.demo_evidence import LimitedDemoEnvelope, record
+import tempfile
+def _sp():  # isolated safety-state path per test (state is now PERSISTENT)
+    return os.path.join(tempfile.mkdtemp(), 'safety_state.json')
 from execution_safety.operational_belief import TradeExecutionRecord
 from execution_safety.execution_guard import consume_or_block, ExecutionBlocked, armed
 
@@ -25,7 +28,7 @@ def _rec(i, **kw):
 
 # 1. cannot exceed the daily trade cap
 def test_cannot_exceed_daily_trade_cap():
-    e = LimitedDemoEnvelope(max_positions=1, max_trades_per_day=3)
+    e = LimitedDemoEnvelope(max_positions=1, max_trades_per_day=3, state_path=_sp())
     for _ in range(3):
         assert e.allow(0)[0] is True; e.record_trade()
     ok, why = e.allow(0)
@@ -33,7 +36,7 @@ def test_cannot_exceed_daily_trade_cap():
 
 # 2. cannot pyramid / exceed concurrent-position cap
 def test_cannot_pyramid_beyond_envelope():
-    e = LimitedDemoEnvelope(max_positions=1)
+    e = LimitedDemoEnvelope(max_positions=1, state_path=_sp())
     assert e.allow(0)[0] is True
     ok, why = e.allow(1)                      # one already open
     assert ok is False and why == "MAX_POSITIONS"
@@ -44,7 +47,7 @@ def test_risk_cap_is_enforced_by_state():
     st = evaluate("S", g)
     assert st["state"] == "LIMITED_DEMO_APPROVED"
     assert st["risk_cap_pct"] == 0.001 and st["position_cap"] == 1
-    e = LimitedDemoEnvelope(max_positions=st["position_cap"], risk_pct=st["risk_cap_pct"])
+    e = LimitedDemoEnvelope(max_positions=st["position_cap"], risk_pct=st["risk_cap_pct"], state_path=_sp())
     assert e.risk_pct == 0.001
 
 # 4. cannot execute below LIMITED_DEMO_APPROVED
@@ -72,13 +75,13 @@ def test_arming_is_single_use_so_one_decision_is_one_order():
 
 # 6. critical failure halts immediately and is recorded as evidence against
 def test_critical_reconciliation_failure_halts():
-    g = _demo_ready(_g()); env = LimitedDemoEnvelope()
+    g = _demo_ready(_g()); env = LimitedDemoEnvelope(state_path=_sp())
     out = record(_rec(1, reconciliation_passed=False), "S", g, env)
     assert "reconciliation_passed" in out["critical_failures"]
     assert env.halted is True and env.allow(0)[0] is False
 
 def test_missing_broker_stop_is_critical():
-    g = _demo_ready(_g()); env = LimitedDemoEnvelope()
+    g = _demo_ready(_g()); env = LimitedDemoEnvelope(state_path=_sp())
     out = record(_rec(2, stop_verified=False), "S", g, env)
     assert "stop_verified" in out["critical_failures"] and env.halted is True
 

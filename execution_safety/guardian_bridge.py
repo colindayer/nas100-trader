@@ -27,6 +27,17 @@ def guardian_ok(day_start_equity=None, hwm=None, consecutive_losses=0, trades_to
         snap = mt5_snapshot(cfg)
         if snap is None or not getattr(snap, "ok", False):
             return False, {"reason": "GUARDIAN_SNAPSHOT_BAD"}
+        # V-04 fix: baselines come from PERSISTED safety state, not from current equity.
+        # Defaulting to current equity made the baseline follow the account down, so realised
+        # drawdown always read ~0 and the daily/total stop could never trigger.
+        if day_start_equity is None or hwm is None:
+            try:
+                from .safety_state import guardian_baselines
+                p_dse, p_hwm = guardian_baselines(equity=snap.equity)
+            except Exception:
+                p_dse = p_hwm = None
+            day_start_equity = day_start_equity if day_start_equity is not None else p_dse
+            hwm = hwm if hwm is not None else p_hwm
         dse = day_start_equity if day_start_equity is not None else snap.balance
         h = hwm if hwm is not None else max(snap.balance, snap.equity)
         dec = evaluate(snap, cfg, dse, h, consecutive_losses, trades_today, cooldown_until,

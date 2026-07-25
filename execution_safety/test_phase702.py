@@ -5,6 +5,9 @@ from execution_safety.belief_graph_v2 import BeliefGraphV2, Evidence, EVIDENCE_C
 from execution_safety.promotion_pipeline_v2 import evaluate, REQUIREMENTS, STATES
 from execution_safety.operational_belief import TradeExecutionRecord, to_evidence
 from execution_safety.demo_evidence import record, LimitedDemoEnvelope
+import tempfile, os as _os
+def _sp():  # isolated safety-state path per test (state is now PERSISTENT)
+    return _os.path.join(tempfile.mkdtemp(), 'safety_state.json')
 
 def _g():
     return BeliefGraphV2(path=os.path.join(tempfile.mkdtemp(), "b.json"))
@@ -92,12 +95,12 @@ def test_critical_defect_blocks_and_halts():
     assert out["promotion"]["outstanding_defects"], out["promotion"]
 
 def test_envelope_limits():
-    e=LimitedDemoEnvelope(max_positions=1, max_trades_per_day=3)
+    e=LimitedDemoEnvelope(max_positions=1, max_trades_per_day=3, state_path=_sp())
     assert e.allow(0)[0] is True
     assert e.allow(1)[0] is False                        # position cap
     e.record_trade(); e.record_trade(); e.record_trade()
     assert e.allow(0)[0] is False                        # daily cap
-    e2=LimitedDemoEnvelope(); e2.halt("boom"); assert e2.allow(0)[0] is False
+    e2=LimitedDemoEnvelope(state_path=_sp()); e2.halt("boom"); assert e2.allow(0)[0] is False
 
 if __name__=="__main__":
     fns=[v for k,v in list(globals().items()) if k.startswith("test_")]; p=0

@@ -11,23 +11,54 @@ LEDGER = "registry/demo_execution_evidence.jsonl"
 
 
 class LimitedDemoEnvelope:
-    """Hard operating limits for LIMITED_DEMO. Any critical error -> automatic shutdown."""
-    def __init__(self, max_positions=1, max_trades_per_day=3, risk_pct=0.001):
-        self.max_positions = max_positions; self.max_trades_per_day = max_trades_per_day
-        self.risk_pct = risk_pct; self.halted = False; self.halt_reason = None
-        self._today = time.strftime("%Y-%m-%d"); self._count = 0
+    """Hard operating limits for LIMITED_DEMO, backed by PERSISTENT state.
+
+    V-01/V-02 fix: the daily counter and the halt live in registry/safety_state.json, so they
+    survive process restart, VPS reboot and power loss. This class holds NO authoritative state.
+    """
+    def __init__(self, max_positions=1, max_trades_per_day=3, risk_pct=0.001,
+                 state_path=None, equity=None):
+        from . import safety_state as _ss
+        self._ss = _ss
+        self.state_path = state_path or _ss.STATE_PATH
+        self.max_positions = max_positions
+        self.max_trades_per_day = max_trades_per_day
+        self.risk_pct = risk_pct
+        st, notes = _ss.load(self.state_path, equity=equity)
+        self.load_notes = notes
+
+    # ---- authoritative reads come from disk every time ----
+    @property
+    def _state(self):
+        st, _ = self._ss.load(self.state_path)
+        return st
+
+    @property
+    def halted(self) -> bool:
+        return self._state.halted
+
+    @property
+    def halt_reason(self):
+        return self._state.halt_reason
+
+    def trades_today(self) -> int:
+        return self._state.trades_today
 
     def allow(self, open_positions: int) -> tuple[bool, str]:
-        if self.halted: return False, f"HALTED: {self.halt_reason}"
-        if time.strftime("%Y-%m-%d") != self._today:
-            self._today = time.strftime("%Y-%m-%d"); self._count = 0
-        if open_positions >= self.max_positions: return False, "MAX_POSITIONS"
-        if self._count >= self.max_trades_per_day: return False, "DAILY_TRADE_LIMIT"
+        st = self._state                                   # re-read: another process may have halted
+        if st.halted:
+            return False, f"HALTED: {st.halt_reason}"
+        if open_positions >= self.max_positions:
+            return False, "MAX_POSITIONS"
+        if st.trades_today >= self.max_trades_per_day:
+            return False, "DAILY_TRADE_LIMIT"
         return True, "ok"
 
-    def record_trade(self): self._count += 1
+    def record_trade(self, intent_id: str | None = None):
+        self._ss.record_trade(intent_id, path=self.state_path)
 
-    def halt(self, reason: str): self.halted = True; self.halt_reason = reason
+    def halt(self, reason: str):
+        self._ss.halt(reason, path=self.state_path)
 
 
 def record(rec: TradeExecutionRecord, strategy_id="portfolio_multisleeve",

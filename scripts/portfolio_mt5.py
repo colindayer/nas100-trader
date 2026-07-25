@@ -275,8 +275,18 @@ def run_demo_limited(config="funded"):
     from execution_safety.execution_guard import armed
     from execution_safety.guardian_bridge import guardian_ok as guardian_check
     from execution_safety.position_ledger import PositionLedger
+    from execution_safety.startup_reconciler import reconcile, report as recon_report
+    from execution_safety import safety_state as _ss
 
     SID = "portfolio_multisleeve"
+
+    # ---- V-12: startup reconciliation BEFORE any trading decision ----
+    _ss.update_equity(acct.equity)                      # V-04: persist baselines
+    recon = reconcile(magic=MAGIC)
+    print(recon_report(recon))
+    if not recon["trading_allowed"]:
+        print("[702] HALT: startup reconciliation failed — no trading this run.")
+        return
     g = BeliefGraphV2()
     st = evaluate(SID, g)
     print(f"[702] state={st['state']} research={st['research_belief']} ops={st['operational_belief']} "
@@ -285,7 +295,13 @@ def run_demo_limited(config="funded"):
         print(f"[702] HALT: state {st['state']} does not permit demo execution. "
               f"blocking={st['blocking']}"); return
     env = LimitedDemoEnvelope(max_positions=st["position_cap"], max_trades_per_day=3,
-                              risk_pct=st["risk_cap_pct"])
+                              risk_pct=st["risk_cap_pct"], equity=acct.equity)
+    for _n in getattr(env, "load_notes", []):
+        print(f"[702] safety state: {_n}")
+    if env.halted:
+        print(f"[702] HALT: {env.halt_reason} — clear with "
+              f"safety_state.clear_halt('human:<you>') after investigating.")
+        return
     print(f"[702] envelope: max_positions={env.max_positions} risk={env.risk_pct:.3%} "
           f"max_trades_per_day={env.max_trades_per_day}")
 
@@ -351,7 +367,7 @@ def run_demo_limited(config="funded"):
             print(f"[702] !! CRITICAL {out['critical_failures']} -> AUTOMATIC SHUTDOWN")
             break
         if rc == 10009:
-            env.record_trade()
+            env.record_trade(dec["order_intent"]["intent_id"])
         p = out["promotion"]
         print(f"[702] state now {p['state']} ops={p['operational_belief']} trades={p['demo_trades']}")
         break        # LIMITED_DEMO: one position per invocation
