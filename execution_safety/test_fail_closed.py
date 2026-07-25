@@ -16,7 +16,10 @@ def approved_contract(**kw):
              version="v1", code_commit="abc123", status="PAPER_APPROVED",
              approved_trial_ids=["TR-1"], permitted_symbols=["EURUSD"],
              maximum_risk_per_trade=0.001, maximum_concurrent_positions=1, pyramiding_allowed=False)
-    d.update(kw); return StrategyContract(**d)
+    d.update(kw)
+    c = StrategyContract(**d)
+    c.sign(); c.signature_valid = c.verify()      # V-03: contracts must be signed to authorise
+    return c
 
 
 def sig(**kw):

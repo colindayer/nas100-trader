@@ -54,6 +54,7 @@ def test_shadow_never_places_even_on_allow():
                          version="v1", code_commit="x", status="PAPER_APPROVED",
                          approved_trial_ids=["TR-1"], permitted_symbols=["EURUSD"],
                          maximum_risk_per_trade=0.001, maximum_concurrent_positions=1)
+    c.sign(); c.signature_valid = c.verify()      # V-03: signed contracts only
     s = Signal("s1", "trend_ema", "v1", "EURUSD", 1, 1.10, 1.095, 1.11)
     d = shadow.shadow_step(s, registry=Reg([c]), inference=lambda x: "ALLOW_PAPER", guardian_ok=True,
                            equity=50000, account_is_demo=True, open_positions=[], log="/tmp/_shadow.jsonl")

@@ -7,7 +7,7 @@ The circular dependency is broken by design: operational evidence is collected u
 LIMITED_DEMO (authorised by *research* evidence), and it can never inflate ResearchBelief.
 """
 from __future__ import annotations
-import json, math, os, time
+import hashlib, json, math, os, tempfile, time
 from dataclasses import dataclass, field, asdict
 
 STORE = "registry/belief_v2.json"
@@ -83,7 +83,8 @@ class StrategyBeliefs:
 
 class BeliefGraphV2:
     def __init__(self, path=STORE):
-        self.path = path; self.strategies: dict[str, StrategyBeliefs] = {}; self.load()
+        self.path = path; self.strategies: dict[str, StrategyBeliefs] = {}
+        self.corrupt = False; self.load()
 
     def get(self, sid: str) -> StrategyBeliefs:
         return self.strategies.setdefault(sid, StrategyBeliefs(strategy_id=sid))
@@ -96,14 +97,60 @@ class BeliefGraphV2:
         s.evidence.append(ev); self.save(); return s
 
     def save(self):
-        os.makedirs(os.path.dirname(self.path), exist_ok=True)
-        json.dump({k: {**asdict(v), "evidence": [asdict(e) for e in v.evidence]}
-                   for k, v in self.strategies.items()}, open(self.path, "w"), indent=1)
+        """V-05: atomic + fsynced + backed-up write under an advisory lock. A crash mid-write can
+        no longer truncate the store, and a corrupt store no longer silently reads as EMPTY."""
+        from .safety_state import acquire, release
+        payload = {k: {**asdict(v), "evidence": [asdict(e) for e in v.evidence]}
+                   for k, v in self.strategies.items()}
+        body = {"schema_version": 2, "payload": payload,
+                "digest": hashlib.sha256(json.dumps(payload, sort_keys=True,
+                                                    separators=(",", ":")).encode()).hexdigest()[:32]}
+        d = os.path.dirname(self.path) or "."
+        os.makedirs(d, exist_ok=True)
+        lp = acquire(self.path)
+        try:
+            fd, tmp = tempfile.mkstemp(dir=d, prefix=".belief_", suffix=".tmp")
+            try:
+                with os.fdopen(fd, "w") as f:
+                    json.dump(body, f, indent=1); f.flush(); os.fsync(f.fileno())
+                if os.path.exists(self.path):
+                    try:
+                        import shutil; shutil.copy2(self.path, self.path + ".bak")
+                    except Exception:
+                        pass
+                os.replace(tmp, self.path)
+            except Exception:
+                try: os.unlink(tmp)
+                except Exception: pass
+                raise
+        finally:
+            release(lp)
 
     def load(self):
+        """V-05: verifies the digest and recovers from backup. Corruption sets self.corrupt so the
+        caller can fail closed instead of seeing a silently-empty graph."""
+        self.corrupt = False
         if not os.path.exists(self.path): return
-        try: data = json.load(open(self.path))
-        except Exception: return
+        def _read(p):
+            try: return json.load(open(p))
+            except Exception: return None
+        data = _read(self.path)
+        if data is None:
+            data = _read(self.path + ".bak")
+            if data is None:
+                self.corrupt = True; return
+        if isinstance(data, dict) and "payload" in data and "digest" in data:
+            calc = hashlib.sha256(json.dumps(data["payload"], sort_keys=True,
+                                             separators=(",", ":")).encode()).hexdigest()[:32]
+            if calc != data["digest"]:
+                bak = _read(self.path + ".bak")
+                if bak and bak.get("digest") == hashlib.sha256(
+                        json.dumps(bak.get("payload", {}), sort_keys=True,
+                                   separators=(",", ":")).encode()).hexdigest()[:32]:
+                    data = bak
+                else:
+                    self.corrupt = True; return
+            data = data["payload"]
         for k, d in data.items():
             s = StrategyBeliefs(d["strategy_id"], d.get("research_prior", .25), d.get("ops_prior", .20))
             s.evidence = [Evidence(**e) for e in d.get("evidence", [])]

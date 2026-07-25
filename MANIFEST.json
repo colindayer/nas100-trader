@@ -1,5 +1,5 @@
 {
- "commit": "c9600aed35b3b3cc6e5bfa3337a95b754e7e27bd",
+ "commit": "5a41aac11d99e4a1288fee574d086c48563003e2",
  "files": {
   "VERSION.json": {
    "sha256_16": "aee0737fccbe7d75",
@@ -10,16 +10,16 @@
    "bytes": 18209
   },
   "deploy.py": {
-   "sha256_16": "916c7797065ffa2a",
-   "bytes": 6390
+   "sha256_16": "e50b54a22b38a472",
+   "bytes": 9281
   },
   "startup.py": {
    "sha256_16": "d439ad00fae43c0b",
    "bytes": 5823
   },
   "scripts/portfolio_mt5.py": {
-   "sha256_16": "cf1998cfdb7b65dd",
-   "bytes": 28285
+   "sha256_16": "47ec107c705c4274",
+   "bytes": 28599
   },
   "scripts/prop_risk_guardian.py": {
    "sha256_16": "6de0f074734eebeb",
@@ -34,16 +34,16 @@
    "bytes": 5716
   },
   "execution_safety/strategy_contract.py": {
-   "sha256_16": "e74a28a7f70358bb",
-   "bytes": 2796
+   "sha256_16": "603e8fac138bd049",
+   "bytes": 5812
   },
   "execution_safety/execution_guard.py": {
    "sha256_16": "6040d52ddd3a8f59",
    "bytes": 1661
   },
   "execution_safety/belief_graph_v2.py": {
-   "sha256_16": "4eb23b2721054eae",
-   "bytes": 5010
+   "sha256_16": "ef1165ab087e4232",
+   "bytes": 7335
   },
   "execution_safety/promotion_pipeline_v2.py": {
    "sha256_16": "1daccd1b09d6bb23",
@@ -54,12 +54,12 @@
    "bytes": 3241
   },
   "execution_safety/demo_evidence.py": {
-   "sha256_16": "c8d33ad7bd8a7af8",
-   "bytes": 3262
+   "sha256_16": "00bb7a6e57bd8005",
+   "bytes": 3502
   },
   "execution_safety/position_ledger.py": {
-   "sha256_16": "2c6490fbfc782b70",
-   "bytes": 2925
+   "sha256_16": "466d16a237e5d652",
+   "bytes": 3718
   },
   "execution_safety/broker_reconciliation.py": {
    "sha256_16": "1d5ccb6f22171d15",
@@ -72,6 +72,14 @@
   "execution_safety/belief_reader.py": {
    "sha256_16": "0784e96749b3ccd4",
    "bytes": 2216
+  },
+  "execution_safety/safety_state.py": {
+   "sha256_16": "76163dbb52564c2f",
+   "bytes": 11724
+  },
+  "execution_safety/startup_reconciler.py": {
+   "sha256_16": "f231dd371ed97bce",
+   "bytes": 5527
   },
   "execution_safety/shadow.py": {
    "sha256_16": "c354a87cc2f585e9",
@@ -134,10 +142,10 @@
    "bytes": 4936
   },
   "strategy_contracts/portfolio_multisleeve.json": {
-   "sha256_16": "b0ad35be169ff5b8",
-   "bytes": 1313
+   "sha256_16": "d1d340310d70ed19",
+   "bytes": 1388
   }
  },
  "missing_at_build": [],
- "n_files": 34
+ "n_files": 36
 }
