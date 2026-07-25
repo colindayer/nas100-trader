@@ -160,10 +160,20 @@ def page(symbols):
 
 class H(BaseHTTPRequestHandler):
     symbols = SYMBOLS
+    token = None                      # when bound off-localhost a token is REQUIRED
+
     def do_GET(self):
+        if self.token:
+            from urllib.parse import urlparse, parse_qs
+            q = parse_qs(urlparse(self.path).query)
+            if q.get("t", [None])[0] != self.token:
+                msg = b"401 - append ?t=YOUR_TOKEN to the URL"
+                self.send_response(401); self.send_header("Content-Length", str(len(msg)))
+                self.end_headers(); self.wfile.write(msg); return
         body = ("<meta http-equiv='refresh' content='30'>" + page(self.symbols)).encode()
         self.send_response(200); self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+
     def log_message(self, *a): pass
 
 
@@ -171,7 +181,22 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8787)
     ap.add_argument("--symbols", default=",".join(SYMBOLS))
+    ap.add_argument("--host", default="127.0.0.1",
+                    help="0.0.0.0 exposes it on the network (a token is then REQUIRED)")
+    ap.add_argument("--token", default=None, help="shared secret; auto-generated if --host is public")
     a = ap.parse_args()
     H.symbols = [s.strip() for s in a.symbols.split(",") if s.strip()]
-    print(f"Market Intelligence -> http://localhost:{a.port}  (refreshes 30s, SHADOW only)")
-    HTTPServer(("127.0.0.1", a.port), H).serve_forever()
+    public = a.host not in ("127.0.0.1", "localhost")
+    if public:
+        import secrets
+        H.token = a.token or secrets.token_urlsafe(16)
+        print("=" * 66)
+        print("  PUBLIC BIND - this page is reachable from the network.")
+        print(f"  TOKEN: {H.token}")
+        print(f"  URL:   http://<VPS-IP>:{a.port}/?t={H.token}")
+        print("  Open the port in Windows Firewall, and prefer restricting it to your own IP.")
+        print("  The page is READ-ONLY and cannot place trades, but it does reveal account state.")
+        print("=" * 66)
+    else:
+        print(f"Market Intelligence -> http://localhost:{a.port}  (refreshes 30s, SHADOW only)")
+    HTTPServer((a.host, a.port), H).serve_forever()
