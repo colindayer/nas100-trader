@@ -193,7 +193,26 @@ if __name__ == "__main__":
         print("=" * 66)
         print("  PUBLIC BIND - this page is reachable from the network.")
         print(f"  TOKEN: {H.token}")
-        print(f"  URL:   http://<VPS-IP>:{a.port}/?t={H.token}")
+        # resolve the real outward-facing IP instead of printing a placeholder
+        import socket
+        lan = "?"
+        try:
+            _s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            _s.connect(("8.8.8.8", 80)); lan = _s.getsockname()[0]; _s.close()
+        except Exception:
+            pass
+        pub = None
+        try:
+            import urllib.request
+            pub = urllib.request.urlopen("https://api.ipify.org", timeout=5).read().decode().strip()
+        except Exception:
+            pass
+        print(f"  LOCAL: http://localhost:{a.port}/?t={H.token}")
+        print(f"  LAN:   http://{lan}:{a.port}/?t={H.token}")
+        if pub:
+            print(f"  PUBLIC:http://{pub}:{a.port}/?t={H.token}   <- open this from your Mac")
+        print(f"  Firewall: New-NetFirewallRule -DisplayName 'MarketIntel {a.port}' "
+              f"-Direction Inbound -LocalPort {a.port} -Protocol TCP -Action Allow")
         print("  Open the port in Windows Firewall, and prefer restricting it to your own IP.")
         print("  The page is READ-ONLY and cannot place trades, but it does reveal account state.")
         print("=" * 66)
