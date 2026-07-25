@@ -10,10 +10,18 @@ def guardian_ok(day_start_equity=None, hwm=None, consecutive_losses=0, trades_to
     """Returns (allow, detail). Never returns True on an error path."""
     try:
         import sys
-        sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts"))
+        here = os.path.dirname(os.path.abspath(__file__))
+        root = os.path.dirname(here)
+        for cand in (here, os.path.join(root, "scripts"), root, os.getcwd(),
+                     os.path.join(os.getcwd(), "scripts"),
+                     os.path.join(os.getcwd(), "execution_safety")):
+            if cand and cand not in sys.path and os.path.isdir(cand):
+                sys.path.insert(0, cand)
         from prop_risk_guardian import Config, mt5_snapshot, evaluate
     except Exception as e:
-        return False, {"reason": "GUARDIAN_UNAVAILABLE", "error": str(e)[:120]}
+        return False, {"reason": "GUARDIAN_UNAVAILABLE", "error": str(e)[:160],
+                       "hint": "place prop_risk_guardian.py in execution_safety\\ or scripts\\ "
+                               "and config/guardian.env alongside"}
     try:
         cfg = Config.load(config or os.environ.get("GUARDIAN_CONFIG", "config/guardian.env"))
         snap = mt5_snapshot(cfg)
