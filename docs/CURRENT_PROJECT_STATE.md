@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+94ef34c  Reliability release: healthcheck, deployment manager, startup diagnostics, live status
+a7e5e3a  Obsidian bridge auto-sync [bridge-auto]
 39dbc22  web.py: print real LAN/PUBLIC URLs + the firewall command instead of a <VPS-IP> placeholder
 f25d858  Obsidian bridge auto-sync [bridge-auto]
 ddfb769  web.py: --host/--token for remote access; token mandatory on any non-localhost bind
 c3ba81c  Obsidian bridge auto-sync [bridge-auto]
 85546e9  guardian_bridge: search execution_safety/, scripts/, root and cwd for prop_risk_guardian
 aaa1d07  Obsidian bridge auto-sync [bridge-auto]
-d26f804  add reaction_recorder: observe what markets actually do after each release
-2108a07  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
