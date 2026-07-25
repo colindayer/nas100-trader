@@ -314,3 +314,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | faireconomy: retry+backoff, cache-on-diagnose, surface LAST_ERROR | git post-commit hook | 6973f5f |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 2108a07 |
 | 2026-07-25 | Obsidian Bridge / automated | add reaction_recorder: observe what markets actually do after each release | git post-commit hook | d26f804 |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | aaa1d07 |
+| 2026-07-25 | Obsidian Bridge / automated | guardian_bridge: search execution_safety/, scripts/, root and cwd for prop_ri... | git post-commit hook | 85546e9 |
