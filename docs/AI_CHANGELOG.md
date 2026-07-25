@@ -304,3 +304,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | faireconomy_provider: add diagnose() — the provider silently returned [] on a... | git post-commit hook | 4d31383 |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 68c6ec7 |
 | 2026-07-25 | Obsidian Bridge / automated | faireconomy_provider: fix SSL CERTIFICATE_VERIFY_FAILED on Windows | git post-commit hook | d7437ae |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | f42784b |
+| 2026-07-25 | Obsidian Bridge / automated | faireconomy: retry+backoff, cache-on-diagnose, surface LAST_ERROR | git post-commit hook | 6973f5f |
