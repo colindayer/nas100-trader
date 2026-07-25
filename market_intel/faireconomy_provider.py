@@ -83,6 +83,39 @@ def _fetch_all():
     return rows or []          # rate-limited/offline -> last known good, never fabricated
 
 
+def diagnose():
+    """Print the RAW result of each feed fetch. Run: py -m market_intel.faireconomy_provider"""
+    import urllib.error, ssl, time
+    print(f"cache: {CACHE} exists={os.path.exists(CACHE)}")
+    rows, age = _cache_read()
+    print(f"cache rows={len(rows) if rows else 0} age={None if age is None else round(age)}s ttl={CACHE_TTL}s")
+    for url in FEEDS:
+        print(f"\n--- {url}")
+        try:
+            req = urllib.request.Request(url, headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) calendar-client",
+                "Accept": "application/json"})
+            t0 = time.time()
+            with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+                body = r.read().decode()
+            print(f"HTTP {r.status}  {len(body)} bytes  {(time.time()-t0)*1000:.0f}ms")
+            try:
+                d = json.loads(body)
+                print(f"parsed {len(d)} rows; first: {json.dumps(d[0])[:160] if d else '(none)'}")
+            except Exception as e:
+                print(f"JSON parse failed: {e}\nbody[:200]: {body[:200]}")
+        except urllib.error.HTTPError as e:
+            print(f"HTTPError {e.code} {e.reason}")
+            try: print("body:", e.read().decode()[:200])
+            except Exception: pass
+        except urllib.error.URLError as e:
+            print(f"URLError: {e.reason}  <- network/DNS/TLS blocked?")
+        except ssl.SSLError as e:
+            print(f"SSLError: {e}")
+        except Exception as e:
+            print(f"{type(e).__name__}: {e}")
+
+
 def load() -> list[EconomicEvent]:
     if os.environ.get("FAIRECONOMY_DISABLED") == "1":
         return []
@@ -107,3 +140,10 @@ def load() -> list[EconomicEvent]:
                 previous=_num(d.get("previous")), forecast=_num(d.get("forecast")),
                 actual=_num(d.get("actual")), unit="", provider="faireconomy"))
     return out
+
+
+if __name__ == "__main__":
+    diagnose()
+    print("\n--- load() ---")
+    ev = load()
+    print(f"{len(ev)} events; with forecast: {sum(1 for e in ev if e.forecast is not None)}")
