@@ -312,3 +312,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | guardian_bridge: search execution_safety/, scripts/, root and cwd for prop_ri... | git post-commit hook | 85546e9 |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | c3ba81c |
 | 2026-07-25 | Obsidian Bridge / automated | web.py: --host/--token for remote access; token mandatory on any non-localhos... | git post-commit hook | ddfb769 |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | f25d858 |
+| 2026-07-25 | Obsidian Bridge / automated | web.py: print real LAN/PUBLIC URLs + the firewall command instead of a <VPS-I... | git post-commit hook | 39dbc22 |
