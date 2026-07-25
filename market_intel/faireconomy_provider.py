@@ -74,16 +74,32 @@ def _cache_write(rows):
         pass
 
 
-def _fetch(url):
-    """Fetch one feed. Callers must go through _fetch_all() so the cache is respected."""
-    try:
-        req = urllib.request.Request(url, headers={
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) calendar-client",
-            "Accept": "application/json"})
-        with urllib.request.urlopen(req, timeout=TIMEOUT, context=_ssl_ctx()) as r:
-            return json.loads(r.read().decode())
-    except Exception:
-        return []
+LAST_ERROR = None          # visible reason for the most recent failure
+
+
+def _fetch(url, retries=3):
+    """Fetch one feed with backoff. Records the failure reason in LAST_ERROR instead of
+    silently returning [] (that silence cost hours of debugging)."""
+    global LAST_ERROR
+    import time as _t
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) calendar-client",
+                "Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=TIMEOUT, context=_ssl_ctx()) as r:
+                LAST_ERROR = None
+                return json.loads(r.read().decode())
+        except Exception as e:
+            LAST_ERROR = f"{type(e).__name__}: {str(e)[:120]}"
+            code = getattr(e, "code", None)
+            if code == 404:                       # nextweek feed legitimately absent
+                return []
+            if attempt < retries - 1:
+                _t.sleep(2 ** attempt * 3)        # 3s, 6s -- the feed throttles hard
+    if os.environ.get("FAIRECONOMY_DEBUG") == "1":
+        print(f"[faireconomy] {url} -> {LAST_ERROR}")
+    return []
 
 
 def _fetch_all():
@@ -98,6 +114,8 @@ def _fetch_all():
     if fresh:
         _cache_write(fresh)
         return fresh
+    if not rows and LAST_ERROR and os.environ.get("FAIRECONOMY_DEBUG") == "1":
+        print(f"[faireconomy] no data and no cache. last error: {LAST_ERROR}")
     return rows or []          # rate-limited/offline -> last known good, never fabricated
 
 
@@ -129,6 +147,9 @@ def diagnose():
             try:
                 d = json.loads(body)
                 print(f"parsed {len(d)} rows; first: {json.dumps(d[0])[:160] if d else '(none)'}")
+                if d:
+                    _cache_write(d)               # so a later throttled call still works
+                    print(f"-> cache written: {CACHE}")
             except Exception as e:
                 print(f"JSON parse failed: {e}\nbody[:200]: {body[:200]}")
         except urllib.error.HTTPError as e:
