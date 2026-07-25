@@ -1,4 +1,4 @@
-# CURRENT PROJECT STATE — 2026-07-25
+# CURRENT PROJECT STATE — 2026-07-26
 
 _Onboarding snapshot for any agent/human joining. Sources: LIVE_TRADING_PARITY,
 PRODUCTION_READINESS_REVIEW, NEXT_30_DAY_MONITORING_PLAN, LIVE_TRADE_REVIEW,
@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+7d1286a  STAGE 5: operational readiness review (documentation only, no code changes)
+988f366  Obsidian bridge auto-sync [bridge-auto]
 cc3a89c  STAGE 3 extended scope + STAGE 4 verification
 8f8369d  Obsidian bridge auto-sync [bridge-auto]
 110d4b1  STAGE 3: close V-01, V-02, V-04, V-12 (approved scope only)
 c9600ae  Obsidian bridge auto-sync [bridge-auto]
 8ad72eb  DEMO_ACCOUNT_POSTMORTEM: formal incident review of Pepperstone-Demo 61552095
 f73c57f  Obsidian bridge auto-sync [bridge-auto]
-9d90726  VERIFICATION_REPORT: adversarial audit — 2 CRITICAL, 4 HIGH, 7 MEDIUM, 2 LOW
-deda99e  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
