@@ -34,6 +34,54 @@ TRACKED = [
 ]
 
 
+# Components explicitly BANNED from any active execution path (caused the 61552095 incident).
+BANNED_EXECUTORS = ["live_trader.py", "mt5_broker.py"]
+
+
+def scan_execution_paths(root=None):
+    """Verify no scheduler/service/startup task references a banned executor.
+    Returns findings; empty = clean. Windows checks are best-effort and reported honestly."""
+    import glob, subprocess
+    root = root or ROOT
+    findings = []
+    # 1. present on disk in the deployment root?
+    for b in BANNED_EXECUTORS:
+        p = os.path.join(root, b)
+        if os.path.exists(p):
+            findings.append({"type": "BANNED_FILE_PRESENT", "file": b, "path": p})
+    # 2. referenced by any .bat/.cmd/.ps1 in the root?
+    for pat in ("*.bat", "*.cmd", "*.ps1"):
+        for f in glob.glob(os.path.join(root, pat)):
+            try:
+                txt = open(f, errors="ignore").read()
+            except Exception:
+                continue
+            for b in BANNED_EXECUTORS:
+                if b in txt:
+                    findings.append({"type": "BANNED_IN_SCRIPT", "file": os.path.basename(f),
+                                     "references": b})
+    # 3. Windows Task Scheduler (best effort; absent on non-Windows)
+    try:
+        out = subprocess.check_output(["schtasks", "/query", "/fo", "LIST", "/v"],
+                                      stderr=subprocess.DEVNULL, timeout=25).decode("utf-8", "ignore")
+        for b in BANNED_EXECUTORS:
+            if b in out:
+                findings.append({"type": "BANNED_IN_SCHEDULED_TASK", "references": b})
+    except Exception:
+        findings.append({"type": "SCHEDULER_NOT_CHECKED",
+                         "detail": "schtasks unavailable (non-Windows or blocked) — verify manually"})
+    # 4. running processes (best effort)
+    try:
+        out = subprocess.check_output(["tasklist", "/v", "/fo", "csv"],
+                                      stderr=subprocess.DEVNULL, timeout=25).decode("utf-8", "ignore")
+        for b in BANNED_EXECUTORS:
+            if b in out:
+                findings.append({"type": "BANNED_PROCESS_RUNNING", "references": b})
+    except Exception:
+        pass
+    return findings
+
+
 def _sha(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -118,7 +166,18 @@ if __name__ == "__main__":
     ap.add_argument("--verify", action="store_true")
     ap.add_argument("--sync-script", action="store_true")
     ap.add_argument("--strict", action="store_true", help="treat modified files as failure")
+    ap.add_argument("--scan-executors", action="store_true",
+                    help="verify no scheduler/script/process references a banned executor")
     a = ap.parse_args()
+    if a.scan_executors:
+        fs = scan_execution_paths()
+        hard = [f for f in fs if f["type"] != "SCHEDULER_NOT_CHECKED"]
+        print("EXECUTION PATH SCAN:", "CLEAN" if not hard else f"{len(hard)} FINDING(S)")
+        for f in fs:
+            print(f"  {'!!' if f['type'] != 'SCHEDULER_NOT_CHECKED' else ' -'} {f}")
+        if not fs:
+            print("  no banned executor found on disk, in scripts, in scheduled tasks or running")
+        sys.exit(1 if hard else 0)
     if a.manifest:
         m = build_manifest()
         print(f"MANIFEST.json: {m['n_files']} files @ commit {(m['commit'] or '?')[:12]}")

@@ -160,6 +160,81 @@ def test_every_transition_is_audited():
     finally:
         ss.AUDIT_PATH=ss.AUDIT_PATH_ORIG
 
+# ---------------- concurrency: two processes cannot overspend the envelope ----------------
+def test_two_processes_cannot_overspend_envelope():
+    p=_tmp()
+    e=LimitedDemoEnvelope(max_trades_per_day=3, state_path=p)
+    import threading
+    def spend():
+        for _ in range(5):
+            try:
+                e.record_trade(f"OI-{time.time_ns()}")      # atomic claim; refuses past the cap
+            except ss.EnvelopeExhausted:
+                return
+    ts=[threading.Thread(target=spend) for _ in range(4)]
+    [t.start() for t in ts]; [t.join() for t in ts]
+    st,_=ss.load(p)
+    assert st.trades_today <= 3, f"envelope overspent under concurrency: {st.trades_today}"
+
+def test_lock_prevents_concurrent_writer():
+    p=_tmp(); ss.save(ss.SafetyState(), p)
+    lp=ss.acquire(p, timeout=1)
+    try:
+        try:
+            ss.acquire(p, timeout=0.2); assert False, "second writer must be refused"
+        except ss.StateLocked: pass
+    finally:
+        ss.release(lp)
+    ss.release(ss.acquire(p, timeout=1))          # lock is reusable after release
+
+def test_record_trade_is_idempotent():
+    p=_tmp()
+    ss.record_trade("OI-SAME", path=p); ss.record_trade("OI-SAME", path=p)
+    st,_=ss.load(p)
+    assert st.trades_today == 1, f"duplicate intent double-counted: {st.trades_today}"
+
+# ---------------- bootstrap + backup recovery ----------------
+def test_missing_state_documented_safe_bootstrap():
+    p=_tmp()
+    st, notes = ss.load(p, equity=50000)
+    assert os.path.exists(p) and st.halted is False and st.trades_today == 0
+    assert st.day_start_equity == 50000 and st.high_water_mark == 50000
+    assert any("initialised" in n for n in notes)
+
+def test_backup_recovers_unreadable_primary():
+    p=_tmp()
+    ss.save(ss.SafetyState(trades_today=2), p)
+    ss.save(ss.SafetyState(trades_today=2), p)          # second save creates the .bak
+    open(p,"w").write("{ corrupt")
+    st, notes = ss.load(p)
+    assert st.halted is False and st.trades_today == 2, (st.halted, st.trades_today)
+    assert any("BACKUP" in n for n in notes)
+
+# ---------------- reconciliation: remaining detections ----------------
+def test_v12_detects_orphan_intent():
+    p=_tmp()
+    e=types.SimpleNamespace(intent_id="OI-9", symbol="EURUSD", comment="ghost",
+                            magic=880001, status="AUTHORIZED", created_at=time.time()-7200)
+    r=reconcile(positions=[], ledger=_Led(known=["ghost"], entries={"OI-9":e}),
+                state_path=p, require_broker=False)
+    assert any(f["type"]=="MISSING_FILL" and f["intent_id"]=="OI-9" for f in r["findings"])
+
+def test_v12_detects_fill_without_ledger_evidence():
+    p=_tmp()
+    r=reconcile(positions=[_pos(comment="no-ledger-entry")], ledger=_Led(known=[]), state_path=p)
+    assert any(f["type"]=="ORPHAN_POSITION" for f in r["findings"])
+    assert r["trading_allowed"] is False
+
+def test_v12_reconciliation_failure_blocks_execution_path():
+    """A failed reconciliation must halt the persistent state, so the runner's envelope
+    refuses regardless of what market intelligence produced."""
+    p=_tmp()
+    reconcile(positions=[_pos(comment="orphan")], ledger=_Led(known=[]), state_path=p)
+    env=LimitedDemoEnvelope(state_path=p)
+    ok, why = env.allow(0)
+    assert ok is False and "HALTED" in why
+
+
 if __name__=="__main__":
     fns=[v for k,v in list(globals().items()) if k.startswith("test_")]; p=0
     for fn in fns:
@@ -167,3 +242,4 @@ if __name__=="__main__":
         except AssertionError as e: print("FAIL", fn.__name__, e)
         except Exception as e: print("ERR ", fn.__name__, repr(e))
     print(f"\n{p}/{len(fns)} critical-fix regressions proven")
+

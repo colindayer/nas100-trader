@@ -55,7 +55,10 @@ class LimitedDemoEnvelope:
         return True, "ok"
 
     def record_trade(self, intent_id: str | None = None):
-        self._ss.record_trade(intent_id, path=self.state_path)
+        """Atomically CLAIM a daily slot. Raises EnvelopeExhausted if none remain — callers must
+        treat that as 'do not submit', not as a warning."""
+        return self._ss.record_trade(intent_id, path=self.state_path,
+                                     max_per_day=self.max_trades_per_day)
 
     def halt(self, reason: str):
         self._ss.halt(reason, path=self.state_path)

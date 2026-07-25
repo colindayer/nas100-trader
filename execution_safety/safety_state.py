@@ -22,6 +22,52 @@ from datetime import datetime, timezone
 SCHEMA_VERSION = 1
 STATE_PATH = "registry/safety_state.json"
 AUDIT_PATH = "registry/safety_state_audit.jsonl"
+LOCK_SUFFIX = ".lock"
+BACKUP_SUFFIX = ".bak"
+LOCK_STALE_S = 120          # a lock older than this is assumed abandoned (crashed writer)
+
+
+class StateLocked(RuntimeError):
+    """Another process owns the safety state. Fail closed rather than overspend the envelope."""
+
+
+def _lock_path(path): return path + LOCK_SUFFIX
+
+
+def acquire(path: str = STATE_PATH, timeout: float = 5.0, owner: str | None = None) -> str:
+    """Exclusive advisory lock via O_EXCL. Prevents two scheduled runs from independently
+    resetting or overspending the envelope. Stale locks (crashed writer) are reclaimed."""
+    lp = _lock_path(path)
+    owner = owner or f"pid{os.getpid()}"
+    d = os.path.dirname(lp)
+    if d:
+        os.makedirs(d, exist_ok=True)
+    deadline = time.time() + timeout
+    while True:
+        try:
+            fd = os.open(lp, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, json.dumps({"owner": owner, "ts": time.time()}).encode())
+            os.close(fd)
+            return lp
+        except FileExistsError:
+            try:
+                age = time.time() - os.path.getmtime(lp)
+                if age > LOCK_STALE_S:
+                    audit("lock_reclaimed", {"age_s": round(age), "owner": owner})
+                    os.unlink(lp)
+                    continue
+            except FileNotFoundError:
+                continue
+            if time.time() >= deadline:
+                raise StateLocked(f"safety state locked by another process (>{timeout}s)")
+            time.sleep(0.05)
+
+
+def release(lp: str):
+    try:
+        os.unlink(lp)
+    except FileNotFoundError:
+        pass
 
 
 def _utc_day(ts: float | None = None) -> str:
@@ -78,6 +124,11 @@ def save(st: SafetyState, path: str = STATE_PATH) -> SafetyState:
             json.dump(body, f, indent=1)
             f.flush()
             os.fsync(f.fileno())            # survive power loss, not just process death
+        if os.path.exists(path):             # keep a recovery copy of the last good state
+            try:
+                import shutil; shutil.copy2(path, path + BACKUP_SUFFIX)
+            except Exception:
+                pass
         os.replace(tmp, path)               # atomic
     except Exception:
         try: os.unlink(tmp)
@@ -98,11 +149,22 @@ def load(path: str = STATE_PATH, equity: float | None = None) -> tuple[SafetySta
     try:
         body = json.load(open(path))
     except Exception as e:
-        st = SafetyState(halted=True, halt_reason=f"STATE_UNREADABLE: {type(e).__name__}",
-                         halt_ts=time.time())
-        notes.append("state file unreadable — FAIL CLOSED (halted)")
-        audit("state_corrupt", {"error": str(e)[:120], "action": "halted"})
-        return st, notes
+        bak = path + BACKUP_SUFFIX
+        if os.path.exists(bak):              # try the recovery copy before failing closed
+            try:
+                body = json.load(open(bak))
+                notes.append("primary state unreadable — RECOVERED FROM BACKUP")
+                audit("state_recovered_from_backup", {"error": str(e)[:80]})
+            except Exception:
+                body = None
+        else:
+            body = None
+        if body is None:
+            st = SafetyState(halted=True, halt_reason=f"STATE_UNREADABLE: {type(e).__name__}",
+                             halt_ts=time.time())
+            notes.append("state file unreadable and no usable backup — FAIL CLOSED (halted)")
+            audit("state_corrupt", {"error": str(e)[:120], "action": "halted"})
+            return st, notes
 
     payload = body.get("payload", {})
     if body.get("digest") != _digest(payload):
@@ -153,12 +215,37 @@ def load(path: str = STATE_PATH, equity: float | None = None) -> tuple[SafetySta
 
 
 # ------------------------------------------------------------------ transitions
-def record_trade(intent_id: str | None = None, path: str = STATE_PATH) -> SafetyState:
-    st, _ = load(path)
-    st.trades_today += 1
-    st.last_intent_id = intent_id
-    audit("trade_recorded", {"trades_today": st.trades_today, "intent_id": intent_id})
-    return save(st, path)
+class EnvelopeExhausted(RuntimeError):
+    """The daily slot could not be claimed. The caller MUST NOT proceed to submit."""
+
+
+def record_trade(intent_id: str | None = None, path: str = STATE_PATH,
+                 max_per_day: int | None = None) -> SafetyState:
+    """ATOMIC compare-and-increment under lock.
+
+    The cap is enforced HERE, not by the caller. A separate allow()-then-record() sequence is a
+    time-of-check/time-of-use race: two schedulers can both pass allow() before either records.
+    Passing max_per_day makes claiming a slot a single atomic operation.
+    Raises EnvelopeExhausted if no slot is available.
+    """
+    lp = acquire(path)
+    try:
+        st, _ = load(path)
+        if intent_id and st.last_intent_id == intent_id:
+            audit("trade_duplicate_ignored", {"intent_id": intent_id})
+            return st                                  # idempotent
+        if st.halted:
+            raise EnvelopeExhausted(f"HALTED: {st.halt_reason}")
+        if max_per_day is not None and st.trades_today >= max_per_day:
+            audit("trade_refused_cap", {"trades_today": st.trades_today, "cap": max_per_day,
+                                        "intent_id": intent_id})
+            raise EnvelopeExhausted(f"DAILY_TRADE_LIMIT {st.trades_today}/{max_per_day}")
+        st.trades_today += 1
+        st.last_intent_id = intent_id
+        audit("trade_recorded", {"trades_today": st.trades_today, "intent_id": intent_id})
+        return save(st, path)
+    finally:
+        release(lp)
 
 
 def halt(reason: str, detail: dict | None = None, path: str = STATE_PATH) -> SafetyState:

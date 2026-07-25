@@ -367,7 +367,12 @@ def run_demo_limited(config="funded"):
             print(f"[702] !! CRITICAL {out['critical_failures']} -> AUTOMATIC SHUTDOWN")
             break
         if rc == 10009:
-            env.record_trade(dec["order_intent"]["intent_id"])
+            try:
+                env.record_trade(dec["order_intent"]["intent_id"])
+            except Exception as e:      # EnvelopeExhausted after a fill = state/reality divergence
+                print(f"[702] !! slot claim failed AFTER fill ({e}) — halting for human review")
+                env.halt(f"POST_FILL_SLOT_CLAIM_FAILED: {str(e)[:80]}")
+                break
         p = out["promotion"]
         print(f"[702] state now {p['state']} ops={p['operational_belief']} trades={p['demo_trades']}")
         break        # LIMITED_DEMO: one position per invocation
