@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+110d4b1  STAGE 3: close V-01, V-02, V-04, V-12 (approved scope only)
+c9600ae  Obsidian bridge auto-sync [bridge-auto]
 8ad72eb  DEMO_ACCOUNT_POSTMORTEM: formal incident review of Pepperstone-Demo 61552095
 f73c57f  Obsidian bridge auto-sync [bridge-auto]
 9d90726  VERIFICATION_REPORT: adversarial audit — 2 CRITICAL, 4 HIGH, 7 MEDIUM, 2 LOW
 deda99e  Obsidian bridge auto-sync [bridge-auto]
 94ef34c  Reliability release: healthcheck, deployment manager, startup diagnostics, live status
 a7e5e3a  Obsidian bridge auto-sync [bridge-auto]
-39dbc22  web.py: print real LAN/PUBLIC URLs + the firewall command instead of a <VPS-IP> placeholder
-f25d858  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
