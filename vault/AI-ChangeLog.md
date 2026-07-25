@@ -324,3 +324,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | Reliability release: healthcheck, deployment manager, startup diagnostics, li... | git post-commit hook | 94ef34c |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | deda99e |
 | 2026-07-25 | Obsidian Bridge / automated | VERIFICATION_REPORT: adversarial audit — 2 CRITICAL, 4 HIGH, 7 MEDIUM, 2 LOW | git post-commit hook | 9d90726 |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | f73c57f |
+| 2026-07-25 | Obsidian Bridge / automated | DEMO_ACCOUNT_POSTMORTEM: formal incident review of Pepperstone-Demo 61552095 | git post-commit hook | 8ad72eb |
