@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+7dc02fd  refresh manifest at HEAD
+1bb368d  Obsidian bridge auto-sync [bridge-auto]
 9b3fbb5  QUANT_OS_ARCHITECTURE: design document (no code)
 4016b67  Obsidian bridge auto-sync [bridge-auto]
 ab89ae2  V-03, V-05, V-06 closed (approved Stage 3)
 5a41aac  Obsidian bridge auto-sync [bridge-auto]
 7d1286a  STAGE 5: operational readiness review (documentation only, no code changes)
 988f366  Obsidian bridge auto-sync [bridge-auto]
-cc3a89c  STAGE 3 extended scope + STAGE 4 verification
-8f8369d  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
