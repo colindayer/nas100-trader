@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+ab89ae2  V-03, V-05, V-06 closed (approved Stage 3)
+5a41aac  Obsidian bridge auto-sync [bridge-auto]
 7d1286a  STAGE 5: operational readiness review (documentation only, no code changes)
 988f366  Obsidian bridge auto-sync [bridge-auto]
 cc3a89c  STAGE 3 extended scope + STAGE 4 verification
 8f8369d  Obsidian bridge auto-sync [bridge-auto]
 110d4b1  STAGE 3: close V-01, V-02, V-04, V-12 (approved scope only)
 c9600ae  Obsidian bridge auto-sync [bridge-auto]
-8ad72eb  DEMO_ACCOUNT_POSTMORTEM: formal incident review of Pepperstone-Demo 61552095
-f73c57f  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

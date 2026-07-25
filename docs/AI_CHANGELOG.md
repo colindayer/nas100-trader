@@ -326,3 +326,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | STAGE 3 extended scope + STAGE 4 verification | git post-commit hook | cc3a89c |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 988f366 |
 | 2026-07-26 | Obsidian Bridge / automated | STAGE 5: operational readiness review (documentation only, no code changes) | git post-commit hook | 7d1286a |
+| 2026-07-26 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 5a41aac |
+| 2026-07-26 | Obsidian Bridge / automated | V-03, V-05, V-06 closed (approved Stage 3) | git post-commit hook | ab89ae2 |
