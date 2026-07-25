@@ -328,3 +328,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | DEMO_ACCOUNT_POSTMORTEM: formal incident review of Pepperstone-Demo 61552095 | git post-commit hook | 8ad72eb |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | c9600ae |
 | 2026-07-25 | Obsidian Bridge / automated | STAGE 3: close V-01, V-02, V-04, V-12 (approved scope only) | git post-commit hook | 110d4b1 |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 8f8369d |
+| 2026-07-25 | Obsidian Bridge / automated | STAGE 3 extended scope + STAGE 4 verification | git post-commit hook | cc3a89c |
