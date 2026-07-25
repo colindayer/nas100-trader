@@ -308,3 +308,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | add FairEconomy provider: FREE ForexFactory calendar JSON feed WITH consensus... | git post-commit hook | b77b4bb |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | bd953e1 |
 | 2026-07-25 | Obsidian Bridge / automated | faireconomy_provider: add diagnose() — the provider silently returned [] on a... | git post-commit hook | 4d31383 |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 68c6ec7 |
+| 2026-07-25 | Obsidian Bridge / automated | faireconomy_provider: fix SSL CERTIFICATE_VERIFY_FAILED on Windows | git post-commit hook | d7437ae |

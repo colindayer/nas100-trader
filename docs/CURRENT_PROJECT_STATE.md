@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+d7437ae  faireconomy_provider: fix SSL CERTIFICATE_VERIFY_FAILED on Windows
+68c6ec7  Obsidian bridge auto-sync [bridge-auto]
 4d31383  faireconomy_provider: add diagnose() — the provider silently returned [] on any failure
 bd953e1  Obsidian bridge auto-sync [bridge-auto]
 b77b4bb  add FairEconomy provider: FREE ForexFactory calendar JSON feed WITH consensus forecasts
 601d296  Obsidian bridge auto-sync [bridge-auto]
 08cb9a8  calendar_feed: fall back to FRED so the dashboard/engine see it
 8a16491  Obsidian bridge auto-sync [bridge-auto]
-be64a3f  add FRED provider: free, official, no ToS problem (US macro actuals + release calendar)
-afba2ba  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
