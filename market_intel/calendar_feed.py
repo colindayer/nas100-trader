@@ -136,9 +136,20 @@ def from_api(url: str | None = None, token: str | None = None) -> list[Event]:
     return out
 
 
-def load() -> list[Event]:
-    """API (auto) -> MT5 built-in -> operator CSV -> empty. Never fabricates."""
-    return from_api() or from_mt5() or from_csv()
+def from_fred_late() -> list:
+    """Late import to avoid a circular import (calendar_provider imports this module).
+    Returns EconomicEvent objects -- same duck-typed interface as Event."""
+    try:
+        from .fred_provider import load as _fred
+        return _fred()
+    except Exception:
+        return []
+
+
+def load() -> list:
+    """API (auto) -> MT5 built-in -> FRED (free/official) -> operator CSV -> empty.
+    Never fabricates an actual."""
+    return from_api() or from_mt5() or from_fred_late() or from_csv()
 
 
 def upcoming(events: list[Event], now: datetime | None = None, hours=24) -> list[Event]:
