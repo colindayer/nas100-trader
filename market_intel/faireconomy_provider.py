@@ -7,7 +7,7 @@ so it does not have the ToS problem the scraper repos do. It provides title/coun
 forecast/previous, and `actual` once released.
 """
 from __future__ import annotations
-import json, os, re, urllib.request
+import json, os, re, ssl, urllib.request
 from datetime import datetime, timezone
 from .calendar_provider import EconomicEvent
 
@@ -17,6 +17,24 @@ FEEDS = [
 ]
 TIMEOUT = 15
 CACHE = "registry/faireconomy_cache.json"
+
+
+def _ssl_ctx():
+    """Windows Python does not use the OS certificate store, so some chains fail to verify.
+    Prefer `truststore` (real Windows store), then `certifi`, then the default context.
+      py -m pip install truststore     # best on Windows
+      py -m pip install --upgrade certifi
+    Verification is NEVER disabled here."""
+    try:
+        import truststore
+        return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    except Exception:
+        pass
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
 CACHE_TTL = 900          # 15 min: the feed rate-limits (HTTP 429); be a good citizen
 _IMPACT = {"high": "high", "medium": "medium", "low": "low", "holiday": "low"}
 
@@ -62,7 +80,7 @@ def _fetch(url):
         req = urllib.request.Request(url, headers={
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) calendar-client",
             "Accept": "application/json"})
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+        with urllib.request.urlopen(req, timeout=TIMEOUT, context=_ssl_ctx()) as r:
             return json.loads(r.read().decode())
     except Exception:
         return []
@@ -86,6 +104,15 @@ def _fetch_all():
 def diagnose():
     """Print the RAW result of each feed fetch. Run: py -m market_intel.faireconomy_provider"""
     import urllib.error, ssl, time
+    ctx = _ssl_ctx()
+    impl = type(ctx).__module__
+    print(f"TLS context: {impl} ({'truststore/Windows store' if 'truststore' in impl else 'certifi/default bundle'})")
+    try:
+        import certifi; print(f"certifi: {certifi.__version__} @ {certifi.where()}")
+    except Exception: print("certifi: NOT INSTALLED  ->  py -m pip install --upgrade certifi")
+    try:
+        import truststore; print("truststore: installed (uses the Windows cert store)")
+    except Exception: print("truststore: not installed  ->  py -m pip install truststore  (recommended on Windows)")
     print(f"cache: {CACHE} exists={os.path.exists(CACHE)}")
     rows, age = _cache_read()
     print(f"cache rows={len(rows) if rows else 0} age={None if age is None else round(age)}s ttl={CACHE_TTL}s")
@@ -96,7 +123,7 @@ def diagnose():
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) calendar-client",
                 "Accept": "application/json"})
             t0 = time.time()
-            with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+            with urllib.request.urlopen(req, timeout=TIMEOUT, context=_ssl_ctx()) as r:
                 body = r.read().decode()
             print(f"HTTP {r.status}  {len(body)} bytes  {(time.time()-t0)*1000:.0f}ms")
             try:
