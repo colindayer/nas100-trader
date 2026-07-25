@@ -310,3 +310,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | add reaction_recorder: observe what markets actually do after each release | git post-commit hook | d26f804 |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | aaa1d07 |
 | 2026-07-25 | Obsidian Bridge / automated | guardian_bridge: search execution_safety/, scripts/, root and cwd for prop_ri... | git post-commit hook | 85546e9 |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | c3ba81c |
+| 2026-07-25 | Obsidian Bridge / automated | web.py: --host/--token for remote access; token mandatory on any non-localhos... | git post-commit hook | ddfb769 |

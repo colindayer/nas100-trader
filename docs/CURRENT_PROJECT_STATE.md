@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+ddfb769  web.py: --host/--token for remote access; token mandatory on any non-localhost bind
+c3ba81c  Obsidian bridge auto-sync [bridge-auto]
 85546e9  guardian_bridge: search execution_safety/, scripts/, root and cwd for prop_risk_guardian
 aaa1d07  Obsidian bridge auto-sync [bridge-auto]
 d26f804  add reaction_recorder: observe what markets actually do after each release
 2108a07  Obsidian bridge auto-sync [bridge-auto]
 6973f5f  faireconomy: retry+backoff, cache-on-diagnose, surface LAST_ERROR
 f42784b  Obsidian bridge auto-sync [bridge-auto]
-d7437ae  faireconomy_provider: fix SSL CERTIFICATE_VERIFY_FAILED on Windows
-68c6ec7  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
