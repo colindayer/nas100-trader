@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+b77b4bb  add FairEconomy provider: FREE ForexFactory calendar JSON feed WITH consensus forecasts
+601d296  Obsidian bridge auto-sync [bridge-auto]
 08cb9a8  calendar_feed: fall back to FRED so the dashboard/engine see it
 8a16491  Obsidian bridge auto-sync [bridge-auto]
 be64a3f  add FRED provider: free, official, no ToS problem (US macro actuals + release calendar)
 afba2ba  Obsidian bridge auto-sync [bridge-auto]
 45ca5d1  add calendar_diag: print RAW provider responses to diagnose empty calendars
 484da6c  Obsidian bridge auto-sync [bridge-auto]
-cf937ef  calendar_feed: honour a bare FINNHUB_TOKEN (dashboard/engine read calendar_feed, not calendar_provider)
-01f671d  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

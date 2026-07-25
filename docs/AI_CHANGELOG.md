@@ -298,3 +298,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-25 | Obsidian Bridge / automated | add FRED provider: free, official, no ToS problem (US macro actuals + release... | git post-commit hook | be64a3f |
 | 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 8a16491 |
 | 2026-07-25 | Obsidian Bridge / automated | calendar_feed: fall back to FRED so the dashboard/engine see it | git post-commit hook | 08cb9a8 |
+| 2026-07-25 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 601d296 |
+| 2026-07-25 | Obsidian Bridge / automated | add FairEconomy provider: FREE ForexFactory calendar JSON feed WITH consensus... | git post-commit hook | b77b4bb |
