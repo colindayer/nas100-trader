@@ -108,3 +108,18 @@ if __name__ == "__main__":
         try: fn(); p += 1; print("PASS", fn.__name__)
         except AssertionError as e: print("FAIL", fn.__name__, e)
     print(f"\n{p}/{len(fns)} fail-closed guarantees proven")
+
+
+def test_healthcheck_does_not_mutate_live_safety_state(tmp_path, monkeypatch):
+    """A diagnostic must never halt production. This regression cost a real alerting drill:
+    healthcheck halted the live state, so the operator's own halt() was a silent no-op."""
+    import os, sys
+    monkeypatch.chdir(tmp_path)
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from execution_safety import safety_state as ss
+    ss.load(ss.STATE_PATH, equity=50000.0)          # live state exists, NOT halted
+    import importlib, healthcheck
+    importlib.reload(healthcheck)
+    healthcheck.check_demo_envelope()
+    st, _ = ss.load(ss.STATE_PATH)
+    assert not st.halted, f"healthcheck halted the live state: {st.halt_reason}"

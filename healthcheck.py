@@ -275,17 +275,25 @@ def check_reconciliation():
 
 
 def check_demo_envelope():
+    # ponytail: probes run against a THROWAWAY state file. A diagnostic must never mutate the
+    # live safety state -- halting it here left the platform halted and silently swallowed the
+    # operator's own halt drill (halt() is a no-op when already halted, so no alert fired).
+    import tempfile, shutil
+    tmp = tempfile.mkdtemp(prefix="hc_envelope_")
     try:
         from execution_safety.demo_evidence import LimitedDemoEnvelope
-        e = LimitedDemoEnvelope(max_positions=1, max_trades_per_day=3)
+        sp = os.path.join(tmp, "safety_state.json")
+        e = LimitedDemoEnvelope(max_positions=1, max_trades_per_day=3, state_path=sp)
         if e.allow(1)[0] is not False:
             return rec("demo_envelope", FAIL, "position cap not enforced")
-        e2 = LimitedDemoEnvelope(); e2.halt("hc")
+        e2 = LimitedDemoEnvelope(state_path=sp); e2.halt("hc")
         if e2.allow(0)[0] is not False:
             return rec("demo_envelope", FAIL, "halt not enforced")
-        return rec("demo_envelope", OK, "position cap + daily cap + halt all enforced")
+        return rec("demo_envelope", OK, "position cap + daily cap + halt all enforced (temp state)")
     except Exception as e:
         return rec("demo_envelope", FAIL, f"{type(e).__name__}: {str(e)[:70]}")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 # ---------------------------------------------------------------- external

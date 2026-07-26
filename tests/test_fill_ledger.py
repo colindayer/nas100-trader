@@ -132,4 +132,13 @@ except Exception as e:
 
 n_fail = sum(1 for _, ok in PASS if not ok)
 print(f"\n{len(PASS)-n_fail}/{len(PASS)} checks passed")
-sys.exit(1 if n_fail else 0)
+
+# ponytail: sys.exit at module scope aborts the ENTIRE pytest run (INTERNALERROR), not just this
+# file -- it fired during collection and hid 26 other errors. Only exit when run as a script.
+if __name__ == "__main__":
+    sys.exit(1 if n_fail else 0)
+
+
+def test_fill_ledger_checks_all_passed():
+    failed = [name for name, ok in PASS if not ok]
+    assert not failed, f"fill-ledger checks failed: {failed}"
