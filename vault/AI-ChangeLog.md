@@ -358,3 +358,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-26 | Obsidian Bridge / automated | fix(audit): CRITICAL — scheduled-task scan silently degraded and reported the... | git post-commit hook | ba126d1 |
 | 2026-07-26 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 667aacb |
 | 2026-07-26 | Obsidian Bridge / automated | fix(audit): every action was labelled with the FIRST task's name | git post-commit hook | 3333245 |
+| 2026-07-26 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 574d410 |
+| 2026-07-26 | Obsidian Bridge / automated | fix(telegram): use the OS certificate store — alerts failed TLS verification ... | git post-commit hook | 4fb5956 |
