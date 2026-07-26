@@ -1066,3 +1066,74 @@
 {"ts": 1785098189.460663, "utc": "2026-07-26T20:36:29.460663+00:00", "event": "HALT", "reason": "critical execution failure: reconciliation_passed"}
 {"ts": 1785098189.462401, "utc": "2026-07-26T20:36:29.462401+00:00", "event": "state_initialised", "equity": null}
 {"ts": 1785098189.463153, "utc": "2026-07-26T20:36:29.463153+00:00", "event": "HALT", "reason": "critical execution failure: stop_verified"}
+{"ts": 1785098388.666362, "utc": "2026-07-26T20:39:48.666363+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098388.66691, "utc": "2026-07-26T20:39:48.666911+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "OI-0"}
+{"ts": 1785098388.667445, "utc": "2026-07-26T20:39:48.667445+00:00", "event": "trade_recorded", "trades_today": 2, "intent_id": "OI-1"}
+{"ts": 1785098388.6678789, "utc": "2026-07-26T20:39:48.667879+00:00", "event": "trade_recorded", "trades_today": 3, "intent_id": "OI-2"}
+{"ts": 1785098388.668653, "utc": "2026-07-26T20:39:48.668653+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098388.6690502, "utc": "2026-07-26T20:39:48.669050+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": null}
+{"ts": 1785098388.669478, "utc": "2026-07-26T20:39:48.669479+00:00", "event": "trade_recorded", "trades_today": 2, "intent_id": null}
+{"ts": 1785098388.669854, "utc": "2026-07-26T20:39:48.669854+00:00", "event": "trade_recorded", "trades_today": 3, "intent_id": null}
+{"ts": 1785098388.67049, "utc": "2026-07-26T20:39:48.670490+00:00", "event": "day_rollover", "from": "2000-01-01", "to": "2026-07-26", "trades_prev_day": 3, "halt_preserved": false}
+{"ts": 1785098388.671324, "utc": "2026-07-26T20:39:48.671324+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098388.6715782, "utc": "2026-07-26T20:39:48.671579+00:00", "event": "HALT", "reason": "critical reconciliation failure"}
+{"ts": 1785098388.672653, "utc": "2026-07-26T20:39:48.672654+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098388.6728818, "utc": "2026-07-26T20:39:48.672882+00:00", "event": "HALT", "reason": "boom"}
+{"ts": 1785098388.673629, "utc": "2026-07-26T20:39:48.673630+00:00", "event": "day_rollover", "from": "2000-01-01", "to": "2026-07-26", "trades_prev_day": 0, "halt_preserved": true}
+{"ts": 1785098388.6743512, "utc": "2026-07-26T20:39:48.674351+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098388.675516, "utc": "2026-07-26T20:39:48.675516+00:00", "event": "HALT", "reason": "boom"}
+{"ts": 1785098388.675955, "utc": "2026-07-26T20:39:48.675955+00:00", "event": "HALT_CLEARED", "actor": "human:colindayer", "note": "investigated", "prior_reason": "boom"}
+{"ts": 1785098388.677121, "utc": "2026-07-26T20:39:48.677121+00:00", "event": "state_corrupt", "error": "Expecting property name enclosed in double quotes: line 1 column 3 (char 2)", "action": "halted"}
+{"ts": 1785098388.678174, "utc": "2026-07-26T20:39:48.678174+00:00", "event": "state_checksum_mismatch", "action": "halted"}
+{"ts": 1785098388.6791449, "utc": "2026-07-26T20:39:48.679145+00:00", "event": "state_schema_mismatch", "found": 999, "expected": 1}
+{"ts": 1785098388.679492, "utc": "2026-07-26T20:39:48.679492+00:00", "event": "state_initialised", "equity": 50000}
+{"ts": 1785098388.68063, "utc": "2026-07-26T20:39:48.680630+00:00", "event": "state_initialised", "equity": 50000}
+{"ts": 1785098388.682464, "utc": "2026-07-26T20:39:48.682464+00:00", "event": "startup_reconciliation", "ok": true, "n_findings": 0, "critical": []}
+{"ts": 1785098388.6829948, "utc": "2026-07-26T20:39:48.682996+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["ORPHAN_POSITION"]}
+{"ts": 1785098388.6830442, "utc": "2026-07-26T20:39:48.683044+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098388.683241, "utc": "2026-07-26T20:39:48.683241+00:00", "event": "HALT", "reason": "RECONCILIATION: ORPHAN_POSITION", "findings": [{"type": "ORPHAN_POSITION", "symbol": "EURUSD", "comment": "unknown", "volume": 0.1}]}
+{"ts": 1785098388.6839402, "utc": "2026-07-26T20:39:48.683940+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["NAKED_POSITION"]}
+{"ts": 1785098388.684, "utc": "2026-07-26T20:39:48.684000+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098388.684196, "utc": "2026-07-26T20:39:48.684196+00:00", "event": "HALT", "reason": "RECONCILIATION: NAKED_POSITION", "findings": [{"type": "NAKED_POSITION", "symbol": "EURUSD", "comment": "portfolio:funded"}]}
+{"ts": 1785098388.684878, "utc": "2026-07-26T20:39:48.684879+00:00", "event": "startup_reconciliation", "ok": true, "n_findings": 1, "critical": []}
+{"ts": 1785098388.685202, "utc": "2026-07-26T20:39:48.685203+00:00", "event": "startup_reconciliation", "ok": true, "n_findings": 1, "critical": []}
+{"ts": 1785098388.685528, "utc": "2026-07-26T20:39:48.685528+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["RECONCILIATION_FAILED"]}
+{"ts": 1785098388.685569, "utc": "2026-07-26T20:39:48.685570+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098388.6858659, "utc": "2026-07-26T20:39:48.685866+00:00", "event": "HALT", "reason": "RECONCILIATION: RECONCILIATION_FAILED", "findings": [{"type": "RECONCILIATION_FAILED", "detail": "MT5_ERROR: ModuleNotFoundError"}]}
+{"ts": 1785098388.686622, "utc": "2026-07-26T20:39:48.686623+00:00", "event": "startup_reconciliation", "ok": true, "n_findings": 0, "critical": []}
+{"ts": 1785098388.6886542, "utc": "2026-07-26T20:39:48.688654+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098388.6892211, "utc": "2026-07-26T20:39:48.689222+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "OI-1785098388688883000"}
+{"ts": 1785098388.690312, "utc": "2026-07-26T20:39:48.690312+00:00", "event": "trade_recorded", "trades_today": 2, "intent_id": "OI-1785098388688927000"}
+{"ts": 1785098388.691404, "utc": "2026-07-26T20:39:48.691405+00:00", "event": "trade_recorded", "trades_today": 3, "intent_id": "OI-1785098388688993000"}
+{"ts": 1785098388.692429, "utc": "2026-07-26T20:39:48.692429+00:00", "event": "trade_refused_cap", "trades_today": 3, "cap": 3, "intent_id": "OI-1785098388688948000"}
+{"ts": 1785098388.6928, "utc": "2026-07-26T20:39:48.692800+00:00", "event": "trade_refused_cap", "trades_today": 3, "cap": 3, "intent_id": "OI-1785098388692175000"}
+{"ts": 1785098388.693176, "utc": "2026-07-26T20:39:48.693176+00:00", "event": "trade_refused_cap", "trades_today": 3, "cap": 3, "intent_id": "OI-1785098388691108000"}
+{"ts": 1785098388.693405, "utc": "2026-07-26T20:39:48.693405+00:00", "event": "trade_refused_cap", "trades_today": 3, "cap": 3, "intent_id": "OI-1785098388690031000"}
+{"ts": 1785098388.895602, "utc": "2026-07-26T20:39:48.895602+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098388.895862, "utc": "2026-07-26T20:39:48.895862+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "OI-SAME"}
+{"ts": 1785098388.896367, "utc": "2026-07-26T20:39:48.896367+00:00", "event": "trade_duplicate_ignored", "intent_id": "OI-SAME"}
+{"ts": 1785098388.896827, "utc": "2026-07-26T20:39:48.896827+00:00", "event": "state_initialised", "equity": 50000}
+{"ts": 1785098388.898052, "utc": "2026-07-26T20:39:48.898053+00:00", "event": "state_recovered_from_backup", "error": "Expecting property name enclosed in double quotes: line 1 column 3 (char 2)"}
+{"ts": 1785098388.898596, "utc": "2026-07-26T20:39:48.898596+00:00", "event": "startup_reconciliation", "ok": true, "n_findings": 1, "critical": []}
+{"ts": 1785098388.899033, "utc": "2026-07-26T20:39:48.899034+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["ORPHAN_POSITION"]}
+{"ts": 1785098388.899075, "utc": "2026-07-26T20:39:48.899075+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098388.8992572, "utc": "2026-07-26T20:39:48.899257+00:00", "event": "HALT", "reason": "RECONCILIATION: ORPHAN_POSITION", "findings": [{"type": "ORPHAN_POSITION", "symbol": "EURUSD", "comment": "no-ledger-entry", "volume": 0.1}]}
+{"ts": 1785098388.8998988, "utc": "2026-07-26T20:39:48.899899+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["ORPHAN_POSITION"]}
+{"ts": 1785098388.899939, "utc": "2026-07-26T20:39:48.899939+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098388.9001, "utc": "2026-07-26T20:39:48.900100+00:00", "event": "HALT", "reason": "RECONCILIATION: ORPHAN_POSITION", "findings": [{"type": "ORPHAN_POSITION", "symbol": "EURUSD", "comment": "orphan", "volume": 0.1}]}
+{"ts": 1785098389.1880991, "utc": "2026-07-26T20:39:49.188099+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098389.188429, "utc": "2026-07-26T20:39:49.188429+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": null}
+{"ts": 1785098389.188834, "utc": "2026-07-26T20:39:49.188834+00:00", "event": "trade_recorded", "trades_today": 2, "intent_id": null}
+{"ts": 1785098389.1892638, "utc": "2026-07-26T20:39:49.189264+00:00", "event": "trade_recorded", "trades_today": 3, "intent_id": null}
+{"ts": 1785098389.189653, "utc": "2026-07-26T20:39:49.189653+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098389.189844, "utc": "2026-07-26T20:39:49.189844+00:00", "event": "HALT", "reason": "boom"}
+{"ts": 1785098389.190628, "utc": "2026-07-26T20:39:49.190628+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098389.190916, "utc": "2026-07-26T20:39:49.190916+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": null}
+{"ts": 1785098389.191394, "utc": "2026-07-26T20:39:49.191395+00:00", "event": "trade_recorded", "trades_today": 2, "intent_id": null}
+{"ts": 1785098389.1918871, "utc": "2026-07-26T20:39:49.191887+00:00", "event": "trade_recorded", "trades_today": 3, "intent_id": null}
+{"ts": 1785098389.192495, "utc": "2026-07-26T20:39:49.192495+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098389.193662, "utc": "2026-07-26T20:39:49.193662+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098389.196061, "utc": "2026-07-26T20:39:49.196061+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098389.19682, "utc": "2026-07-26T20:39:49.196821+00:00", "event": "HALT", "reason": "critical execution failure: reconciliation_passed"}
+{"ts": 1785098389.1985521, "utc": "2026-07-26T20:39:49.198552+00:00", "event": "state_initialised", "equity": null}
+{"ts": 1785098389.1991801, "utc": "2026-07-26T20:39:49.199180+00:00", "event": "HALT", "reason": "critical execution failure: stop_verified"}

@@ -3,12 +3,35 @@ this module cannot place, modify, or close a trade. Fails silently-but-logged if
 Env: TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
 """
 from __future__ import annotations
-import json, os, time, urllib.parse, urllib.request
+import json, os, ssl, time, urllib.parse, urllib.request
 
 LOG = "registry/telegram_alerts.jsonl"
 CLASSES = ["opportunity", "calendar", "guardian_block", "promotion", "shadow_result",
            "demo_fill", "live_fill", "daily_summary", "critical_error"]
 MIN_CONFIDENCE = float(os.environ.get("TELEGRAM_MIN_CONFIDENCE", "0.5"))
+
+
+def _ssl_context():
+    """Windows Python does not use the OS certificate store, so chains fail to verify --
+    especially behind AV/corporate TLS interception, which presents a self-signed root.
+    Prefer `truststore` (the real Windows store), then `certifi`, then the default.
+
+      py -m pip install truststore          # best on Windows
+      py -m pip install --upgrade certifi
+
+    Verification is NEVER disabled. An alert path that trusts anything is worse than no alert:
+    it would look healthy while being interceptable.
+    """
+    try:
+        import truststore
+        return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    except Exception:
+        pass
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
 
 
 def _cfg():
@@ -33,7 +56,7 @@ def send(kind: str, text: str) -> dict:
         data = urllib.parse.urlencode({"chat_id": chat, "text": text,
                                        "parse_mode": "HTML", "disable_web_page_preview": "true"}).encode()
         req = urllib.request.Request(f"https://api.telegram.org/bot{tok}/sendMessage", data=data)
-        with urllib.request.urlopen(req, timeout=10) as r:
+        with urllib.request.urlopen(req, timeout=10, context=_ssl_context()) as r:
             ok = json.loads(r.read().decode()).get("ok", False)
         _log(kind, text, ok)
         return {"sent": ok}
@@ -107,7 +130,15 @@ def selftest() -> int:
     r = send("critical_error", "<b>ALERTING SELFTEST</b>\nIf you can read this, the alert "
                                "path works. No trading action was taken.")
     ok = bool(r.get("sent"))
-    print(f"\n  send() -> sent={ok} {('error: ' + str(r.get('error'))[:120]) if not ok else ''}")
+    err = str(r.get("error") or "")
+    print(f"\n  send() -> sent={ok} {('error: ' + err[:140]) if not ok else ''}")
+    if "CERTIFICATE_VERIFY" in err:
+        print("\n  TLS chain not verifiable. This VPS presents a self-signed root (AV or")
+        print("  corporate interception). Install the Windows-store bridge and retry:")
+        print("      py -m pip install truststore")
+        print("      py -m pip install --upgrade certifi")
+        print("  Verification is never disabled — an alert path that trusts anything is worse")
+        print("  than no alert path.")
     print("  Check your phone. No message despite sent=True means the chat id is wrong.")
     return 0 if ok else 1
 
