@@ -223,7 +223,33 @@ def _capture_execution(it, dec, req, res, t0, pre_tick, config, guardian_ok):
     pos = [p for p in (mt5.positions_get(symbol=it["symbol"]) or []) if p.magic == MAGIC]
     p0 = pos[-1] if pos else None
     exp_entry = float(req["price"])
+    # capture entry context for Market Memory (read-only; never affects quality())
+    ctx = {"regime_at_entry": "", "session_at_entry": "", "kill_zones_at_entry": "",
+           "volatility_regime": "", "macro_risk_state": ""}
+    try:
+        import pandas as _pd
+        from market_intel.state import classify as _classify
+        def _g(tf, n):
+            r = mt5.copy_rates_from_pos(it["symbol"], tf, 0, n)
+            if r is None or not len(r): return None
+            d = _pd.DataFrame(r); d["time"] = _pd.to_datetime(d["time"], unit="s", utc=True)
+            return d.set_index("time")[["open", "high", "low", "close"]]
+        _m5, _d1 = _g(mt5.TIMEFRAME_M5, 600), _g(mt5.TIMEFRAME_D1, 90)
+        if _m5 is not None and _d1 is not None:
+            _st = _classify(it["symbol"], _m5, _d1)
+            ctx.update(regime_at_entry=f"{_st.trend}/{_st.volatility_regime}",
+                       session_at_entry=_st.session,
+                       kill_zones_at_entry=",".join(_st.kill_zones) or "none",
+                       volatility_regime=_st.volatility_regime)
+    except Exception:
+        pass
+    try:
+        from market_intel.macro_board import board as _mb
+        ctx["macro_risk_state"] = _mb()["claims"]["risk"]["statement"]
+    except Exception:
+        pass
     rec = TradeExecutionRecord(
+        **ctx,
         trade_id=f"{dec['decision_id']}", symbol=it["symbol"],
         expected_entry=exp_entry, actual_entry=fill,
         expected_spread=float((pre_tick.ask - pre_tick.bid) if pre_tick else 0.0),
@@ -245,6 +271,17 @@ def _capture_execution(it, dec, req, res, t0, pre_tick, config, guardian_ok):
         except Exception:
             rec.reconciliation_passed = False
     return rec
+
+
+def _notify(kind, text):
+    """Best-effort alert. Never raises — alerting must not break execution."""
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from market_intel import telegram_notifier as tg
+        return tg.send(kind, text)
+    except Exception as e:
+        print(f"[alert] not sent: {type(e).__name__}")
+        return {"sent": False}
 
 
 def _startup_banner(mode):
@@ -286,6 +323,7 @@ def run_demo_limited(config="funded"):
     print(recon_report(recon))
     if not recon["trading_allowed"]:
         print("[702] HALT: startup reconciliation failed — no trading this run.")
+        _notify("critical_error", f"RECONCILIATION FAILED\n{recon_report(recon)[:600]}")
         return
     g = BeliefGraphV2()
     st = evaluate(SID, g)
@@ -328,7 +366,8 @@ def run_demo_limited(config="funded"):
         sym = syms[name]
         g_ok, g_det = guardian_check(proposed_risk_pct=env.risk_pct)
         if not g_ok:
-            print(f"[702] guardian veto: {g_det}"); break
+            print(f"[702] guardian veto: {g_det}")
+            _notify("guardian_block", f"GUARDIAN VETO {sym}\n{g_det}"); break
         tick = mt5.symbol_info_tick(sym); side_buy = weight > 0
         price = tick.ask if side_buy else tick.bid
         stop = round(price * (0.98 if side_buy else 1.02), 5)      # tight, fixed demo stop
@@ -363,8 +402,12 @@ def run_demo_limited(config="funded"):
                                  dec, req, res, t0, tick, config, g_ok)
         out = record(rec, SID, g, env)
         print(f"[702] operational evidence: supports={out['supports']} | {out['evidence']}")
+        _notify("demo_fill", f"DEMO FILL {sym} {'BUY' if side_buy else 'SELL'} {vol}\n"
+                             f"retcode {rc} | stop_verified={rec.stop_verified} "
+                             f"| recon={rec.reconciliation_passed}\n{out['evidence']}")
         if out["critical_failures"]:
             print(f"[702] !! CRITICAL {out['critical_failures']} -> AUTOMATIC SHUTDOWN")
+            _notify("critical_error", f"CRITICAL {out['critical_failures']} on {sym} — HALTED")
             break
         if rc == 10009:
             try:

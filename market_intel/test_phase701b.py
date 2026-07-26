@@ -1,11 +1,11 @@
 """Tests for the new PHASE 701 modules."""
 import sys, os, tempfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from market_intel import telegram_notifier as tg, tradingview_bridge as tv, calendar_provider as cp
+from market_intel import telegram_notifier as tg, calendar_provider as cp
 
 def test_telegram_never_places_orders():
     import inspect
-    for m in (tg, tv, cp):
+    for m in (tg, cp):
         src = inspect.getsource(m)
         for banned in ("order_send", "place_order", "TRADE_ACTION_DEAL"):
             assert banned not in src, f"{m.__name__} references {banned}"
@@ -25,10 +25,6 @@ def test_telegram_confidence_filter():
         status="REGISTERED"
     assert tg.opportunity(O())["sent"] is False
 
-def test_tradingview_falls_back_without_mcp():
-    os.environ.pop("TRADINGVIEW_MCP_URL", None)
-    ok, why = tv.available(); assert ok is False
-    assert tv.chart_context("EURUSD")["source"] == "mt5_fallback"
 
 def test_calendar_provider_priority_and_empty():
     ev, prov = cp.load()

@@ -67,7 +67,7 @@ MODULES = ["execution_safety.gate", "execution_safety.strategy_contract",
            "execution_safety.broker_reconciliation", "execution_safety.guardian_bridge",
            "market_intel.state", "market_intel.calendar_feed",
            "market_intel.faireconomy_provider", "market_intel.telegram_notifier",
-           "market_intel.tradingview_bridge"]
+           "market_intel.macro_board"]
 
 
 def check_modules():
@@ -84,8 +84,7 @@ def check_modules():
 
 # ---------------------------------------------------------------- env
 ENV = {"FRED_API_KEY": False, "FINNHUB_TOKEN": False, "TELEGRAM_TOKEN": False,
-       "TELEGRAM_CHAT_ID": False, "TRADINGVIEW_MCP_URL": False,
-       "TRADINGECONOMICS_KEY": False, "FXSTREET_URL": False}
+       "TELEGRAM_CHAT_ID": False, "TRADINGECONOMICS_KEY": False, "FXSTREET_URL": False}
 
 
 def check_env():
@@ -146,14 +145,7 @@ def check_providers(quick=False):
     row("Forex Factory (scrape)", True, os.environ.get("FOREXFACTORY_ENABLED") == "1", None,
         "DISABLED by default (ToS)")
 
-    # TradingView MCP
-    try:
-        from market_intel import tradingview_bridge as tv
-        conf = bool(os.environ.get("TRADINGVIEW_MCP_URL"))
-        tested = tv.available()[0] if (conf and not quick) else None
-        row("TradingView MCP", True, conf, tested, "advisory only; MT5 authoritative; NOT wired into any path")
-    except Exception as e:
-        row("TradingView MCP", False, False, False, str(e)[:60])
+    row("TradingView MCP", False, False, False, "SHELVED to attic/ — failed the complexity rubric")
 
     # which provider is ACTIVE at runtime
     active = "none"
@@ -324,8 +316,9 @@ def check_telegram(quick=False):
         conf = bool(os.environ.get("TELEGRAM_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"))
         if not conf:
             return rec("telegram", WARN, "not configured (TELEGRAM_TOKEN/CHAT_ID unset)", critical=False)
-        return rec("telegram", OK, f"configured, {len(tg.CLASSES)} alert classes | "
-                                   "NOTE: no module currently calls it (not integrated)", critical=False)
+        return rec("telegram", OK, f"configured, {len(tg.CLASSES)} alert classes | WIRED: "
+                                   "safety_state HALT/corruption + runner fills/vetoes/critical",
+                   critical=False)
     except Exception as e:
         return rec("telegram", FAIL, str(e)[:70], critical=False)
 

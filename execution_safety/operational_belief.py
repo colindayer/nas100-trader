@@ -35,6 +35,13 @@ class TradeExecutionRecord:
     execution_latency_ms: float = 0.0
     broker_retcode: int = 0
     defects: list = field(default_factory=list)
+    # --- context at entry (Market Memory prerequisite). Retrofitting is impossible, so it is
+    # captured from trade one. NOT an operational-quality input: it never affects `quality()`. ---
+    regime_at_entry: str = ""            # e.g. "up/highvol" from market_intel.state
+    session_at_entry: str = ""
+    kill_zones_at_entry: str = ""
+    volatility_regime: str = ""
+    macro_risk_state: str = ""           # from macro_board risk claim, if available
 
     # derived checks
     @property

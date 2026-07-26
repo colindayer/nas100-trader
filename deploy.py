@@ -31,7 +31,7 @@ TRACKED = [
     "market_intel/fred_provider.py", "market_intel/macro_board.py",
     "market_intel/opportunity.py", "market_intel/engine.py",
     "market_intel/dashboard.py", "market_intel/web.py", "market_intel/telegram_notifier.py",
-    "market_intel/tradingview_bridge.py", "market_intel/reaction_recorder.py",
+    "market_intel/reaction_recorder.py",
     "strategy_contracts/portfolio_multisleeve.json",
 ]
 

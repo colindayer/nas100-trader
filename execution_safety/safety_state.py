@@ -99,6 +99,22 @@ class SafetyState:
 
 
 # ------------------------------------------------------------------ audit
+ALERT_EVENTS = {"HALT", "HALT_CLEARED", "state_corrupt", "state_checksum_mismatch",
+                "state_schema_mismatch", "state_recovered_from_backup", "trade_refused_cap"}
+
+
+def _alert(event: str, detail: dict):
+    """Best-effort notification. NEVER raises and never blocks a state transition:
+    a failed alert must not prevent a halt from being recorded."""
+    try:
+        from market_intel import telegram_notifier as tg
+        crit = event in ("HALT", "state_corrupt", "state_checksum_mismatch", "state_schema_mismatch")
+        body = f"<b>{event}</b>\n" + "\n".join(f"{k}: {v}" for k, v in list(detail.items())[:6])
+        tg.critical(body) if crit else tg.send("critical_error", body)
+    except Exception:
+        pass
+
+
 def audit(event: str, detail: dict, path: str | None = None):
     """Immutable record of every critical state transition.
     Path resolves at CALL time (module-level default was previously frozen at import)."""
@@ -109,6 +125,8 @@ def audit(event: str, detail: dict, path: str | None = None):
     with open(path, "a") as f:
         f.write(json.dumps({"ts": time.time(), "utc": datetime.now(timezone.utc).isoformat(),
                             "event": event, **detail}, default=str) + "\n")
+    if event in ALERT_EVENTS:
+        _alert(event, detail)
 
 
 # ------------------------------------------------------------------ io

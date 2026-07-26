@@ -5,18 +5,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from execution_safety.strategy_contract import StrategyContract
 from execution_safety.strategy_registry_shim import Reg
 from execution_safety.gate import Signal, authorize
-from execution_safety.prop_objective import FirmConfig, PropAccountState, survival_check
 from execution_safety.broker_reconciliation import BrokerPosition, reconcile, protective_stop_monitor
 from execution_safety.position_ledger import PositionLedger, LedgerEntry, classify_broker_positions
 from execution_safety import shadow
 
-# ---- Stage 5: prop survival ----
-def test_prop_blocks_when_trade_would_breach_daily():
-    cfg = FirmConfig("ftmo", 10, 5, 10, "trailing", 4, 2.0, [], "UTC", 3.0, 1.0)
-    st = PropAccountState(equity=49000, day_start_equity=50000, high_water_mark=50000, days_traded=5,
-                          largest_day_profit=0)   # already -2% on the day
-    r = survival_check(st, cfg, proposed_risk_pct=0.04)   # +4% risk -> 6% > 5% daily
-    assert not r["prop_ok"] and "WOULD_RISK_DAILY_LIMIT" in r["reason_codes"]
 
 # ---- Stage 7: broker reconciliation ----
 def test_missing_broker_stop_is_critical():

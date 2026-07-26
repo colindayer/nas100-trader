@@ -16,3 +16,27 @@
 {"ts": 1785019688.098686, "kind": "opportunity", "text": "x", "sent": false, "error": "unconfigured"}
 {"ts": 1785019722.107282, "kind": "opportunity", "text": "x", "sent": false, "error": "unconfigured"}
 {"ts": 1785050518.405508, "kind": "opportunity", "text": "x", "sent": false, "error": "unconfigured"}
+{"ts": 1785050640.3161411, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: alerting drill", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.1798248, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: boom", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.233828, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: critical execution failure: reconciliation_passed", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.236585, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: critical execution failure: stop_verified", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.319772, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: critical reconciliation failure", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.321289, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: boom", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.323264, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: boom", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.323688, "kind": "critical_error", "text": "<b>HALT_CLEARED</b>\nactor: human:colindayer\nnote: investigated\nprior_reason: boom", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.3245661, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>state_corrupt</b>\nerror: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)\naction: halted", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.325361, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>state_checksum_mismatch</b>\naction: halted", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.3262389, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>state_schema_mismatch</b>\nfound: 999\nexpected: 1", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.330176, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: RECONCILIATION: ORPHAN_POSITION\nfindings: [{'type': 'ORPHAN_POSITION', 'symbol': 'EURUSD', 'comment': 'unknown', 'volume': 0.1}]", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.331094, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: RECONCILIATION: NAKED_POSITION\nfindings: [{'type': 'NAKED_POSITION', 'symbol': 'EURUSD', 'comment': 'portfolio:funded'}]", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.3332438, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: RECONCILIATION: RECONCILIATION_FAILED\nfindings: [{'type': 'RECONCILIATION_FAILED', 'detail': 'MT5_ERROR: ModuleNotFoundError'}]", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.3346891, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: test", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.335058, "kind": "critical_error", "text": "<b>HALT_CLEARED</b>\nactor: human:test\nnote: \nprior_reason: test", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.338214, "kind": "critical_error", "text": "<b>trade_refused_cap</b>\ntrades_today: 3\ncap: 3\nintent_id: OI-1785050689338069000", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.3882, "kind": "critical_error", "text": "<b>trade_refused_cap</b>\ntrades_today: 3\ncap: 3\nintent_id: OI-1785050689336232000", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.39192, "kind": "critical_error", "text": "<b>trade_refused_cap</b>\ntrades_today: 3\ncap: 3\nintent_id: OI-1785050689336381000", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.442671, "kind": "critical_error", "text": "<b>trade_refused_cap</b>\ntrades_today: 3\ncap: 3\nintent_id: OI-1785050689336313000", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.665855, "kind": "critical_error", "text": "<b>state_recovered_from_backup</b>\nerror: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.66732, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: RECONCILIATION: ORPHAN_POSITION\nfindings: [{'type': 'ORPHAN_POSITION', 'symbol': 'EURUSD', 'comment': 'no-ledger-entry', 'volume': 0.1}]", "sent": false, "error": "unconfigured"}
+{"ts": 1785050689.6693819, "kind": "critical_error", "text": "\ud83d\uded1 <b>CRITICAL</b>\n<b>HALT</b>\nreason: RECONCILIATION: ORPHAN_POSITION\nfindings: [{'type': 'ORPHAN_POSITION', 'symbol': 'EURUSD', 'comment': 'orphan', 'volume': 0.1}]", "sent": false, "error": "unconfigured"}
+{"ts": 1785050690.3271759, "kind": "opportunity", "text": "x", "sent": false, "error": "unconfigured"}
