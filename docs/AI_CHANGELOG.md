@@ -342,3 +342,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-26 | Obsidian Bridge / automated | Alerting wired, entry context captured, four dead components shelved | git post-commit hook | c193975 |
 | 2026-07-26 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | d96138a |
 | 2026-07-26 | Obsidian Bridge / automated | fix: healthcheck no longer halts live safety state; unbreak pytest collection | git post-commit hook | dc1f039 |
+| 2026-07-26 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 76cfcfb |
+| 2026-07-26 | Obsidian Bridge / automated | chore: rebuild MANIFEST at healthcheck fix | git post-commit hook | 680e722 |
