@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+3333245  fix(audit): every action was labelled with the FIRST task's name
+667aacb  Obsidian bridge auto-sync [bridge-auto]
 ba126d1  fix(audit): CRITICAL — scheduled-task scan silently degraded and reported the host clean
 85a32fa  Obsidian bridge auto-sync [bridge-auto]
 86e2661  feat(cockpit): MACRO page (macro board) + IDEAS launcher
 55ac2f7  Obsidian bridge auto-sync [bridge-auto]
 fd7a728  feat: Stage 4 full execution-chain audit (deploy.py --audit-execution)
 eb148f8  Obsidian bridge auto-sync [bridge-auto]
-680e722  chore: rebuild MANIFEST at healthcheck fix
-76cfcfb  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
