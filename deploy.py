@@ -94,27 +94,49 @@ def _classify(cmd, args, workdir, root):
 
 def _tasks_from_schtasks():
     """Every scheduled task with its real Exec action. XML is used because /fo LIST truncates
-    arguments and omits the working directory -- both of which are where the risk hides."""
+    arguments and omits the working directory -- both of which are where the risk hides.
+
+    Namespaces are stripped rather than mapped: a prefix map built from the root tag broke on a
+    real VPS ('prefix t not found in prefix map'), the parse raised, and the audit reported the
+    host clean while a legacy trader ran hourly. Local-name matching cannot fail that way.
+    """
     import re, xml.etree.ElementTree as ET
     raw = subprocess.check_output(["schtasks", "/query", "/xml", "ONE"],
                                   stderr=subprocess.DEVNULL, timeout=60)
     txt = raw.decode("utf-16-le", "ignore") if raw[:2] == b"\xff\xfe" else raw.decode("utf-8", "ignore")
-    out = []
-    # /xml ONE concatenates documents; split on the XML declaration and parse each.
+    out, errs = [], []
+
+    def local(el):
+        return el.tag.rsplit("}", 1)[-1]
+
+    def first(root, name):
+        for el in root.iter():
+            if local(el) == name and (el.text or "").strip():
+                return el.text.strip()
+        return ""
+
     for chunk in re.split(r"<\?xml[^>]*\?>", txt):
         if "<Task" not in chunk:
             continue
         try:
             r = ET.fromstring(chunk.strip())
-        except Exception:
+        except Exception as e:
+            errs.append(f"unparseable task XML: {type(e).__name__}")
             continue
-        ns = {"t": r.tag.split("}")[0].strip("{")} if "}" in r.tag else {}
-        g = lambda n, p: (n.findtext(p, default="", namespaces=ns) or "").strip()
-        uri = g(r, ".//t:RegistrationInfo/t:URI") or g(r, ".//t:RegistrationInfo/t:Description") or "(unnamed)"
-        enabled = g(r, ".//t:Settings/t:Enabled").lower() != "false"
-        for ex in r.findall(".//t:Actions/t:Exec", ns) or []:
-            out.append({"task": uri, "enabled": enabled, "command": g(ex, "t:Command"),
-                        "arguments": g(ex, "t:Arguments"), "workdir": g(ex, "t:WorkingDirectory")})
+        uri = first(r, "URI") or first(r, "Description") or "(unnamed)"
+        enabled = True
+        for el in r.iter():
+            if local(el) == "Enabled" and (el.text or "").strip().lower() == "false":
+                enabled = False
+                break
+        for ex in [el for el in r.iter() if local(el) == "Exec"]:
+            g = lambda n: next((c.text.strip() for c in ex if local(c) == n and c.text), "")
+            out.append({"task": uri, "enabled": enabled, "command": g("Command"),
+                        "arguments": g("Arguments"), "workdir": g("WorkingDirectory")})
+    if errs:
+        raise RuntimeError("; ".join(errs[:3]))
+    if not out:
+        raise RuntimeError("schtasks returned no Exec actions — output shape unexpected")
     return out
 
 
@@ -198,6 +220,13 @@ def print_execution_audit(rows, errors):
         print(" CRITICAL\n\n LEGACY EXECUTION PATH DETECTED\n")
         print(" The platform must not be considered operationally clean until all legacy")
         print(" scheduled tasks are disabled or explicitly approved.")
+    elif errors:
+        # Never print a clean headline off an incomplete scan. The previous version did, and a
+        # live hourly trader running run_all.bat out of Downloads read as "no CRITICAL detected".
+        print(" INCONCLUSIVE — ENUMERATION FAILED\n")
+        print(" This scan did NOT see every execution path. Absence of findings here is")
+        print(" absence of evidence, not evidence of absence. Verify manually before")
+        print(" treating this host as clean.")
     else:
         print(" EXECUTION CHAIN AUDIT: no CRITICAL legacy execution path detected")
     print("=" * 78)

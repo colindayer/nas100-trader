@@ -87,3 +87,31 @@ def critical(msg) -> dict:
 def daily_summary(state: dict) -> dict:
     return send("daily_summary", "<b>DAILY SUMMARY</b>\n" +
                 "\n".join(f"{k}: {v}" for k, v in state.items()))
+
+
+def selftest() -> int:
+    """Prove the alert path end to end, INDEPENDENT of safety-state.
+
+    The halt drill is not a reliable alerting test: halt() is a no-op when the state is already
+    halted, so it emits nothing and looks identical to a broken notifier. This sends directly
+    and reports exactly which step failed.
+    """
+    tok, chat = _cfg()
+    print(f"  TELEGRAM_TOKEN   : {'set (' + tok[:8] + '...)' if tok else 'NOT SET'}")
+    print(f"  TELEGRAM_CHAT_ID : {chat or 'NOT SET'}")
+    if not tok or not chat:
+        print("\n  FAIL: credentials missing in THIS process.")
+        print("  SetEnvironmentVariable(...,'User') does not affect an already-open shell —")
+        print("  open a NEW PowerShell window and retry.")
+        return 1
+    r = send("critical_error", "<b>ALERTING SELFTEST</b>\nIf you can read this, the alert "
+                               "path works. No trading action was taken.")
+    ok = bool(r.get("sent"))
+    print(f"\n  send() -> sent={ok} {('error: ' + str(r.get('error'))[:120]) if not ok else ''}")
+    print("  Check your phone. No message despite sent=True means the chat id is wrong.")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    import sys as _sys
+    _sys.exit(selftest())

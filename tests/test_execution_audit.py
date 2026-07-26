@@ -44,3 +44,46 @@ def test_enumeration_failure_is_reported_not_swallowed():
     rows, errors = deploy.audit_execution()      # no schtasks on macOS
     assert errors, "a source that cannot be enumerated must be reported, not treated as clean"
     assert deploy.print_execution_audit(rows, errors) == 1
+
+
+REAL_VPS_XML = '''<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo><URI>\\Nas100Bot-MT5</URI></RegistrationInfo>
+  <Settings><Enabled>true</Enabled></Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>cmd.exe</Command>
+      <Arguments>/c "C:\\Users\\Administrator\\Downloads\\nas100-trader-main\\nas100-trader-main\\run_all.bat"</Arguments>
+    </Exec>
+  </Actions>
+</Task>'''
+
+
+def test_the_task_that_was_actually_missed_on_the_vps():
+    """Regression: this exact task ran hourly while the audit reported the host clean.
+    It contains no banned filename -- risk lives in run_all.bat + Downloads + archived repo."""
+    r = deploy._classify("cmd.exe",
+                         '/c "C:\\Users\\Administrator\\Downloads\\nas100-trader-main'
+                         '\\nas100-trader-main\\run_all.bat"', "", ROOT)
+    assert r[0] == "CRITICAL", r
+
+
+def test_namespaced_task_xml_parses(monkeypatch):
+    """The prefix-map approach raised on real VPS XML and the whole scan silently degraded."""
+    import subprocess as sp
+    monkeypatch.setattr(deploy.subprocess, "check_output",
+                        lambda *a, **k: REAL_VPS_XML.encode("utf-8"))
+    rows = deploy._tasks_from_schtasks()
+    assert len(rows) == 1, rows
+    assert rows[0]["task"] == "\\Nas100Bot-MT5"
+    assert rows[0]["command"] == "cmd.exe"
+    assert "run_all.bat" in rows[0]["arguments"]
+    assert rows[0]["enabled"] is True
+
+
+def test_incomplete_enumeration_never_prints_a_clean_headline(capsys):
+    rc = deploy.print_execution_audit([], ["scheduled_task: boom"])
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "no CRITICAL legacy execution path detected" not in out
+    assert "INCONCLUSIVE" in out
