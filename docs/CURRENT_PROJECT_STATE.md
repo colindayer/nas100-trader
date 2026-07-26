@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+fd7a728  feat: Stage 4 full execution-chain audit (deploy.py --audit-execution)
+eb148f8  Obsidian bridge auto-sync [bridge-auto]
 680e722  chore: rebuild MANIFEST at healthcheck fix
 76cfcfb  Obsidian bridge auto-sync [bridge-auto]
 dc1f039  fix: healthcheck no longer halts live safety state; unbreak pytest collection
 d96138a  Obsidian bridge auto-sync [bridge-auto]
 c193975  Alerting wired, entry context captured, four dead components shelved
 1e20874  Obsidian bridge auto-sync [bridge-auto]
-bc6d5c1  Macro board: evidence-linked regime pane in the dashboard (read-only)
-8af95ec  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
