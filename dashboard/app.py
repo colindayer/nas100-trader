@@ -218,8 +218,8 @@ def ticker():
 
 
 # ------------------------------------------------------------------ pages --
-PAGES = ["HOME", "STRATEGIES", "RvSvL", "TRADE EXPLORER", "SHADOW", "RESEARCH",
-         "GRAVEYARD", "EXECUTION", "EVIDENCE", "TIMELINE", "LOGS", "SETTINGS"]
+PAGES = ["HOME", "MACRO", "STRATEGIES", "RvSvL", "TRADE EXPLORER", "SHADOW", "RESEARCH",
+         "IDEAS", "GRAVEYARD", "EXECUTION", "EVIDENCE", "TIMELINE", "LOGS", "SETTINGS"]
 page = st.sidebar.radio("Cockpit", PAGES)
 auto = st.sidebar.toggle("Auto-refresh 60 s", value=True)
 if auto:
@@ -291,6 +291,91 @@ if page == "HOME":
                            ("Research Backlog", "docs/RESEARCH_BACKLOG.md"),
                            ("Knowledge Graph", "docs/KNOWLEDGE_GRAPH.md")]:
             st.markdown(f"- [{label}]({rel})")
+
+elif page == "MACRO":
+    st.subheader("Macro Board")
+    st.caption("Evidence only. No direction, no signal, no edge probability. "
+               "`confidence` is evidence COVERAGE — how much of the expected evidence was "
+               "actually observed — NOT probability of profit.")
+    try:
+        sys.path.insert(0, str(REPO))
+        from market_intel import macro_board
+        b = macro_board.board()
+    except Exception as e:
+        b = None
+        st.error(f"macro board unavailable: {type(e).__name__}: {e}")
+        st.caption("MT5 is not reachable from this machine — the board reads live symbols. "
+                   "This renders on the VPS.")
+    if b:
+        st.caption(f"as of {b['as_of']}")
+        claims = b["claims"]
+        risk = claims.pop("risk", None)
+        if risk:
+            st.markdown(f"<div class='card'><b>RISK</b> — {risk['statement']}<br>"
+                        f"<span class='mono' style='color:{DIM}'>evidence coverage "
+                        f"{risk['confidence']:.0%}</span></div>", unsafe_allow_html=True)
+        cols = st.columns(3)
+        for i, (dim, c) in enumerate(claims.items()):
+            with cols[i % 3]:
+                # contradictions and unknowns are shown at the SAME level as evidence, never
+                # collapsed away -- a claim that hides what disagrees with it is marketing.
+                st.markdown(f"<div class='card'><b>{dim.upper()}</b><br>{c['statement']}<br>"
+                            f"<span class='mono' style='color:{DIM}'>coverage "
+                            f"{c['confidence']:.0%}</span></div>", unsafe_allow_html=True)
+                if c["evidence"]:
+                    st.caption("evidence")
+                    for ev in c["evidence"]:
+                        st.markdown(f"<span class='tick'>{' · '.join(str(x) for x in ev)}</span>",
+                                    unsafe_allow_html=True)
+                if c["contradictions"]:
+                    st.caption(":red[contradictions]")
+                    for x in c["contradictions"]:
+                        st.markdown(f"- :red[{x}]")
+                if c["unknowns"]:
+                    st.caption(":orange[unknowns]")
+                    for x in c["unknowns"]:
+                        st.markdown(f"- :orange[{x}]")
+        st.divider()
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("**Upcoming high-impact**")
+            up = b.get("upcoming_high_impact") or []
+            st.table(up) if up else st.caption("none in the next 48h (or calendar unavailable)")
+        with c2:
+            st.markdown("**Latest releases**")
+            lr = b.get("latest_releases") or []
+            st.table(lr) if lr else st.caption("none")
+
+elif page == "IDEAS":
+    st.subheader("Idea Triage")
+    # ponytail: this page LINKS to the research plane, it does not embed it. Triage lives in
+    # research-lab and writes to the Trial Registry. Copying it into the production cockpit
+    # would put research tooling on the execution side of the firewall -- the exact direction
+    # PHASE 601 closed. Production may not read research as an input to trading.
+    st.warning("**This cockpit cannot triage ideas, by design.** Triage lives on the research "
+               "plane (`research-lab/dashboard/triage.py`). Production reading research is the "
+               "direction that lets an unvalidated idea reach an order path — PHASE 601 closed "
+               "it deliberately. This page is a launcher and a checklist, not a pipeline.")
+    st.code("cd ~/research-lab && streamlit run dashboard/triage.py", language="bash")
+    st.markdown("""
+**Every external idea is an unverified hypothesis — including ones that look rigorous.**
+
+Before an idea is worth any time, it must state:
+
+| question | why it kills most ideas |
+|--|--|
+| What data does it need? | Volume-based methods (VPIN, volume profile, CVD, delta) need **real traded volume**. Pepperstone CFDs give *tick volume* — a count of price updates. Different statistic. |
+| Is the sample big enough? | "PF 1.87" on 194 trades with 62 out-of-sample is noise. |
+| What does the Monte Carlo assume? | Independent reshuffling turns a mediocre edge into "99.7% profitable". Real losses cluster in regimes. |
+| Is there an unfalsifiable core? | Dealer-gamma (GEX) assigns dealer-vs-customer signs **by convention** — public OI cannot identify ownership. |
+| Would it survive costs? | Most intraday edges die at the spread. |
+
+Only after Research → Trial Registry (pre-registration) → Backtest → Walk-forward → Costs →
+Belief → Guardian → Demo may anything graduate here.
+""")
+    for label, rel in (("Research Backlog", "docs/RESEARCH_BACKLOG.md"),
+                       ("Graveyard audit", "docs/RESEARCH_GRAVEYARD_AUDIT.md")):
+        obsidian_button(label, rel)
 
 elif page == "STRATEGIES":
     st.subheader("Strategy cards — each explains itself")
