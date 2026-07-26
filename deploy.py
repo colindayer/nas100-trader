@@ -39,6 +39,190 @@ TRACKED = [
 # Components explicitly BANNED from any active execution path (caused the 61552095 incident).
 BANNED_EXECUTORS = ["live_trader.py", "mt5_broker.py"]
 
+# --- full execution-chain audit (Stage 4) -------------------------------------------------
+# Grepping for two filenames is not an audit. A scheduled task can reach an order path via a
+# .bat wrapper, a stale clone, a Downloads copy, or an MT5 terminal launch -- none of which
+# contain the string "live_trader.py". Risk is therefore assessed on the WHOLE chain:
+# command + arguments + working directory + which repository the path resolves into.
+# A directory name at the END of a path has no trailing separator. Requiring one made
+# "...\\Downloads" and "...\\trading-os" classify as HIGH instead of CRITICAL -- fail-open.
+_END = r"(?:[\\/\"'\s]|$)"
+
+RISK_PATTERNS = [
+    # (regex, risk, why)
+    (r"live_trader\.py|mt5_broker\.py",  "CRITICAL", "banned executor (caused the 61552095 incident)"),
+    (r"run_all\.(bat|cmd|ps1)",          "CRITICAL", "legacy batch runner — chains unknown children"),
+    (r"terminal64\.exe|metatrader",      "CRITICAL", "MT5 launcher — can restore Algo Trading + attached EAs"),
+    (r"[\\/]Downloads" + _END,          "CRITICAL", "executes from Downloads — unversioned, unreviewed"),
+    (r"[\\/](nas100_backnet|nas100-live-evidence|trading-os|kronos_lab|tradingview-mcp)" + _END,
+                                          "CRITICAL", "archived/legacy repository — outside the deployment root"),
+    (r"[\\/](old|bak|backup|archive|_old|copy)" + _END, "HIGH", "archived directory"),
+    (r"\.bat\b|\.cmd\b",                 "MEDIUM",  "batch wrapper — actual command is indirect"),
+]
+
+# Entry points this platform is allowed to schedule, relative to the deployment root.
+SANCTIONED_ENTRY = ["market_intel.web", "market_intel.reaction_recorder", "scripts\\portfolio_mt5.py",
+                    "scripts/portfolio_mt5.py", "healthcheck.py", "deploy.py", "startup.py"]
+APPROVED_TASKS = os.path.join(ROOT, "config", "approved_tasks.json")
+
+
+def _approved():
+    """Explicit operator allowlist. Absent file = nothing is pre-approved (fail closed)."""
+    try:
+        return set(json.load(open(APPROVED_TASKS))["approved"])
+    except Exception:
+        return set()
+
+
+def _classify(cmd, args, workdir, root):
+    blob = f"{cmd} {args} {workdir}"
+    import re
+    hits = [(risk, why) for pat, risk, why in RISK_PATTERNS if re.search(pat, blob, re.I)]
+    if hits:
+        order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2}
+        risk, why = sorted(hits, key=lambda h: order[h[0]])[0]
+        return risk, why
+    # No pattern hit. Is it ours, and does it run a sanctioned entry point?
+    inside = os.path.normcase(root) in os.path.normcase(f"{workdir} {cmd} {args}")
+    if inside and any(e.lower() in f"{args} {cmd}".lower() for e in SANCTIONED_ENTRY):
+        return "OK", "sanctioned entry point inside the deployment root"
+    if re.search(r"(^|[\\/])(py|python[0-9.]*)(\.exe)?$", cmd.strip().strip('"'), re.I) \
+            or re.search(r"\.py\b|\s-m\s", args, re.I):
+        return "HIGH", "python execution NOT resolving to a sanctioned entry point in the deployment root"
+    return "INFO", "not a python/trading execution path"
+
+
+def _tasks_from_schtasks():
+    """Every scheduled task with its real Exec action. XML is used because /fo LIST truncates
+    arguments and omits the working directory -- both of which are where the risk hides."""
+    import re, xml.etree.ElementTree as ET
+    raw = subprocess.check_output(["schtasks", "/query", "/xml", "ONE"],
+                                  stderr=subprocess.DEVNULL, timeout=60)
+    txt = raw.decode("utf-16-le", "ignore") if raw[:2] == b"\xff\xfe" else raw.decode("utf-8", "ignore")
+    out = []
+    # /xml ONE concatenates documents; split on the XML declaration and parse each.
+    for chunk in re.split(r"<\?xml[^>]*\?>", txt):
+        if "<Task" not in chunk:
+            continue
+        try:
+            r = ET.fromstring(chunk.strip())
+        except Exception:
+            continue
+        ns = {"t": r.tag.split("}")[0].strip("{")} if "}" in r.tag else {}
+        g = lambda n, p: (n.findtext(p, default="", namespaces=ns) or "").strip()
+        uri = g(r, ".//t:RegistrationInfo/t:URI") or g(r, ".//t:RegistrationInfo/t:Description") or "(unnamed)"
+        enabled = g(r, ".//t:Settings/t:Enabled").lower() != "false"
+        for ex in r.findall(".//t:Actions/t:Exec", ns) or []:
+            out.append({"task": uri, "enabled": enabled, "command": g(ex, "t:Command"),
+                        "arguments": g(ex, "t:Arguments"), "workdir": g(ex, "t:WorkingDirectory")})
+    return out
+
+
+def _autostart_entries():
+    """Run keys and Startup folders -- a scheduled-task-only audit misses these entirely."""
+    found = []
+    for hive in ("HKCU", "HKLM"):
+        for key in (r"Software\Microsoft\Windows\CurrentVersion\Run",
+                    r"Software\Microsoft\Windows\CurrentVersion\RunOnce"):
+            try:
+                out = subprocess.check_output(["reg", "query", f"{hive}\\{key}"],
+                                              stderr=subprocess.DEVNULL, timeout=20).decode("utf-8", "ignore")
+            except Exception:
+                continue
+            for line in out.splitlines():
+                p = line.split("REG_SZ")
+                if len(p) == 2 and p[1].strip():
+                    found.append({"task": f"{hive}\\...\\Run\\{p[0].strip()}", "enabled": True,
+                                  "command": p[1].strip(), "arguments": "", "workdir": ""})
+    for d in (os.path.expandvars(r"%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"),
+              os.path.expandvars(r"%ProgramData%\Microsoft\Windows\Start Menu\Programs\Startup")):
+        try:
+            for f in os.listdir(d):
+                found.append({"task": f"Startup\\{f}", "enabled": True,
+                              "command": os.path.join(d, f), "arguments": "", "workdir": d})
+        except Exception:
+            pass
+    return found
+
+
+def audit_execution(root=None):
+    """Stage 4: audit the ENTIRE execution chain, not just banned filenames.
+    Returns (rows, errors). Every row carries task/command/args/workdir/repo/risk/action."""
+    root = root or ROOT
+    rows, errors = [], []
+    entries = []
+    for src, fn in (("scheduled_task", _tasks_from_schtasks), ("autostart", _autostart_entries)):
+        try:
+            for e in fn():
+                e["source"] = src
+                entries.append(e)
+        except Exception as ex:
+            errors.append(f"{src}: {type(ex).__name__}: {str(ex)[:70]} — VERIFY MANUALLY")
+
+    approved = _approved()
+    for e in entries:
+        # Microsoft's own tasks are noise; keep them only if a risk pattern fires.
+        risk, why = _classify(e["command"], e["arguments"], e["workdir"], root)
+        is_ms = e["task"].startswith("\\Microsoft\\") or e["task"].startswith("/Microsoft/")
+        if is_ms and risk in ("INFO", "OK"):
+            continue
+        blob = f"{e['command']} {e['arguments']} {e['workdir']}"
+        repo = "(none)"
+        for cand in sorted({os.path.basename(p.rstrip("\\/")) for p in
+                            __import__("re").findall(r"[A-Za-z]:[\\/][^\"'\s]+", blob)}):
+            if cand:
+                repo = cand
+                break
+        if os.path.normcase(root) in os.path.normcase(blob):
+            repo = os.path.basename(root) + " (deployment root)"
+        if e["task"] in approved and risk != "CRITICAL":
+            risk, why = "APPROVED", f"operator-approved in config/approved_tasks.json ({why})"
+        if not e["enabled"] and risk in ("CRITICAL", "HIGH"):
+            why += " [task is DISABLED — still present, can be re-enabled]"
+        rows.append({**e, "repo": repo, "risk": risk, "why": why,
+                     "action": {"CRITICAL": "DISABLE NOW, then delete or explicitly approve",
+                                "HIGH": "investigate; disable unless justified",
+                                "MEDIUM": "read the wrapper; confirm what it actually launches",
+                                "APPROVED": "none — already approved",
+                                "OK": "none", "INFO": "none"}[risk]})
+    order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "APPROVED": 3, "OK": 4, "INFO": 5}
+    rows.sort(key=lambda r: order[r["risk"]])
+    return rows, errors
+
+
+def print_execution_audit(rows, errors):
+    crit = [r for r in rows if r["risk"] == "CRITICAL"]
+    high = [r for r in rows if r["risk"] == "HIGH"]
+    print("=" * 78)
+    if crit:
+        print(" CRITICAL\n\n LEGACY EXECUTION PATH DETECTED\n")
+        print(" The platform must not be considered operationally clean until all legacy")
+        print(" scheduled tasks are disabled or explicitly approved.")
+    else:
+        print(" EXECUTION CHAIN AUDIT: no CRITICAL legacy execution path detected")
+    print("=" * 78)
+    for r in rows:
+        if r["risk"] in ("OK", "INFO"):
+            continue
+        print(f"\n  Task name    : {r['task']}   [{r['source']}, "
+              f"{'ENABLED' if r['enabled'] else 'disabled'}]")
+        print(f"  Command      : {r['command'] or '(none)'}")
+        print(f"  Arguments    : {r['arguments'] or '(none)'}")
+        print(f"  Working dir  : {r['workdir'] or '(not set — inherits scheduler cwd)'}")
+        print(f"  Repository   : {r['repo']}")
+        print(f"  Risk         : {r['risk']} — {r['why']}")
+        print(f"  Action       : {r['action']}")
+    clean = [r for r in rows if r["risk"] in ("OK", "APPROVED")]
+    print("\n" + "-" * 78)
+    print(f" {len(crit)} CRITICAL | {len(high)} HIGH | {len(clean)} sanctioned/approved | "
+          f"{len(rows)} inspected")
+    for e in errors:
+        print(f" !! ENUMERATION INCOMPLETE — {e}")
+    if errors:
+        print(" A source that could not be enumerated is NOT a clean source.")
+    print("=" * 78)
+    return 1 if (crit or errors) else 0
+
 
 def scan_execution_paths(root=None):
     """Verify no scheduler/service/startup task references a banned executor.
@@ -170,7 +354,12 @@ if __name__ == "__main__":
     ap.add_argument("--strict", action="store_true", help="treat modified files as failure")
     ap.add_argument("--scan-executors", action="store_true",
                     help="verify no scheduler/script/process references a banned executor")
+    ap.add_argument("--audit-execution", action="store_true",
+                    help="Stage 4: audit the ENTIRE execution chain (tasks, autostart, repos)")
     a = ap.parse_args()
+    if a.audit_execution:
+        rows, errors = audit_execution()
+        sys.exit(print_execution_audit(rows, errors))
     if a.scan_executors:
         fs = scan_execution_paths()
         hard = [f for f in fs if f["type"] != "SCHEDULER_NOT_CHECKED"]
