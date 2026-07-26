@@ -562,3 +562,4 @@
 {"ts": 1785019721.01934, "utc": "2026-07-25T22:48:41.019340+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["ORPHAN_POSITION"]}
 {"ts": 1785019721.0193841, "utc": "2026-07-25T22:48:41.019384+00:00", "event": "state_initialised", "equity": null}
 {"ts": 1785019721.019569, "utc": "2026-07-25T22:48:41.019569+00:00", "event": "HALT", "reason": "RECONCILIATION: ORPHAN_POSITION", "findings": [{"type": "ORPHAN_POSITION", "symbol": "EURUSD", "comment": "orphan", "volume": 0.1}]}
+{"ts": 1785050540.383934, "utc": "2026-07-26T07:22:20.383935+00:00", "event": "day_rollover", "from": "2026-07-25", "to": "2026-07-26", "trades_prev_day": 0, "halt_preserved": true}

@@ -73,6 +73,49 @@ def page(symbols):
         h.append("<tr><td colspan=11>no MT5 data (terminal running?)</td></tr>")
     h.append("</table>")
 
+    # ---------- MACRO BOARD (evidence-linked; no direction, no signal) ----------
+    try:
+        from .macro_board import board as _macro
+        mb = _macro()
+        h.append("<h2>Macro board</h2>")
+        h.append("<table><tr><th>dimension</th><th>claim</th><th>evidence</th>"
+                 "<th>contradictions</th><th>unknowns</th><th>coverage</th></tr>")
+        for dim, c in mb["claims"].items():
+            ev = "; ".join(f"{a} {b}" for a, b, _ in c["evidence"][:4]) or "—"
+            src = ", ".join(sorted({s for _, _, s in c["evidence"] if s}))[:60]
+            contra = "; ".join(c["contradictions"]) or "—"
+            unk = "; ".join(c["unknowns"][:2]) or "—"
+            cls = ("warn" if "UNKNOWN" in c["statement"] else
+                   "up" if ("risk-on" in c["statement"] or "rising" in c["statement"]) else
+                   "down" if ("risk-off" in c["statement"] or "falling" in c["statement"]) else "")
+            h.append(f"<tr><td><b>{html.escape(dim)}</b></td>"
+                     f"<td class='{cls}'>{html.escape(c['statement'])}</td>"
+                     f"<td><small>{html.escape(ev)}<br><i>{html.escape(src)}</i></small></td>"
+                     f"<td><small class='down'>{html.escape(contra)}</small></td>"
+                     f"<td><small>{html.escape(unk)}</small></td>"
+                     f"<td>{c['confidence']:.2f}</td></tr>")
+        h.append("</table>")
+        h.append("<div class='card'><small>Evidence only — no direction, no signal. "
+                 "<b>'coverage' is how much evidence was available, NOT a probability of profit.</b> "
+                 "Contradictions are shown, never resolved; unknowns are listed, never hidden.</small></div>")
+
+        if mb["latest_releases"]:
+            h.append("<h2>Latest releases — measured surprise</h2><table>"
+                     "<tr><th>ccy</th><th>event</th><th>forecast</th><th>actual</th>"
+                     "<th>surprise</th><th>source</th></tr>")
+            for r in mb["latest_releases"]:
+                sp = r["surprise"]; spc = r.get("surprise_pct")
+                cls = "up" if sp and sp > 0 else "down" if sp and sp < 0 else ""
+                h.append(f"<tr><td>{html.escape(str(r['currency']))}</td>"
+                         f"<td>{html.escape(str(r['name']))}</td><td>{r['forecast']}</td>"
+                         f"<td><b>{r['actual']}</b></td>"
+                         f"<td class='{cls}'>{sp:+.4g}"
+                         f"{f' ({spc:+.1%})' if spc is not None else ''}</td>"
+                         f"<td><small>{html.escape(str(r['provider']))}</small></td></tr>")
+            h.append("</table>")
+    except Exception as e:
+        h.append(f"<div class='card'>macro board unavailable: {html.escape(str(e)[:120])}</div>")
+
     h.append("<h2>Economic calendar — next 48h</h2><table>"
              "<tr><th>countdown</th><th>impact</th><th>ccy</th><th>event</th>"
              "<th>prev</th><th>forecast</th><th>actual</th><th>surprise</th></tr>")
