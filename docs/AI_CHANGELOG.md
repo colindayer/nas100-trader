@@ -346,3 +346,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-26 | Obsidian Bridge / automated | chore: rebuild MANIFEST at healthcheck fix | git post-commit hook | 680e722 |
 | 2026-07-26 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | eb148f8 |
 | 2026-07-26 | Obsidian Bridge / automated | feat: Stage 4 full execution-chain audit (deploy.py --audit-execution) | git post-commit hook | fd7a728 |
+| 2026-07-26 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 55ac2f7 |
+| 2026-07-26 | Obsidian Bridge / automated | feat(cockpit): MACRO page (macro board) + IDEAS launcher | git post-commit hook | 86e2661 |
