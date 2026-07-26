@@ -340,3 +340,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-26 | Obsidian Bridge / automated | refresh manifest at HEAD | git post-commit hook | 7dc02fd |
 | 2026-07-26 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | aebf876 |
 | 2026-07-26 | Obsidian Bridge / automated | OPERATIONAL_VALIDATION_PLAN: 60-day unattended validation (plan only, no code) | git post-commit hook | 430640d |
+| 2026-07-26 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 889f93a |
+| 2026-07-26 | Obsidian Bridge / automated | MARKET_MEMORY evaluated against the complexity rubric (analysis only, no code) | git post-commit hook | bf6d413 |

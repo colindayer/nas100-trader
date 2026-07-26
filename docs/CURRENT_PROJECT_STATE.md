@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+bf6d413  MARKET_MEMORY evaluated against the complexity rubric (analysis only, no code)
+889f93a  Obsidian bridge auto-sync [bridge-auto]
 430640d  OPERATIONAL_VALIDATION_PLAN: 60-day unattended validation (plan only, no code)
 aebf876  Obsidian bridge auto-sync [bridge-auto]
 7dc02fd  refresh manifest at HEAD
 1bb368d  Obsidian bridge auto-sync [bridge-auto]
 9b3fbb5  QUANT_OS_ARCHITECTURE: design document (no code)
 4016b67  Obsidian bridge auto-sync [bridge-auto]
-ab89ae2  V-03, V-05, V-06 closed (approved Stage 3)
-5a41aac  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
