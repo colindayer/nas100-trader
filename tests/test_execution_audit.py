@@ -87,3 +87,44 @@ def test_incomplete_enumeration_never_prints_a_clean_headline(capsys):
     assert rc == 1
     assert "no CRITICAL legacy execution path detected" not in out
     assert "INCONCLUSIVE" in out
+
+
+MULTI_TASK_XML = '''<?xml version="1.0" encoding="UTF-16"?>
+<Tasks xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <Task>
+    <RegistrationInfo><URI>\\MarketIntel Recorder</URI></RegistrationInfo>
+    <Settings><Enabled>true</Enabled></Settings>
+    <Actions><Exec><Command>C:\\Users\\Administrator\\run_recorder.bat</Command></Exec></Actions>
+  </Task>
+  <Task>
+    <RegistrationInfo><URI>\\Nas100Bot-MT5</URI></RegistrationInfo>
+    <Settings><Enabled>false</Enabled></Settings>
+    <Actions><Exec>
+      <Command>cmd.exe</Command>
+      <Arguments>/c "C:\\Users\\Administrator\\Downloads\\nas100-trader-main\\run_all.bat"</Arguments>
+    </Exec></Actions>
+  </Task>
+</Tasks>'''
+
+
+def test_each_task_keeps_its_own_name(monkeypatch):
+    """Every action was labelled with the FIRST task's URI, so the report named one task 14
+    times. An audit you cannot act on is not an audit."""
+    monkeypatch.setattr(deploy.subprocess, "check_output",
+                        lambda *a, **k: MULTI_TASK_XML.encode("utf-8"))
+    rows = deploy._tasks_from_schtasks()
+    assert len(rows) == 2, rows
+    names = {r["task"] for r in rows}
+    assert names == {"\\MarketIntel Recorder", "\\Nas100Bot-MT5"}, names
+    mt5 = [r for r in rows if r["task"] == "\\Nas100Bot-MT5"][0]
+    assert mt5["enabled"] is False and "run_all.bat" in mt5["arguments"]
+    assert [r for r in rows if r["task"] == "\\MarketIntel Recorder"][0]["enabled"] is True
+
+
+def test_downloads_path_is_not_called_the_deployment_root(monkeypatch, tmp_path):
+    monkeypatch.setattr(deploy.subprocess, "check_output",
+                        lambda *a, **k: MULTI_TASK_XML.encode("utf-8"))
+    monkeypatch.setattr(deploy, "_autostart_entries", lambda: [])
+    rows, _ = deploy.audit_execution(root="C:\\Users\\Administrator")
+    bad = [r for r in rows if "Downloads" in r["arguments"]]
+    assert bad and "deployment root" not in bad[0]["repo"], bad

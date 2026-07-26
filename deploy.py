@@ -115,24 +115,29 @@ def _tasks_from_schtasks():
                 return el.text.strip()
         return ""
 
-    for chunk in re.split(r"<\?xml[^>]*\?>", txt):
+    def tasks_in(root):
+        return [root] if local(root) == "Task" else \
+               [el for el in root.iter() if local(el) == "Task"]
+
+    for chunk in re.split(r"<\\?xml[^>]*\\?>", txt):
         if "<Task" not in chunk:
             continue
         try:
-            r = ET.fromstring(chunk.strip())
+            doc = ET.fromstring(chunk.strip())
         except Exception as e:
             errs.append(f"unparseable task XML: {type(e).__name__}")
             continue
-        uri = first(r, "URI") or first(r, "Description") or "(unnamed)"
-        enabled = True
-        for el in r.iter():
-            if local(el) == "Enabled" and (el.text or "").strip().lower() == "false":
-                enabled = False
-                break
-        for ex in [el for el in r.iter() if local(el) == "Exec"]:
-            g = lambda n: next((c.text.strip() for c in ex if local(c) == n and c.text), "")
-            out.append({"task": uri, "enabled": enabled, "command": g("Command"),
-                        "arguments": g("Arguments"), "workdir": g("WorkingDirectory")})
+        # schtasks /xml ONE emits MANY <Task> elements. Searching the whole document for URI
+        # gave every action the FIRST task's name -- the report named one task 14 times and was
+        # unusable for acting on. Name and Exec must be read from the SAME Task element.
+        for t in tasks_in(doc):
+            uri = first(t, "URI") or first(t, "Description") or "(unnamed)"
+            enabled = not any(local(el) == "Enabled" and (el.text or "").strip().lower() == "false"
+                              for el in t.iter())
+            for ex in [el for el in t.iter() if local(el) == "Exec"]:
+                g = lambda n: next((c.text.strip() for c in ex if local(c) == n and c.text), "")
+                out.append({"task": uri, "enabled": enabled, "command": g("Command"),
+                            "arguments": g("Arguments"), "workdir": g("WorkingDirectory")})
     if errs:
         raise RuntimeError("; ".join(errs[:3]))
     if not out:
@@ -195,8 +200,15 @@ def audit_execution(root=None):
             if cand:
                 repo = cand
                 break
-        if os.path.normcase(root) in os.path.normcase(blob):
-            repo = os.path.basename(root) + " (deployment root)"
+        low = os.path.normcase(blob)
+        for marker in ("downloads", "nas100-trader-main", "nas100_backnet", "trading-os",
+                       "kronos_lab", "tradingview-mcp", "nas100-live-evidence"):
+            if marker in low:
+                repo = marker                      # a risk path is never "the deployment root"
+                break
+        else:
+            if os.path.normcase(root) in low:
+                repo = os.path.basename(root) + " (deployment root)"
         if e["task"] in approved and risk != "CRITICAL":
             risk, why = "APPROVED", f"operator-approved in config/approved_tasks.json ({why})"
         if not e["enabled"] and risk in ("CRITICAL", "HIGH"):
