@@ -342,3 +342,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-26 | Obsidian Bridge / automated | OPERATIONAL_VALIDATION_PLAN: 60-day unattended validation (plan only, no code) | git post-commit hook | 430640d |
 | 2026-07-26 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 889f93a |
 | 2026-07-26 | Obsidian Bridge / automated | MARKET_MEMORY evaluated against the complexity rubric (analysis only, no code) | git post-commit hook | bf6d413 |
+| 2026-07-26 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 8af95ec |
+| 2026-07-26 | Obsidian Bridge / automated | Macro board: evidence-linked regime pane in the dashboard (read-only) | git post-commit hook | bc6d5c1 |
