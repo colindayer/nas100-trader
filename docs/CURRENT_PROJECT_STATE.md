@@ -1,4 +1,4 @@
-# CURRENT PROJECT STATE — 2026-07-26
+# CURRENT PROJECT STATE — 2026-07-29
 
 _Onboarding snapshot for any agent/human joining. Sources: LIVE_TRADING_PARITY,
 PRODUCTION_READINESS_REVIEW, NEXT_30_DAY_MONITORING_PLAN, LIVE_TRADE_REVIEW,
@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+cbb7cbe  audit: scan CI workflows and order-capable modules — a live trader hid in GitHub Actions
+ddc86c1  Obsidian bridge auto-sync [bridge-auto]
 4fb5956  fix(telegram): use the OS certificate store — alerts failed TLS verification on the VPS
 574d410  Obsidian bridge auto-sync [bridge-auto]
 3333245  fix(audit): every action was labelled with the FIRST task's name
 667aacb  Obsidian bridge auto-sync [bridge-auto]
 ba126d1  fix(audit): CRITICAL — scheduled-task scan silently degraded and reported the host clean
 85a32fa  Obsidian bridge auto-sync [bridge-auto]
-86e2661  feat(cockpit): MACRO page (macro board) + IDEAS launcher
-55ac2f7  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
