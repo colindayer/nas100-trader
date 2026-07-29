@@ -39,6 +39,12 @@ TRACKED = [
 # Components explicitly BANNED from any active execution path (caused the 61552095 incident).
 BANNED_EXECUTORS = ["live_trader.py", "mt5_broker.py"]
 
+# Modules that can place a real order. Any of these reachable from an automated trigger is an
+# execution surface, whether or not it appears in BANNED_EXECUTORS.
+ORDER_CAPABLE = ["live_trader.py", "mt5_broker.py", "binance_broker.py", "alpaca_broker.py",
+                 "broker.py", "fill_ledger.py"]
+ORDER_CALLS = ["place_order", "submit_order", "create_order", "order_send", "place_order_safe"]
+
 # --- full execution-chain audit (Stage 4) -------------------------------------------------
 # Grepping for two filenames is not an audit. A scheduled task can reach an order path via a
 # .bat wrapper, a stale clone, a Downloads copy, or an MT5 terminal launch -- none of which
@@ -309,6 +315,62 @@ def scan_execution_paths(root=None):
     return findings
 
 
+def scan_ci_workflows(root=None):
+    """GitHub Actions is an execution surface the host scan CANNOT see.
+
+    A cloud runner does not exist until its cron fires, so scheduled tasks, autostart entries and
+    tasklist are all blind to it. A live 'Trade Workflow' running live_trader.py against a broker
+    survived a CLEAN host audit for the entire project because of exactly this gap.
+    """
+    import glob, re
+    root = root or ROOT
+    out = []
+    for f in glob.glob(os.path.join(root, ".github", "workflows", "*.y*ml")):
+        try:
+            txt = open(f, errors="ignore").read()
+        except Exception:
+            continue
+        crons = re.findall(r"cron:\s*[\"']([^\"']+)", txt)
+        name = (re.search(r"^name:\s*(.+)$", txt, re.M) or [None, "(unnamed)"])[1].strip()
+        runs = [l.strip() for l in txt.splitlines()
+                if "run:" in l or re.match(r"\s*(python|py)\s", l)]
+        hits = sorted({b for b in ORDER_CAPABLE if b in txt})
+        # `on:` with no schedule and no dispatch is still triggerable by push
+        triggered = bool(crons) or "workflow_dispatch" in txt or "push:" in txt
+        out.append({"file": os.path.relpath(f, root), "name": name, "crons": crons,
+                    "order_capable_refs": hits, "triggered": triggered,
+                    "risk": ("CRITICAL" if hits and triggered else
+                             "HIGH" if hits else "INFO"),
+                    "why": ("scheduled/triggerable CI job invokes an order-capable module — "
+                            "invisible to any host-based scan" if hits and triggered else
+                            "references an order-capable module" if hits else
+                            "no order-capable reference")})
+    return out
+
+
+def scan_order_surfaces(root=None):
+    """Every module that can place an order, and whether anything can trigger it."""
+    import glob, re
+    root = root or ROOT
+    surfaces = []
+    for mod in ORDER_CAPABLE:
+        p = os.path.join(root, mod)
+        if not os.path.exists(p):
+            continue
+        try:
+            txt = open(p, errors="ignore").read()
+        except Exception:
+            continue
+        calls = sum(txt.count(c) for c in ORDER_CALLS)
+        guarded = ("authorize(" in txt or "execution_guard" in txt or "arm(" in txt)
+        surfaces.append({"module": mod, "order_calls": calls, "governed": guarded,
+                         "risk": "INFO" if guarded else ("CRITICAL" if calls else "INFO"),
+                         "why": ("routes through the authorization chain" if guarded
+                                 else f"{calls} order call(s) with NO authorize()/execution_guard"
+                                 if calls else "no order calls")})
+    return surfaces
+
+
 def _sha(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -400,7 +462,25 @@ if __name__ == "__main__":
     a = ap.parse_args()
     if a.audit_execution:
         rows, errors = audit_execution()
-        sys.exit(print_execution_audit(rows, errors))
+        rc = print_execution_audit(rows, errors)
+        ci = scan_ci_workflows()
+        surf = scan_order_surfaces()
+        print("\n" + "=" * 78 + "\n CI / CLOUD EXECUTION SURFACES (host scans cannot see these)\n" + "=" * 78)
+        for w in ci:
+            print(f"  [{w['risk']}] {w['file']} — {w['name']}")
+            print(f"      crons: {w['crons'] or 'none'}")
+            print(f"      order-capable refs: {w['order_capable_refs'] or 'none'}")
+            print(f"      {w['why']}")
+        if not ci:
+            print("  no workflow files found")
+        print("\n" + "=" * 78 + "\n ORDER-CAPABLE MODULES\n" + "=" * 78)
+        for m in surf:
+            print(f"  [{m['risk']}] {m['module']:22s} calls={m['order_calls']:<3} "
+                  f"governed={m['governed']}  {m['why']}")
+        bad = [x for x in ci + surf if x["risk"] == "CRITICAL"]
+        print("\n" + "-" * 78)
+        print(f" {len(bad)} CRITICAL execution surface(s) outside QUANT OS governance")
+        sys.exit(1 if (rc or bad) else 0)
     if a.scan_executors:
         fs = scan_execution_paths()
         hard = [f for f in fs if f["type"] != "SCHEDULER_NOT_CHECKED"]
