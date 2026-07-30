@@ -356,3 +356,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-26 | Obsidian Bridge / automated | fix(telegram): use the OS certificate store — alerts failed TLS verification ... | git post-commit hook | 4fb5956 |
 | 2026-07-26 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | ddc86c1 |
 | 2026-07-29 | Obsidian Bridge / automated | audit: scan CI workflows and order-capable modules — a live trader hid in Git... | git post-commit hook | cbb7cbe |
+| 2026-07-29 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | c463f5e |
+| 2026-07-31 | Obsidian Bridge / automated | test: prove shadow mode cannot reach order_send | git post-commit hook | 0d2f48c |
