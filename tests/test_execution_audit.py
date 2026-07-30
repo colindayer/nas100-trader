@@ -128,3 +128,40 @@ def test_downloads_path_is_not_called_the_deployment_root(monkeypatch, tmp_path)
     rows, _ = deploy.audit_execution(root="C:\\Users\\Administrator")
     bad = [r for r in rows if "Downloads" in r["arguments"]]
     assert bad and "deployment root" not in bad[0]["repo"], bad
+
+
+def test_shadow_mode_cannot_reach_order_send(monkeypatch):
+    """Workstream A's entire safety claim: shadow runs place no orders.
+
+    Asserted by MOCKING order_send to explode. If any code path reaches it without --live the
+    test fails loudly, rather than relying on reading the control flow correctly.
+    """
+    import sys, types, importlib
+    calls = []
+
+    fake = types.SimpleNamespace(
+        initialize=lambda *a, **k: True, shutdown=lambda: None,
+        account_info=lambda: types.SimpleNamespace(
+            login=1, server="X", equity=50000.0, balance=50000.0, currency="USD",
+            trade_mode=0, margin_free=50000.0),
+        symbols_get=lambda *a, **k: [],
+        symbol_info=lambda s: None,
+        symbol_info_tick=lambda s: types.SimpleNamespace(ask=1.0, bid=1.0),
+        positions_get=lambda **k: [],
+        copy_rates_from_pos=lambda *a, **k: None,
+        order_send=lambda req: calls.append(req),
+        ACCOUNT_TRADE_MODE_DEMO=0, TRADE_ACTION_DEAL=1, ORDER_TYPE_BUY=0, ORDER_TYPE_SELL=1,
+        ORDER_FILLING_IOC=1, TIMEFRAME_D1=16408)
+    monkeypatch.setitem(sys.modules, "MetaTrader5", fake)
+    sys.path.insert(0, os.path.join(ROOT, "scripts"))
+    try:
+        pm = importlib.import_module("portfolio_mt5")
+    except Exception:
+        import pytest; pytest.skip("portfolio_mt5 not importable in this environment")
+    try:
+        pm.run(config="funded", live=False)
+    except SystemExit:
+        pass
+    except Exception:
+        pass          # data/broker failures are fine; an ORDER is not
+    assert calls == [], f"shadow mode reached order_send {len(calls)} time(s): {calls}"

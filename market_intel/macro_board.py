@@ -44,6 +44,45 @@ def _pct(series_now, series_then):
         return None
 
 
+# Yahoo tickers for the same exposures. The board was MT5-only, so it read UNKNOWN /
+# coverage 0% on every dimension anywhere MT5 is absent (the Mac) or the symbol is not in
+# Market Watch (the VPS). A macro board that shows nothing is worse than no macro board.
+YF_MAP = {
+    "EURUSD": "EURUSD=X", "GBPUSD": "GBPUSD=X", "USDJPY": "USDJPY=X", "USDCHF": "USDCHF=X",
+    "AUDUSD": "AUDUSD=X", "USDCAD": "USDCAD=X", "DXY": "DX-Y.NYB",
+    "XAUUSD": "GC=F", "XAGUSD": "SI=F", "WTOIL-PERP": "CL=F", "WTIUSD": "CL=F",
+    "Copper": "HG=F", "COPPER": "HG=F", "NATGAS": "NG=F",
+    "NAS100": "^NDX", "US500": "^GSPC", "US30": "^DJI", "GER40": "^GDAXI",
+    "BTCUSD": "BTC-USD", "ETHUSD": "ETH-USD",
+    "VIX": "^VIX", "US10Y": "^TNX",
+}
+
+
+def _yf_change(sym, bars=21):
+    """Free fallback: Yahoo daily bars. No key, no Market Watch, works off-broker."""
+    t = YF_MAP.get(sym) or YF_MAP.get(sym.upper())
+    if not t:
+        return None, None, None
+    try:
+        import yfinance as yf
+        h = yf.Ticker(t).history(period=f"{max(bars * 2, 45)}d", interval="1d")
+        c = h["Close"].dropna()
+        if len(c) < bars:
+            return None, None, None
+        last, prev = float(c.iloc[-1]), float(c.iloc[-min(bars + 1, len(c))])
+        return last, _pct(last, prev), f"YF:{t}:D1"
+    except Exception:
+        return None, None, None
+
+
+def _change(sym, bars=21):
+    """MT5 first (it is the execution venue, so its prices are authoritative), Yahoo second."""
+    last, pct, src = _mt5_change(sym, bars)
+    if last is not None:
+        return last, pct, src
+    return _yf_change(sym, bars)
+
+
 def _mt5_change(sym, bars=21):
     """(last, pct_change_over_bars, source) from daily bars. None if unavailable."""
     try:
@@ -72,11 +111,11 @@ def _resolve(names):
 def _dimension(dim: str, syms: list, now_iso: str) -> Claim:
     ev, unknown, moves = [], [], []
     for want in syms:
-        s = _resolve([want])
+        s = _resolve([want]) or want   # fall back to the Yahoo mapping when MT5 has no symbol
         if s is None:
             unknown.append(f"{want} not in Market Watch")
             continue
-        last, chg, src = _mt5_change(s)
+        last, chg, src = _change(s)
         if chg is None:
             unknown.append(f"{s} no daily history")
             continue
