@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+a1bb2d7  FundedNext symbol mapping; copper unavailable and must be declared
+71a2f02  Obsidian bridge auto-sync [bridge-auto]
 0d2f48c  test: prove shadow mode cannot reach order_send
 c463f5e  Obsidian bridge auto-sync [bridge-auto]
 cbb7cbe  audit: scan CI workflows and order-capable modules — a live trader hid in GitHub Actions
 ddc86c1  Obsidian bridge auto-sync [bridge-auto]
 4fb5956  fix(telegram): use the OS certificate store — alerts failed TLS verification on the VPS
 574d410  Obsidian bridge auto-sync [bridge-auto]
-3333245  fix(audit): every action was labelled with the FIRST task's name
-667aacb  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
