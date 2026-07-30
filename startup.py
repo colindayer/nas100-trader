@@ -112,7 +112,7 @@ def _guardian():
 
 def _telegram():
     conf = bool(os.environ.get("TELEGRAM_TOKEN") and os.environ.get("TELEGRAM_CHAT_ID"))
-    return ("configured — NOTE: no runner currently emits alerts (not integrated)"
+    return ("configured — WIRED: safety_state HALT/corruption + runner fills/vetoes/critical"
             if conf else "not configured")
 
 

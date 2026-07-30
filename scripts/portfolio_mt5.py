@@ -34,12 +34,14 @@ SYMBOL_MAP = {
     "GOLD":   ["XAUUSD", "GOLD", "XAUUSD.a"],
     "SILVER": ["XAGUSD", "SILVER", "XAGUSD.a"],
     # Pepperstone uses a -PERP convention for commodity CFDs
-    "OIL":    ["WTOIL-PERP", "XTIUSD", "USOIL", "WTI", "SpotCrude", "Crude", "OILUSD",
-               "BRENTOIL-PERP", "XBRUSD", "SpotBrent", "BRENT", "WTIUSD", "CRUDEOIL", "CL"],
+    # USOUSD/UKOUSD are FundedNext's WTI/Brent names. WTI is listed first: the validated
+    # backtest used WTI, and silently substituting Brent would change the strategy.
+    "OIL":    ["WTOIL-PERP", "USOUSD", "XTIUSD", "USOIL", "WTI", "SpotCrude", "Crude", "OILUSD",
+               "WTIUSD", "CRUDEOIL", "CL", "UKOUSD", "BRENTOIL-PERP", "XBRUSD", "SpotBrent", "BRENT"],
     "COPPER": ["COPPER-PERP", "COPPER.PERP", "XCUUSD", "COPPER", "SpotCopper", "COPPERUSD",
                "HGUSD", "HG", "COP-PERP"],
-    "NAS100": ["NAS100", "US100", "NDX", "USTEC"],
-    "SP500":  ["US500", "SPX500", "SP500"],
+    "NAS100": ["NAS100", "NDX100", "US100", "NDX", "USTEC"],
+    "SP500":  ["US500", "SPX500", "SP500", "US500.cash"],
     "EURUSD": ["EURUSD"], "GBPUSD": ["GBPUSD"], "USDJPY": ["USDJPY"],
     "AUDUSD": ["AUDUSD"], "USDCAD": ["USDCAD"], "USDCHF": ["USDCHF"], "NZDUSD": ["NZDUSD"],
 }
