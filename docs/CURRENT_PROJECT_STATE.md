@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+5868860  belief: annulment for evidence that misdescribes what happened + admin CLI
+7f697ea  Obsidian bridge auto-sync [bridge-auto]
 17db5bd  safety: bind equity baselines to an account; stop scoring broker rejections as critical
 ae858a3  Obsidian bridge auto-sync [bridge-auto]
 a1bb2d7  FundedNext symbol mapping; copper unavailable and must be declared
 71a2f02  Obsidian bridge auto-sync [bridge-auto]
 0d2f48c  test: prove shadow mode cannot reach order_send
 c463f5e  Obsidian bridge auto-sync [bridge-auto]
-cbb7cbe  audit: scan CI workflows and order-capable modules — a live trader hid in GitHub Actions
-ddc86c1  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
