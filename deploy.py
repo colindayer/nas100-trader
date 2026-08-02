@@ -19,6 +19,7 @@ TRACKED = [
     "VERSION.json", "healthcheck.py", "deploy.py", "startup.py",
     "scripts/portfolio_mt5.py", "scripts/prop_risk_guardian.py",
     "scripts/account_forensics.py", "scripts/export_history.py",
+    "scripts/backtest_portfolio.py",
     "execution_safety/__init__.py", "execution_safety/gate.py",
     "execution_safety/strategy_contract.py", "execution_safety/execution_guard.py",
     "execution_safety/belief_graph_v2.py", "execution_safety/promotion_pipeline_v2.py",
