@@ -44,12 +44,27 @@ class Evidence:
     weight: float                # base log-odds magnitude (>0)
     note: str = ""
     ts: float = field(default_factory=time.time)
+    # An annulled item stays in the record forever -- this is an append-only audit trail, not a
+    # delete button -- but stops contributing belief and stops counting as a defect. Annulment is
+    # ONLY for evidence that is factually wrong about what happened, never for evidence that is
+    # merely unwelcome. It requires a human actor and a reason, both recorded below.
+    annulled_by: str | None = None
+    annulled_reason: str = ""
+    annulled_ts: float | None = None
+
+    @property
+    def annulled(self) -> bool:
+        return self.annulled_by is not None
 
     def research_logodds(self) -> float:
+        if self.annulled:
+            return 0.0
         f = EVIDENCE_CLASSES.get(self.evidence_class, {}).get("research_factor", 0.0)
         return (self.weight if self.supports else -self.weight) * f
 
     def ops_logodds(self) -> float:
+        if self.annulled:
+            return 0.0
         f = EVIDENCE_CLASSES.get(self.evidence_class, {}).get("ops_factor", 0.0)
         return (self.weight if self.supports else -self.weight) * f
 
@@ -75,10 +90,11 @@ class StrategyBeliefs:
 
     def defects(self) -> list:
         return [e.note for e in self.evidence
-                if not e.supports and e.evidence_class in ("DemoExecution", "LiveExecution", "Shadow")]
+                if not e.supports and not e.annulled
+                and e.evidence_class in ("DemoExecution", "LiveExecution", "Shadow")]
 
     def count(self, cls: str) -> int:
-        return sum(1 for e in self.evidence if e.evidence_class == cls)
+        return sum(1 for e in self.evidence if e.evidence_class == cls and not e.annulled)
 
 
 class BeliefGraphV2:
@@ -95,6 +111,37 @@ class BeliefGraphV2:
         s = self.get(sid)
         s.evidence = [e for e in s.evidence if e.evidence_id != ev.evidence_id]   # idempotent
         s.evidence.append(ev); self.save(); return s
+
+    def annul(self, sid: str, evidence_id: str, actor: str, reason: str) -> dict:
+        """Neutralise ONE evidence item that is factually wrong about what happened.
+
+        Not a delete: the item stays in the store with the actor and reason attached, and remains
+        visible in the audit trail. It simply stops contributing belief and stops counting as a
+        defect or as a demo trade.
+
+        This exists because a broker rejection was recorded as a failed execution -- an event that
+        never occurred -- which drove the strategy back to RESEARCH_ONLY with no way out. The bug
+        is fixed; the false record still had to be correctable.
+
+        Annul evidence that misdescribes reality. NEVER annul evidence that is merely unwelcome:
+        a real defect that is annulled away is how a safety system becomes decorative.
+        """
+        if not actor or not reason:
+            raise ValueError("annul requires both an actor and a reason — it is a human act")
+        s = self.get(sid)
+        hits = [e for e in s.evidence if e.evidence_id == evidence_id]
+        if not hits:
+            return {"error": f"no evidence {evidence_id} on {sid}",
+                    "available": [e.evidence_id for e in s.evidence]}
+        ev = hits[0]
+        if ev.annulled:
+            return {"error": f"{evidence_id} already annulled by {ev.annulled_by}"}
+        ev.annulled_by, ev.annulled_reason, ev.annulled_ts = actor, reason, time.time()
+        self.save()
+        from .safety_state import audit
+        audit("EVIDENCE_ANNULLED", {"strategy": sid, "evidence_id": evidence_id,
+                                    "actor": actor, "reason": reason, "note": ev.note})
+        return {"annulled": evidence_id, "actor": actor, "reason": reason, "note": ev.note}
 
     def save(self):
         """V-05: atomic + fsynced + backed-up write under an advisory lock. A crash mid-write can
@@ -155,3 +202,28 @@ class BeliefGraphV2:
             s = StrategyBeliefs(d["strategy_id"], d.get("research_prior", .25), d.get("ops_prior", .20))
             s.evidence = [Evidence(**e) for e in d.get("evidence", [])]
             self.strategies[k] = s
+
+
+# ---------------------------------------------------------------- admin CLI
+if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser(description="inspect and annul belief evidence")
+    ap.add_argument("--sid", default="portfolio_multisleeve")
+    ap.add_argument("--list", action="store_true")
+    ap.add_argument("--annul", metavar="EVIDENCE_ID")
+    ap.add_argument("--actor", default="")
+    ap.add_argument("--reason", default="")
+    a = ap.parse_args()
+    g = BeliefGraphV2()
+    if g.corrupt:
+        raise SystemExit("belief store CORRUPT — refusing to act")
+    s = g.get(a.sid)
+    if a.annul:
+        r = g.annul(a.sid, a.annul, a.actor, a.reason)
+        print(r)
+    print(f"\n{a.sid}: research={s.research_belief():.4f} ops={s.operational_belief():.4f} "
+          f"demo_trades={s.count('DemoExecution')} defects={len(s.defects())}")
+    for e in s.evidence:
+        flag = f"  ANNULLED by {e.annulled_by}" if e.annulled else ""
+        print(f"  {e.evidence_id:<46} {e.evidence_class:<14} supports={str(e.supports):<5} "
+              f"w={e.weight}{flag}\n      {e.note[:96]}")
