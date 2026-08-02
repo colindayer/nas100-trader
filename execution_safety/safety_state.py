@@ -19,7 +19,7 @@ import hashlib, json, os, tempfile, time
 from dataclasses import dataclass, asdict, field
 from datetime import datetime, timezone
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2   # v2: account_login — baselines are per-account (see load())
 STATE_PATH = "registry/safety_state.json"
 AUDIT_PATH = "registry/safety_state_audit.jsonl"
 LOCK_SUFFIX = ".lock"
@@ -93,6 +93,11 @@ class SafetyState:
     high_water_mark: float | None = None
     last_update: float = field(default_factory=time.time)
     last_intent_id: str | None = None       # idempotency hook for duplicate detection
+    # v2. Equity baselines are MEANINGLESS without the account they were measured on. This file
+    # is shared by every runner invocation, and this project connects to more than one broker
+    # (Pepperstone 61552095 and FundedNext 34536803). Without this field a FundedNext drawdown
+    # was measured against a Pepperstone high-water mark. Baselines are reset on account change.
+    account_login: int | None = None
 
     def payload(self) -> dict:
         return asdict(self)
@@ -155,11 +160,15 @@ def save(st: SafetyState, path: str = STATE_PATH) -> SafetyState:
     return st
 
 
-def load(path: str = STATE_PATH, equity: float | None = None) -> tuple[SafetyState, list[str]]:
-    """Return (state, notes). ANY problem => halted state. Never returns a permissive default."""
+def load(path: str = STATE_PATH, equity: float | None = None,
+         login: int | None = None) -> tuple[SafetyState, list[str]]:
+    """Return (state, notes). ANY problem => halted state. Never returns a permissive default.
+
+    `login` binds the equity baselines to an account. Passing it is strongly recommended: without
+    it the caller inherits whatever account last wrote the file."""
     notes: list[str] = []
     if not os.path.exists(path):
-        st = SafetyState(day_start_equity=equity, high_water_mark=equity)
+        st = SafetyState(day_start_equity=equity, high_water_mark=equity, account_login=login)
         notes.append("no prior state — initialised")
         audit("state_initialised", {"equity": equity})
         return save(st, path), notes
@@ -207,6 +216,26 @@ def load(path: str = STATE_PATH, equity: float | None = None) -> tuple[SafetySta
         notes.append("state fields invalid — FAIL CLOSED (halted)")
         audit("state_fields_invalid", {"error": str(e)[:120]})
         return st, notes
+
+    # ---- account change: per-account baselines are reset, the HALT is not ----
+    # A halt means "this system did something unsafe" and is deliberately sticky across accounts.
+    # Equity baselines are the opposite: they describe one account and transfer to no other.
+    if login is not None:
+        if st.account_login is None:
+            st.account_login = login
+            save(st, path)
+        elif st.account_login != login:
+            audit("account_changed", {"from": st.account_login, "to": login,
+                                      "discarded_day_start": st.day_start_equity,
+                                      "discarded_hwm": st.high_water_mark,
+                                      "halt_preserved": st.halted})
+            notes.append(f"ACCOUNT CHANGED {st.account_login} -> {login}: equity baselines and "
+                         f"daily counter reset for the new account (halt preserved: {st.halted})")
+            st.account_login = login
+            st.day_start_equity = equity
+            st.high_water_mark = equity
+            st.trades_today = 0
+            save(st, path)
 
     # ---- UTC day rollover: reset the counter, NEVER the halt ----
     today = _utc_day()
@@ -288,12 +317,14 @@ def clear_halt(actor: str, note: str = "", path: str = STATE_PATH) -> SafetyStat
     return save(st, path)
 
 
-def update_equity(equity: float, path: str = STATE_PATH) -> SafetyState:
-    st, _ = load(path, equity=equity)
+def update_equity(equity: float, path: str = STATE_PATH,
+                  login: int | None = None) -> SafetyState:
+    st, _ = load(path, equity=equity, login=login)
     return save(st, path)
 
 
-def guardian_baselines(equity: float | None = None, path: str = STATE_PATH) -> tuple[float | None, float | None]:
+def guardian_baselines(equity: float | None = None, path: str = STATE_PATH,
+                       login: int | None = None) -> tuple[float | None, float | None]:
     """(day_start_equity, high_water_mark) — persisted, so drawdown does not reset on restart."""
-    st, _ = load(path, equity=equity)
+    st, _ = load(path, equity=equity, login=login)
     return st.day_start_equity, st.high_water_mark

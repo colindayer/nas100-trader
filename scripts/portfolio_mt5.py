@@ -36,11 +36,14 @@ SYMBOL_MAP = {
     # Pepperstone uses a -PERP convention for commodity CFDs
     # USOUSD/UKOUSD are FundedNext's WTI/Brent names. WTI is listed first: the validated
     # backtest used WTI, and silently substituting Brent would change the strategy.
-    "OIL":    ["WTOIL-PERP", "USOUSD", "XTIUSD", "USOIL", "WTI", "SpotCrude", "Crude", "OILUSD",
-               "WTIUSD", "CRUDEOIL", "CL", "UKOUSD", "BRENTOIL-PERP", "XBRUSD", "SpotBrent", "BRENT"],
+    # FTMO uses a ".cash" suffix for indices and energy. WTI stays ahead of every Brent name:
+    # the validated backtest used WTI and silently substituting Brent would change the strategy.
+    "OIL":    ["WTOIL-PERP", "USOUSD", "USOIL.cash", "XTIUSD", "USOIL", "WTI", "SpotCrude",
+               "Crude", "OILUSD", "WTIUSD", "CRUDEOIL", "CL",
+               "UKOUSD", "UKOIL.cash", "BRENTOIL-PERP", "XBRUSD", "SpotBrent", "BRENT"],
     "COPPER": ["COPPER-PERP", "COPPER.PERP", "XCUUSD", "COPPER", "SpotCopper", "COPPERUSD",
                "HGUSD", "HG", "COP-PERP"],
-    "NAS100": ["NAS100", "NDX100", "US100", "NDX", "USTEC"],
+    "NAS100": ["NAS100", "NDX100", "US100", "US100.cash", "USTEC.cash", "NDX", "USTEC"],
     "SP500":  ["US500", "SPX500", "SP500", "US500.cash"],
     "EURUSD": ["EURUSD"], "GBPUSD": ["GBPUSD"], "USDJPY": ["USDJPY"],
     "AUDUSD": ["AUDUSD"], "USDCAD": ["USDCAD"], "USDCHF": ["USDCHF"], "NZDUSD": ["NZDUSD"],
@@ -222,8 +225,16 @@ def _capture_execution(it, dec, req, res, t0, pre_tick, config, guardian_ok):
     rc = getattr(res, "retcode", None)
     fill = float(getattr(res, "price", 0.0) or 0.0)
     post = mt5.symbol_info_tick(it["symbol"])
-    pos = [p for p in (mt5.positions_get(symbol=it["symbol"]) or []) if p.magic == MAGIC]
+    # positions_get returns None on API ERROR and () for "no positions". `or []` collapsed those
+    # into the same thing, which is fail-OPEN in the one place that must fail closed: an order we
+    # cannot confirm is exactly the dangerous case.
+    raw_pos = mt5.positions_get(symbol=it["symbol"])
+    positions_queryable = raw_pos is not None
+    pos = [p for p in (raw_pos or []) if p.magic == MAGIC]
     p0 = pos[-1] if pos else None
+    # Positive proof that the broker refused the order AND opened nothing. Both conditions, and
+    # never the retcode alone.
+    rejected_no_position = (rc != 10009) and positions_queryable and not pos
     exp_entry = float(req["price"])
     # capture entry context for Market Memory (read-only; never affects quality())
     ctx = {"regime_at_entry": "", "session_at_entry": "", "kill_zones_at_entry": "",
@@ -263,6 +274,7 @@ def _capture_execution(it, dec, req, res, t0, pre_tick, config, guardian_ok):
         no_duplicate=(len(pos) <= 1), symbol_mapped=True,
         volume_correct=bool(p0 and abs(p0.volume - abs(it["delta"])) < 1e-6),
         guardian_approved=bool(guardian_ok), broker_ack=(rc == 10009),
+        order_rejected_no_position=rejected_no_position,
         execution_latency_ms=(_t.time() - t0) * 1000.0, broker_retcode=int(rc or 0))
     if p0:
         try:
@@ -320,7 +332,9 @@ def run_demo_limited(config="funded"):
     SID = "portfolio_multisleeve"
 
     # ---- V-12: startup reconciliation BEFORE any trading decision ----
-    _ss.update_equity(acct.equity)                      # V-04: persist baselines
+    # V-04: persist baselines. login is REQUIRED here: the state file is shared across brokers,
+    # and an unbound baseline measures FundedNext drawdown against a Pepperstone high-water mark.
+    _ss.update_equity(acct.equity, login=acct.login)
     recon = reconcile(magic=MAGIC)
     print(recon_report(recon))
     if not recon["trading_allowed"]:

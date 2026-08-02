@@ -37,6 +37,9 @@ class TradeExecutionRecord:
     defects: list = field(default_factory=list)
     # --- context at entry (Market Memory prerequisite). Retrofitting is impossible, so it is
     # captured from trade one. NOT an operational-quality input: it never affects `quality()`. ---
+    # True ONLY when the broker refused the order AND the position list was successfully queried
+    # and confirmed empty for our magic. Never inferred from a retcode alone.
+    order_rejected_no_position: bool = False
     regime_at_entry: str = ""            # e.g. "up/highvol" from market_intel.state
     session_at_entry: str = ""
     kill_zones_at_entry: str = ""
@@ -62,8 +65,28 @@ class TradeExecutionRecord:
                 out.append(c)
         return out
 
+    # Checks that describe a POSITION. If the broker refused the order, no position exists, so
+    # these are NOT APPLICABLE -- they are not failures. See order_rejected_no_position.
+    POSITION_CHECKS = ("stop_verified", "reconciliation_passed", "volume_correct")
+
     def critical_failures(self) -> list:
-        return [c for c in self.failed_checks() if c in CRITICAL]
+        """Critical == 'we may be holding something unsafe'.
+
+        A broker rejection is not that. Nothing was opened, so there is no unverified stop and
+        nothing to reconcile. Scoring a rejection as a critical execution defect halted the demo
+        campaign on 2026-07-30 and again on 2026-08-02 for FundedNext retcode 10026
+        (TRADE_RETCODE_SERVER_DISABLES_AT), and each time wrote weight-1.4 evidence AGAINST
+        operational belief for a failure that never happened.
+
+        This is a CLASSIFICATION fix, not a relaxation: the exemption applies only when we have
+        POSITIVE proof that no position exists (see _capture_execution). If the broker could not
+        be queried, order_rejected_no_position stays False and every check fails as before --
+        fail-closed, because an unconfirmed order is exactly the dangerous case.
+        """
+        failed = self.failed_checks()
+        if self.order_rejected_no_position:
+            failed = [c for c in failed if c not in self.POSITION_CHECKS]
+        return [c for c in failed if c in CRITICAL]
 
     def quality(self) -> float:
         passed = len(CHECKS) - len(self.failed_checks())

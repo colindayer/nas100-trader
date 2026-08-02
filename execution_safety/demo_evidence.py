@@ -70,13 +70,24 @@ def record(rec: TradeExecutionRecord, strategy_id="portfolio_multisleeve",
     beyond the small documented DemoExecution factor in EVIDENCE_CLASSES."""
     g = graph or BeliefGraphV2()
     ev = to_evidence(rec, "DemoExecution")
-    g.add(strategy_id, ev)
+    # A broker rejection is NOT an execution sample: nothing was executed, so it carries no
+    # information about whether our execution machinery works. It must still be LOGGED -- the
+    # ledger is the audit trail and a suppressed rejection is a hidden failure -- but it must not
+    # move OperationalBelief in either direction. Counting it as evidence-against was penalising
+    # us for FundedNext's server setting; counting it as evidence-for would be worse.
+    is_sample = not rec.order_rejected_no_position
+    if is_sample:
+        g.add(strategy_id, ev)
     os.makedirs(os.path.dirname(LEDGER), exist_ok=True)
     with open(LEDGER, "a") as f:
         f.write(json.dumps({"ts": time.time(), **rec.to_dict(),
+                            "counted_as_execution_sample": is_sample,
                             "evidence": {"supports": ev.supports, "weight": ev.weight}}) + "\n")
     crit = rec.critical_failures()
     if crit and envelope is not None:
         envelope.halt(f"critical execution failure: {','.join(crit)}")
-    return {"evidence": ev.note, "supports": ev.supports,
+    return {"evidence": ev.note if is_sample else f"ORDER REJECTED (retcode {rec.broker_retcode}) "
+                                                  f"— logged, not counted as an execution sample",
+            "supports": ev.supports if is_sample else None,
+            "order_rejected": rec.order_rejected_no_position,
             "critical_failures": crit, "promotion": evaluate(strategy_id, g)}
