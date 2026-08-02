@@ -43,9 +43,14 @@ OUT = Path(__file__).resolve().parents[1] / "data" / "mt5"
 
 
 def grab(sym: str, tf, bars: int) -> pd.DataFrame | None:
+    # MT5 fetches history from the broker on first request; this can take minutes per symbol and
+    # looks identical to a hang without progress output. Print BEFORE the call, and flush.
+    print(f"    requesting {sym} ...", end=" ", flush=True)
     r = mt5.copy_rates_from_pos(sym, tf, 0, bars)
     if r is None or len(r) == 0:
+        print(f"NO DATA (mt5 error {mt5.last_error()})", flush=True)
         return None
+    print(f"{len(r):,} bars", flush=True)
     d = pd.DataFrame(r)
     d["time"] = pd.to_datetime(d["time"], unit="s", utc=True)
     keep = [c for c in ("time", "open", "high", "low", "close", "tick_volume", "spread")
@@ -82,8 +87,10 @@ def write(frames: dict, label: str):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--m15", action="store_true")
+    ap.add_argument("--daily-only", action="store_true",
+                    help="skip H1 — gets the backtest running fastest")
     ap.add_argument("--daily-bars", type=int, default=6000)
-    ap.add_argument("--intraday-bars", type=int, default=200_000)
+    ap.add_argument("--intraday-bars", type=int, default=60_000)
     a = ap.parse_args()
 
     if mt5 is None or not mt5.initialize():
@@ -95,16 +102,18 @@ def main():
     syms = resolve_symbols(verbose=True)
     print(f"\nresolved {len(syms)} symbols: {syms}\n")
 
-    tfs = [("D1", mt5.TIMEFRAME_D1, a.daily_bars), ("H1", mt5.TIMEFRAME_H1, a.intraday_bars)]
+    tfs = [("D1", mt5.TIMEFRAME_D1, a.daily_bars)]
+    if not a.daily_only:
+        tfs.append(("H1", mt5.TIMEFRAME_H1, a.intraday_bars))
     if a.m15:
         tfs.append(("M15", mt5.TIMEFRAME_M15, a.intraday_bars))
 
     for label, tf, bars in tfs:
+        print(f"--- {label} (up to {bars:,} bars/symbol) ---", flush=True)
         frames = {}
         for name, sym in syms.items():
             d = grab(sym, tf, bars)
             if d is None:
-                print(f"  {name} ({sym}): NO DATA at {label}")
                 continue
             frames[name] = d
         write(frames, label)
