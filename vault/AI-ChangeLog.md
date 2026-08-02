@@ -366,3 +366,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-07-31 | Obsidian Bridge / automated | test: prove shadow mode cannot reach order_send | git post-commit hook | 0d2f48c |
 | 2026-07-31 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 71a2f02 |
 | 2026-07-31 | Obsidian Bridge / automated | FundedNext symbol mapping; copper unavailable and must be declared | git post-commit hook | a1bb2d7 |
+| 2026-07-31 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | ae858a3 |
+| 2026-08-03 | Obsidian Bridge / automated | safety: bind equity baselines to an account; stop scoring broker rejections a... | git post-commit hook | 17db5bd |
