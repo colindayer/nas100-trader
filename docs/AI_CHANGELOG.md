@@ -364,3 +364,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | safety: bind equity baselines to an account; stop scoring broker rejections a... | git post-commit hook | 17db5bd |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 7f697ea |
 | 2026-08-03 | Obsidian Bridge / automated | belief: annulment for evidence that misdescribes what happened + admin CLI | git post-commit hook | 5868860 |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 97cf8a4 |
+| 2026-08-03 | Obsidian Bridge / automated | release 2026.08.03: ship MANIFEST.json with the sync so a deployment verifies... | git post-commit hook | 32a9a9f |
