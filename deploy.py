@@ -18,6 +18,7 @@ REPO = "colindayer/nas100-trader"
 TRACKED = [
     "VERSION.json", "healthcheck.py", "deploy.py", "startup.py",
     "scripts/portfolio_mt5.py", "scripts/prop_risk_guardian.py",
+    "scripts/account_forensics.py",
     "execution_safety/__init__.py", "execution_safety/gate.py",
     "execution_safety/strategy_contract.py", "execution_safety/execution_guard.py",
     "execution_safety/belief_graph_v2.py", "execution_safety/promotion_pipeline_v2.py",
@@ -444,6 +445,7 @@ def sync_script(commit=None):
             for f in group:
                 lines.append(f'iwr "$S/{f}" -OutFile {f}')
     lines += ['iwr "$S/config/guardian.env" -OutFile "config\\guardian.env"',
+              'iwr "$S/MANIFEST.json" -OutFile MANIFEST.json',
               'py deploy.py --verify',
               'py healthcheck.py']
     return "\n".join(lines)

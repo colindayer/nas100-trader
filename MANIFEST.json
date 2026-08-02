@@ -1,8 +1,8 @@
 {
- "commit": "71a2f0256d3f55c2f9fe86175c17ffd333a8ca78",
+ "commit": "97cf8a47ee9f32ffcb15f4a07b3bbcfd1480e7fc",
  "files": {
   "VERSION.json": {
-   "sha256_16": "aee0737fccbe7d75",
+   "sha256_16": "61e77b4fc94203dc",
    "bytes": 1330
   },
   "healthcheck.py": {
@@ -10,20 +10,24 @@
    "bytes": 18392
   },
   "deploy.py": {
-   "sha256_16": "f6b12f5404a259f4",
-   "bytes": 25452
+   "sha256_16": "749042b7d10bc072",
+   "bytes": 25551
   },
   "startup.py": {
    "sha256_16": "21399aa5999c6968",
    "bytes": 5834
   },
   "scripts/portfolio_mt5.py": {
-   "sha256_16": "74d559ebad25c293",
-   "bytes": 31043
+   "sha256_16": "4d0e06ad576c00be",
+   "bytes": 32046
   },
   "scripts/prop_risk_guardian.py": {
    "sha256_16": "6de0f074734eebeb",
    "bytes": 15676
+  },
+  "scripts/account_forensics.py": {
+   "sha256_16": "70ce8ebaa3f75629",
+   "bytes": 5839
   },
   "execution_safety/__init__.py": {
    "sha256_16": "50522f235f395670",
@@ -42,20 +46,20 @@
    "bytes": 1661
   },
   "execution_safety/belief_graph_v2.py": {
-   "sha256_16": "ef1165ab087e4232",
-   "bytes": 7335
+   "sha256_16": "9924a08bea044f0c",
+   "bytes": 10963
   },
   "execution_safety/promotion_pipeline_v2.py": {
    "sha256_16": "1daccd1b09d6bb23",
    "bytes": 3482
   },
   "execution_safety/operational_belief.py": {
-   "sha256_16": "419dd3ffcfbb5f82",
-   "bytes": 3701
+   "sha256_16": "51c6d169d017d7b5",
+   "bytes": 5204
   },
   "execution_safety/demo_evidence.py": {
-   "sha256_16": "00bb7a6e57bd8005",
-   "bytes": 3502
+   "sha256_16": "e90e277f76932a7b",
+   "bytes": 4377
   },
   "execution_safety/position_ledger.py": {
    "sha256_16": "466d16a237e5d652",
@@ -74,8 +78,8 @@
    "bytes": 2216
   },
   "execution_safety/safety_state.py": {
-   "sha256_16": "7a814c2cd31f90d3",
-   "bytes": 12524
+   "sha256_16": "821d803e36d1a143",
+   "bytes": 14462
   },
   "execution_safety/startup_reconciler.py": {
    "sha256_16": "f231dd371ed97bce",
@@ -147,5 +151,5 @@
   }
  },
  "missing_at_build": [],
- "n_files": 36
+ "n_files": 37
 }
