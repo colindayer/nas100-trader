@@ -374,3 +374,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | release 2026.08.03: ship MANIFEST.json with the sync so a deployment verifies... | git post-commit hook | 32a9a9f |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 762aeeb |
 | 2026-08-03 | Obsidian Bridge / automated | export OHLC from MT5 — the data the multisleeve strategy was never backtested on | git post-commit hook | 2a0b52c |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 6c3a543 |
+| 2026-08-03 | Obsidian Bridge / automated | backtest: the first real equity curve for portfolio_multisleeve, via the prod... | git post-commit hook | c47ca84 |
