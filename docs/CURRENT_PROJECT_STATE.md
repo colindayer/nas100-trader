@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+2a0b52c  export OHLC from MT5 — the data the multisleeve strategy was never backtested on
+762aeeb  Obsidian bridge auto-sync [bridge-auto]
 32a9a9f  release 2026.08.03: ship MANIFEST.json with the sync so a deployment verifies itself
 97cf8a4  Obsidian bridge auto-sync [bridge-auto]
 5868860  belief: annulment for evidence that misdescribes what happened + admin CLI
 7f697ea  Obsidian bridge auto-sync [bridge-auto]
 17db5bd  safety: bind equity baselines to an account; stop scoring broker rejections as critical
 ae858a3  Obsidian bridge auto-sync [bridge-auto]
-a1bb2d7  FundedNext symbol mapping; copper unavailable and must be declared
-71a2f02  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
