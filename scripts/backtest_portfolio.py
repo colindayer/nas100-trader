@@ -77,11 +77,55 @@ def field(panel: pd.DataFrame, name: str) -> pd.DataFrame:
     return out.sort_index()
 
 
-def run(config: str, sleeves: tuple | None, warmup: int, intraday: bool):
+# Instruments listed at different times, so a fixed 13-symbol panel starts when the YOUNGEST one
+# does. On FTMO that is COPPER at 2024-12-02 -- twenty months. Tiers report what each universe can
+# actually support, instead of throwing away twenty years of FX history to keep copper.
+TIERS = {
+    "fx":        ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "USDCHF", "NZDUSD"],
+    "fx_metals": ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "USDCHF", "NZDUSD",
+                  "GOLD", "SILVER"],
+    "fx_metals_idx": ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "USDCHF", "NZDUSD",
+                      "GOLD", "SILVER", "NAS100", "SP500"],
+    "plus_oil":  ["EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "USDCHF", "NZDUSD",
+                  "GOLD", "SILVER", "NAS100", "SP500", "OIL"],
+    "full":      None,          # everything the export contains, incl. COPPER
+}
+
+
+def verify_window(close, cfg, window, n=12, seed=0):
+    """Prove the trailing window reproduces full-expanding weights before trusting it for speed.
+
+    target_weights uses pct_change(252), EWM span 60 and 252, and a 1764-bar rolling window. A
+    truncated history is only legitimate if it returns the SAME weights; asserting that without
+    checking is how a speed optimisation silently becomes a different strategy."""
+    rng = np.random.default_rng(seed)
+    lo = max(window + 10, 400)
+    if len(close) <= lo + 5:
+        return None
+    idxs = sorted(rng.choice(range(lo, len(close)), size=min(n, len(close) - lo), replace=False))
+    worst = 0.0
+    for i in idxs:
+        w_full, _ = target_weights(close.iloc[:i], carry_signs={}, **cfg)
+        w_win, _ = target_weights(close.iloc[max(0, i - window):i], carry_signs={}, **cfg)
+        a = w_full.reindex(close.columns).fillna(0.0)
+        b = w_win.reindex(close.columns).fillna(0.0)
+        worst = max(worst, float((a - b).abs().max()))
+    return worst
+
+
+def run(config: str, sleeves: tuple | None, warmup: int, intraday: bool,
+        universe: str = "full", window: int = 2000, check: bool = True):
     panel = load("D1")
     if panel is None:
         raise SystemExit(f"no daily export found in {DATA} — run scripts/export_history.py first")
     close = field(panel, "close").ffill().dropna(how="all")
+    if TIERS.get(universe):
+        keep = [c for c in TIERS[universe] if c in close.columns]
+        missing = [c for c in TIERS[universe] if c not in close.columns]
+        if missing:
+            print(f"  (universe '{universe}': {missing} absent from the export)")
+        close = close[keep]
+    close = close.dropna(how="any")      # the panel starts when EVERY member has data
     print(f"data: {close.shape[1]} symbols, {len(close):,} daily bars "
           f"{close.index[0].date()} -> {close.index[-1].date()}")
 
@@ -104,12 +148,25 @@ def run(config: str, sleeves: tuple | None, warmup: int, intraday: bool):
         raise SystemExit("nothing testable left after removing CARRY")
     cfg["sleeves"] = tested
 
+    if check:
+        err = verify_window(close, cfg, window)
+        if err is None:
+            print(f"\n  window check: sample too short — running full expanding history")
+            window = 10 ** 9
+        elif err > 1e-6:
+            print(f"\n  !! window {window} does NOT reproduce full history (max weight diff "
+                  f"{err:.2e}) — falling back to full expanding history (slower, exact)")
+            window = 10 ** 9
+        else:
+            print(f"\n  window check: trailing {window} bars reproduce full-history weights "
+                  f"(max diff {err:.2e}) — safe to use")
+
     ret = close.pct_change().fillna(0.0)
     rows, weights = [], []
     prev_w = pd.Series(0.0, index=close.columns)
     for i in range(warmup, len(close)):
         # EXPANDING window, strictly past data -> no look-ahead. carry_signs empty = sleeve off.
-        w, _ = target_weights(close.iloc[:i], carry_signs={}, **cfg)
+        w, _ = target_weights(close.iloc[max(0, i - window):i], carry_signs={}, **cfg)
         w = w.reindex(close.columns).fillna(0.0)
         gross_ret = float((w * ret.iloc[i]).sum())
         turnover = float((w - prev_w).abs().sum())
@@ -163,9 +220,10 @@ def run(config: str, sleeves: tuple | None, warmup: int, intraday: bool):
             print(f"\n  H1 export present: {len(h1):,} bars. Intraday drawdown modelling is the "
                   "next\n  step and is what FTMO's 10%/5% rules actually require.")
 
-    out = ROOT / "registry" / f"backtest_{config}_{'_'.join(tested)}.json"
+    out = ROOT / "registry" / f"backtest_{config}_{universe}_{'_'.join(tested)}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
-    json.dump({"config": config, "sleeves": list(tested),
+    json.dump({"config": config, "universe": universe, "symbols": list(close.columns),
+               "window": window if window < 10 ** 8 else "full_expanding", "sleeves": list(tested),
                "period": [str(d.index[0].date()), str(d.index[-1].date())],
                "years": round(yrs, 2), "sharpe": round(float(sharpe), 3),
                "total_return": round(float(eq.iloc[-1] - 1), 4),
@@ -190,8 +248,22 @@ def main():
     ap.add_argument("--warmup", type=int, default=300,
                     help="bars reserved before the first weight (target_weights needs history)")
     ap.add_argument("--intraday", action="store_true")
+    ap.add_argument("--universe", default="full", choices=list(TIERS),
+                    help="which instruments; a fixed panel starts when its YOUNGEST member does")
+    ap.add_argument("--window", type=int, default=2000,
+                    help="trailing bars fed to target_weights (verified equivalent before use)")
+    ap.add_argument("--no-check", action="store_true", help="skip the window equivalence proof")
+    ap.add_argument("--tiers", action="store_true", help="run every universe and compare")
     a = ap.parse_args()
-    run(a.config, a.sleeves, a.warmup, a.intraday)
+    if a.tiers:
+        for u in TIERS:
+            print("\n" + "#" * 74 + f"\n# UNIVERSE: {u}\n" + "#" * 74)
+            try:
+                run(a.config, a.sleeves, a.warmup, False, u, a.window, not a.no_check)
+            except SystemExit as e:
+                print(f"  skipped: {e}")
+    else:
+        run(a.config, a.sleeves, a.warmup, a.intraday, a.universe, a.window, not a.no_check)
 
 
 if __name__ == "__main__":
