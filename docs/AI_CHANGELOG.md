@@ -376,3 +376,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | backtest: universe tiers + a window-equivalence proof before any speed shortcut | git post-commit hook | 3dad140 |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | d87985a |
 | 2026-08-03 | Obsidian Bridge / automated | frozen portfolio: autonomous rebalance loop, parity proven, execution still g... | git post-commit hook | 183c1a5 |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 4dd6dee |
+| 2026-08-03 | Obsidian Bridge / automated | guardian: bind INITIAL_BALANCE to the connected account; fail closed on mismatch | git post-commit hook | 12d2a90 |

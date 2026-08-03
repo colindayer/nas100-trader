@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+12d2a90  guardian: bind INITIAL_BALANCE to the connected account; fail closed on mismatch
+4dd6dee  Obsidian bridge auto-sync [bridge-auto]
 183c1a5  frozen portfolio: autonomous rebalance loop, parity proven, execution still gated
 d87985a  Obsidian bridge auto-sync [bridge-auto]
 3dad140  backtest: universe tiers + a window-equivalence proof before any speed shortcut
 8c0aa72  Obsidian bridge auto-sync [bridge-auto]
 f275df2  export_history: per-symbol progress + flush; --daily-only; lighter H1 default
 bce1ff4  Obsidian bridge auto-sync [bridge-auto]
-c47ca84  backtest: the first real equity curve for portfolio_multisleeve, via the production function
-6c3a543  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
