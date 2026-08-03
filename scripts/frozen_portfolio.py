@@ -103,6 +103,29 @@ def log_telemetry(record: dict):
         pass
 
 
+# MT5 trade return codes, so a log line never reads as a bare number again.
+RETCODES = {
+    10004: "REQUOTE", 10006: "REJECT", 10007: "CANCEL", 10008: "PLACED", 10009: "DONE",
+    10010: "DONE_PARTIAL", 10011: "ERROR", 10012: "TIMEOUT", 10013: "INVALID",
+    10014: "INVALID_VOLUME", 10015: "INVALID_PRICE", 10016: "INVALID_STOPS",
+    10017: "TRADE_DISABLED", 10018: "MARKET_CLOSED", 10019: "NO_MONEY",
+    10020: "PRICE_CHANGED", 10021: "PRICE_OFF", 10022: "INVALID_EXPIRATION",
+    10023: "ORDER_CHANGED", 10024: "TOO_MANY_REQUESTS", 10025: "NO_CHANGES",
+    10026: "SERVER_DISABLES_AT", 10027: "CLIENT_DISABLES_AT", 10028: "LOCKED",
+    10029: "FROZEN", 10030: "INVALID_FILL", 10031: "CONNECTION", 10032: "ONLY_REAL",
+    10033: "LIMIT_ORDERS", 10034: "LIMIT_VOLUME", 10035: "INVALID_ORDER",
+    10036: "POSITION_CLOSED", 10038: "INVALID_CLOSE_VOLUME", 10039: "CLOSE_ORDER_EXIST",
+    10040: "LIMIT_POSITIONS", 10041: "REJECT_CANCEL", 10042: "LONG_ONLY",
+    10043: "SHORT_ONLY", 10044: "CLOSE_ONLY", 10045: "FIFO_CLOSE", 10046: "HEDGE_PROHIBITED",
+}
+TRADE_MODES = {0: "DISABLED", 1: "LONGONLY", 2: "SHORTONLY", 3: "CLOSEONLY", 4: "FULL"}
+EXEC_MODES = {0: "REQUEST", 1: "INSTANT", 2: "MARKET", 3: "EXCHANGE"}
+
+
+def rc_name(rc):
+    return f"{rc} {RETCODES.get(rc, 'UNKNOWN')}"
+
+
 def _now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -325,6 +348,13 @@ def submit_plan(acct, plan, syms, equity, checks, budget_money=None):
                # run after the first fill on 2026-08-03.
                "comment": dec["order_intent"]["comment"],
                "type_filling": mt5.ORDER_FILLING_IOC}
+        # ORDER_CHECK FIRST. The broker states its verdict before anything is sent, and that
+        # verdict is recorded whether or not the send succeeds.
+        chk = mt5.order_check(req)
+        chk_rc = getattr(chk, "retcode", None) if chk else None
+        chk_comment = getattr(chk, "comment", None) if chk else None
+        if chk_rc not in (0, 10009, None):
+            print(f"  order_check {sym}: {rc_name(chk_rc)} {chk_comment!r}")
         t0 = _t.time()
         with armed(dec["decision_id"]):
             res = mt5.order_send(req)
@@ -359,6 +389,10 @@ def submit_plan(acct, plan, syms, equity, checks, budget_money=None):
                "broker_stop": (float(pos.sl) if pos else None),
                "stop_verified": stop_verified, "magic": MAGIC, "retcode": rc,
                "latency_ms": round(latency_ms, 1), "decision_id": dec["decision_id"],
+               "retcode_name": RETCODES.get(rc, "UNKNOWN"),
+               "order_check_retcode": chk_rc,
+               "order_check_name": RETCODES.get(chk_rc, "UNKNOWN") if chk_rc else None,
+               "order_check_comment": chk_comment,
                "ledger_recorded": True, "reconciliation_ok": bool(recon.get("trading_allowed")),
                "account": acct.login, "server": acct.server}
         FILLS_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -399,7 +433,8 @@ def submit_plan(acct, plan, syms, equity, checks, budget_money=None):
                                  f"px {fill_px} slip {rec['slippage']} stop {sl}\n"
                                  f"recon {'OK' if rec['reconciliation_ok'] else 'FAILED'}")
         else:
-            print(f"  {sym} retcode {rc} — not filled")
+            print(f"  {sym} {rc_name(rc)} — not filled"
+                  + (f" | order_check said {rc_name(chk_rc)} {chk_comment!r}" if chk_rc else ""))
     return submitted, results
 
 
@@ -559,6 +594,90 @@ def preflight(acct, proposed_gross=0.0, proposed_catastrophe_pct=0.0):
     return (len(blocking) == 0), checks
 
 
+def diagnose():
+    """Dump what MT5 ACTUALLY believes about each symbol, and order_check() every planned order.
+
+    Written because 10018 was read as "the market is closed" from the wall clock rather than from
+    the broker's own metadata. On an FTMO Swing account that assumption is not safe. order_check()
+    returns the reason BEFORE anything is sent, and symbol_info exposes visibility, trade mode,
+    execution mode, session counts, stops and freeze levels. Prove it; do not infer it."""
+    acct = mt5.account_info()
+    syms = {k: v for k, v in resolve_symbols(verbose=False).items() if k in FROZEN_UNIVERSE}
+    print("=" * 108)
+    print(f" SYMBOL DIAGNOSTICS   account {acct.login} @ {acct.server}   {_now()}")
+    print("=" * 108)
+    for name, sym in syms.items():
+        sel = mt5.symbol_select(sym, True)
+        i = mt5.symbol_info(sym)
+        t = mt5.symbol_info_tick(sym)
+        print(f"\n {name} -> {sym}   symbol_select={sel}")
+        if i is None:
+            print("   symbol_info returned None — the symbol does not exist on this server")
+            continue
+        print(f"   visible            {getattr(i,'visible',None)}")
+        print(f"   trade_mode         {getattr(i,'trade_mode',None)} "
+              f"({TRADE_MODES.get(getattr(i,'trade_mode',None),'?')})")
+        print(f"   trade_execution    {getattr(i,'trade_exemode',None)} "
+              f"({EXEC_MODES.get(getattr(i,'trade_exemode',None),'?')})")
+        print(f"   filling_mode       {getattr(i,'filling_mode',None)}  "
+              f"expiration_mode {getattr(i,'expiration_mode',None)}")
+        print(f"   session_deals      {getattr(i,'session_deals',None)}  "
+              f"buy_orders {getattr(i,'session_buy_orders',None)}  "
+              f"sell_orders {getattr(i,'session_sell_orders',None)}")
+        print(f"   bid/ask            {getattr(i,'bid',None)} / {getattr(i,'ask',None)}   "
+              f"tick bid/ask {getattr(t,'bid',None)} / {getattr(t,'ask',None)}")
+        print(f"   spread             {getattr(i,'spread',None)} points  "
+              f"spread_float {getattr(i,'spread_float',None)}")
+        print(f"   contract_size      {getattr(i,'trade_contract_size',None)}  "
+              f"volume_min {getattr(i,'volume_min',None)} step {getattr(i,'volume_step',None)}")
+        print(f"   stops_level        {getattr(i,'trade_stops_level',None)}  "
+              f"freeze_level {getattr(i,'trade_freeze_level',None)}  "
+              f"point {getattr(i,'point',None)}  digits {getattr(i,'digits',None)}")
+        tick_age = None
+        if t is not None and getattr(t, "time", None):
+            tick_age = round(_t.time() - t.time, 1)
+        print(f"   last tick age      {tick_age}s")
+
+    print("\n" + "=" * 108)
+    print(" ORDER_CHECK — the broker's verdict BEFORE anything is sent")
+    print("=" * 108)
+    equity = float(acct.equity)
+    held = held_weights(syms, equity)
+    px = fetch_daily(syms)[[k for k in FROZEN_UNIVERSE if k in syms]].dropna(how="any")
+    w, _ = target_weights(px, carry_signs={}, target_vol=FROZEN_VOL,
+                          max_leverage=FROZEN_LEV, sleeves=("TREND",))
+    for p in build_plan(acct, syms, w, held, equity):
+        if p["action"] not in ("REDUCE_OR_CLOSE", "OPEN_OR_INCREASE"):
+            continue
+        sym, side, vol = p["symbol"], p["side"], float(p["volume"])
+        info, tick = mt5.symbol_info(sym), mt5.symbol_info_tick(sym)
+        price = float(tick.ask if side == "BUY" else tick.bid)
+        req = {"action": mt5.TRADE_ACTION_DEAL, "symbol": sym, "volume": vol,
+               "type": mt5.ORDER_TYPE_BUY if side == "BUY" else mt5.ORDER_TYPE_SELL,
+               "price": price, "sl": catastrophe_stop(price, side, info),
+               "deviation": 20, "magic": MAGIC, "comment": "portfolio_frozen_v1:v1",
+               "type_filling": mt5.ORDER_FILLING_IOC}
+        chk = mt5.order_check(req)
+        print(f"\n {sym} {side} {vol}")
+        if chk is None:
+            print(f"   order_check returned None — last_error {mt5.last_error()}")
+            continue
+        print(f"   retcode   {rc_name(getattr(chk,'retcode',None))}")
+        print(f"   comment   {getattr(chk,'comment',None)!r}")
+        print(f"   balance   {getattr(chk,'balance',None)}  equity {getattr(chk,'equity',None)}")
+        print(f"   margin    {getattr(chk,'margin',None)}  free {getattr(chk,'margin_free',None)}"
+              f"  level {getattr(chk,'margin_level',None)}")
+        print(f"   profit    {getattr(chk,'profit',None)}")
+        # try every filling mode the symbol advertises, so an INVALID_FILL cannot hide as
+        # something else
+        for fname, fmode in (("IOC", mt5.ORDER_FILLING_IOC), ("FOK", mt5.ORDER_FILLING_FOK),
+                             ("RETURN", mt5.ORDER_FILLING_RETURN)):
+            r2 = mt5.order_check({**req, "type_filling": fmode})
+            print(f"   filling {fname:<6} -> {rc_name(getattr(r2,'retcode',None)) if r2 else 'None'}"
+                  f"  {getattr(r2,'comment','') if r2 else ''}")
+    print("\n Nothing was sent. This command only reads and checks.")
+
+
 def reconcile_proof():
     """Prove every broker position traces to an exact ledger intent. Read-only.
 
@@ -612,7 +731,14 @@ def main():
     ap.add_argument("--live", action="store_true", help="execute (demo accounts only)")
     ap.add_argument("--reconcile-proof", action="store_true",
                     help="read-only: prove broker positions trace to ledger intents")
+    ap.add_argument("--diagnose", action="store_true",
+                    help="read-only: dump symbol_info and order_check for every planned order")
     a = ap.parse_args()
+    if a.diagnose:
+        if mt5 is None or not mt5.initialize():
+            raise SystemExit("MetaTrader5 unavailable")
+        diagnose()
+        raise SystemExit(0)
     if a.reconcile_proof:
         if mt5 is None or not mt5.initialize():
             raise SystemExit("MetaTrader5 unavailable")
