@@ -392,3 +392,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | manifest: restamp at shipping commit | git post-commit hook | 2104a97 |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 672b7ad |
 | 2026-08-03 | Obsidian Bridge / automated | execution: three-concept account risk, tranching, partial fills, reconciliati... | git post-commit hook | 60ecc79 |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 4d58b18 |
+| 2026-08-03 | Obsidian Bridge / automated | manifest: restamp at shipping commit | git post-commit hook | 64c89a0 |
