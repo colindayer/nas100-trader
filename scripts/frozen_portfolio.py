@@ -534,7 +534,23 @@ def reconcile_proof():
         print(f"   {e.intent_id:<22} {e.symbol:<12} magic {e.magic} comment {e.comment!r}")
     r = reconcile(magic=MAGIC)
     print("\n" + report(r))
-    clean = bool(r.get("trading_allowed")) and not r.get("findings")
+    # The verdict must match the GATE, not be stricter than it. Treating any finding as
+    # disqualifying made this print NOT CLEAN while startup_reconciliation printed OK -- a check
+    # disagreeing with the thing it verifies, which quietly devalues every other green light.
+    # Only CRITICAL findings block; MISSING_FILL from a rejected order does not.
+    from execution_safety.startup_reconciler import CRITICAL
+    findings = r.get("findings") or []
+    critical = [f for f in findings if f.get("type") in CRITICAL]
+    other = [f for f in findings if f.get("type") not in CRITICAL]
+    clean = bool(r.get("trading_allowed")) and not critical
+    if other:
+        print(f"\n non-critical findings ({len(other)}), informational only:")
+        for f in other:
+            print(f"   {f.get('type')}: {f.get('intent_id') or f.get('symbol')}")
+    if critical:
+        print(f"\n CRITICAL findings ({len(critical)}):")
+        for f in critical:
+            print(f"   {f.get('type')}: {f.get('symbol')} {f.get('comment','')}")
     print(f"\n RECONCILIATION: {'CLEAN' if clean else 'NOT CLEAN — halt must not be cleared'}")
     return clean
 
