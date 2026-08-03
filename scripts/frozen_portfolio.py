@@ -157,8 +157,27 @@ def catastrophe_stop(entry: float, side: str, info) -> float:
     return float(lvl)
 
 
+# Retcodes that prove the order was rejected BEFORE reaching the market. Only these are safe to
+# retry: nothing was executed, so a repeat cannot duplicate a position. Every other outcome --
+# including a timeout, an exception, or an unrecognised code -- is treated as POSSIBLY FILLED and
+# blocks the retry, because "we do not know" must never mean "try again".
+PRE_TRADE_REJECTIONS = {
+    10026,   # SERVER_DISABLES_AT   - broker forbids EAs
+    10027,   # CLIENT_DISABLES_AT   - AlgoTrading button off in this terminal
+    10018,   # MARKET_CLOSED
+    10014,   # INVALID_VOLUME
+    10016,   # INVALID_STOPS
+    10019,   # NO_MONEY
+    10030,   # UNSUPPORTED_FILLING_MODE
+}
+
+
 def already_submitted_today(iid: str) -> bool:
-    """Idempotency: the ledger is consulted BEFORE submission. A restart mid-run cannot duplicate."""
+    """Idempotency: consulted BEFORE submission, so a restart mid-run cannot duplicate an order.
+
+    A PRE-TRADE rejection does not count as submitted. All six orders were rejected 10027 on
+    2026-08-03 and were still written to the fills ledger; without this exemption the retry after
+    switching AlgoTrading on would have been silently skipped for the rest of the day."""
     if not FILLS_PATH.exists():
         return False
     day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -166,8 +185,10 @@ def already_submitted_today(iid: str) -> bool:
         try:
             r = json.loads(line)
         except Exception:
-            continue
+            return True                       # unparseable ledger line -> fail closed
         if r.get("intent_id") == iid and str(r.get("ts", "")).startswith(day):
+            if r.get("retcode") in PRE_TRADE_REJECTIONS:
+                continue                      # never reached the market; safe to retry
             return True
     return False
 
@@ -335,8 +356,20 @@ def preflight(acct):
     """Every gate that must pass before a single order may be sent. Returns (ok, report)."""
     checks = {}
     checks["account_is_demo"] = (acct.trade_mode == 0)
+    # account_info().trade_expert is the SERVER permission. It says nothing about the AlgoTrading
+    # button in this terminal, which is what retcode 10027 (CLIENT_DISABLES_AT) reports. Preflight
+    # said GO and all six orders were then rejected client-side. Both flags are required.
     checks["trade_expert_enabled"] = bool(getattr(acct, "trade_expert", False))
     checks["trade_allowed"] = bool(getattr(acct, "trade_allowed", False))
+    try:
+        _ti = mt5.terminal_info()
+        checks["terminal_algotrading_on"] = bool(getattr(_ti, "trade_allowed", False))
+        if not checks["terminal_algotrading_on"]:
+            checks["_terminal_hint"] = ("the AlgoTrading button in this MT5 terminal is OFF -> "
+                                        "every order returns 10027 CLIENT_DISABLES_AT")
+    except Exception as e:
+        checks["terminal_algotrading_on"] = False
+        checks["_terminal_error"] = str(e)[:120]
     try:
         from execution_safety.startup_reconciler import reconcile
         r = reconcile(magic=MAGIC)
@@ -361,7 +394,8 @@ def preflight(acct):
         checks["guardian_allows"] = False
         checks["_guardian_error"] = str(e)[:120]
     required = ["account_is_demo", "trade_expert_enabled", "trade_allowed",
-                "startup_reconciliation", "not_halted", "guardian_allows"]
+                "terminal_algotrading_on", "startup_reconciliation", "not_halted",
+                "guardian_allows"]
     return all(checks.get(k) for k in required), checks
 
 

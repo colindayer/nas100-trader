@@ -180,5 +180,19 @@ def test_submission_path():
     assert not fp.already_submitted_today(iid), "yesterday's intent wrongly blocks today"
     print("  9 idempotency: replay skipped, different side allowed, stale day does not block")
 
+    # 10 — a PRE-TRADE rejection must not block the retry, but anything ambiguous must
+    now = datetime.now(timezone.utc).isoformat()
+    for rc in sorted(fp.PRE_TRADE_REJECTIONS):
+        tmp.write_text(json.dumps({"intent_id": iid, "ts": now, "retcode": rc}) + "\n")
+        assert not fp.already_submitted_today(iid), (
+            f"retcode {rc} never reached the market but blocked the retry")
+    for rc in (10009, None, 99999):
+        tmp.write_text(json.dumps({"intent_id": iid, "ts": now, "retcode": rc}) + "\n")
+        assert fp.already_submitted_today(iid), (
+            f"retcode {rc} may have filled but the retry was allowed — duplicate risk")
+    tmp.write_text("{not json\n")
+    assert fp.already_submitted_today(iid), "an unreadable ledger must fail CLOSED"
+    print("  10 idempotency: pre-trade rejections retryable; filled/unknown/corrupt block")
+
 if __name__ == "__main__":
     main()
