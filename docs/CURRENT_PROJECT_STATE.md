@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+c59ba01  diagnose: remove a call to an API that does not exist; add --probe to settle 10018
+e237b07  Obsidian bridge auto-sync [bridge-auto]
 50b41f3  manifest: restamp
 6590495  Obsidian bridge auto-sync [bridge-auto]
 d0179ca  diagnose: correct the tick-age calculation and dump the broker's declared sessions
 d326c42  Obsidian bridge auto-sync [bridge-auto]
 5c1ebb2  manifest: restamp
 e5b3e28  Obsidian bridge auto-sync [bridge-auto]
-b26d7cb  diagnostics: order_check before every send, full symbol metadata, named retcodes
-5a20c84  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
