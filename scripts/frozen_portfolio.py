@@ -633,10 +633,48 @@ def diagnose():
         print(f"   stops_level        {getattr(i,'trade_stops_level',None)}  "
               f"freeze_level {getattr(i,'trade_freeze_level',None)}  "
               f"point {getattr(i,'point',None)}  digits {getattr(i,'digits',None)}")
-        tick_age = None
+        # tick.time is SERVER time, not UTC. Subtracting it from time.time() yields the broker's
+        # timezone offset and prints as a nonsensical negative "age" (-9915s = UTC+2.75). Report
+        # the offset explicitly and derive a real age from it.
         if t is not None and getattr(t, "time", None):
-            tick_age = round(_t.time() - t.time, 1)
-        print(f"   last tick age      {tick_age}s")
+            raw = _t.time() - t.time
+            offset_h = round(-raw / 3600.0)
+            age = round(raw + offset_h * 3600, 1)
+            print(f"   server offset      UTC{offset_h:+d}   (tick.time is server time)")
+            print(f"   last tick age      {age}s   server clock "
+                  f"{datetime.fromtimestamp(t.time, timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
+        else:
+            print("   last tick age      no tick")
+
+        # THE MISSING EVIDENCE: the broker's own declared trading sessions for today.
+        # order_check does NOT validate sessions, so this is the only place the truth appears.
+        try:
+            dow = datetime.now(timezone.utc).weekday()      # Mon=0
+            mt5_dow = (dow + 1) % 7                         # MT5: Sunday=0
+            quotes, trades = [], []
+            for k in range(4):
+                q = mt5.symbol_info_session_quote(sym, mt5_dow, k)
+                if q is None:
+                    break
+                quotes.append(q)
+            for k in range(4):
+                tr = mt5.symbol_info_session_trade(sym, mt5_dow, k)
+                if tr is None:
+                    break
+                trades.append(tr)
+            def _fmt(sess):
+                out = []
+                for x in sess:
+                    a = getattr(x, "from", None) if not isinstance(x, tuple) else x[0]
+                    b = getattr(x, "to", None) if not isinstance(x, tuple) else x[1]
+                    if a is None and isinstance(x, (list, tuple)) and len(x) >= 2:
+                        a, b = x[0], x[1]
+                    out.append(f"{a}-{b}")
+                return ", ".join(out) if out else "NONE"
+            print(f"   quote sessions     {_fmt(quotes)}")
+            print(f"   TRADE sessions     {_fmt(trades)}   <- if empty, the market is shut")
+        except Exception as e:
+            print(f"   sessions           unavailable ({type(e).__name__}: {str(e)[:60]})")
 
     print("\n" + "=" * 108)
     print(" ORDER_CHECK — the broker's verdict BEFORE anything is sent")
