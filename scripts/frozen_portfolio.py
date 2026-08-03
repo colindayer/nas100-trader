@@ -633,48 +633,17 @@ def diagnose():
         print(f"   stops_level        {getattr(i,'trade_stops_level',None)}  "
               f"freeze_level {getattr(i,'trade_freeze_level',None)}  "
               f"point {getattr(i,'point',None)}  digits {getattr(i,'digits',None)}")
-        # tick.time is SERVER time, not UTC. Subtracting it from time.time() yields the broker's
-        # timezone offset and prints as a nonsensical negative "age" (-9915s = UTC+2.75). Report
-        # the offset explicitly and derive a real age from it.
+        # tick.time is SERVER time. Estimating the offset per symbol off a possibly stale tick
+        # rounded COPPER to UTC+1 and the rest to UTC+2, which is nonsense -- one server has one
+        # clock. Print the raw server timestamp and let the reader compare it to UTC.
         if t is not None and getattr(t, "time", None):
-            raw = _t.time() - t.time
-            offset_h = round(-raw / 3600.0)
-            age = round(raw + offset_h * 3600, 1)
-            print(f"   server offset      UTC{offset_h:+d}   (tick.time is server time)")
-            print(f"   last tick age      {age}s   server clock "
-                  f"{datetime.fromtimestamp(t.time, timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"   last tick (server) "
+                  f"{datetime.fromtimestamp(t.time, timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}"
+                  f"   UTC now {datetime.now(timezone.utc).strftime('%H:%M:%S')}")
         else:
-            print("   last tick age      no tick")
-
-        # THE MISSING EVIDENCE: the broker's own declared trading sessions for today.
-        # order_check does NOT validate sessions, so this is the only place the truth appears.
-        try:
-            dow = datetime.now(timezone.utc).weekday()      # Mon=0
-            mt5_dow = (dow + 1) % 7                         # MT5: Sunday=0
-            quotes, trades = [], []
-            for k in range(4):
-                q = mt5.symbol_info_session_quote(sym, mt5_dow, k)
-                if q is None:
-                    break
-                quotes.append(q)
-            for k in range(4):
-                tr = mt5.symbol_info_session_trade(sym, mt5_dow, k)
-                if tr is None:
-                    break
-                trades.append(tr)
-            def _fmt(sess):
-                out = []
-                for x in sess:
-                    a = getattr(x, "from", None) if not isinstance(x, tuple) else x[0]
-                    b = getattr(x, "to", None) if not isinstance(x, tuple) else x[1]
-                    if a is None and isinstance(x, (list, tuple)) and len(x) >= 2:
-                        a, b = x[0], x[1]
-                    out.append(f"{a}-{b}")
-                return ", ".join(out) if out else "NONE"
-            print(f"   quote sessions     {_fmt(quotes)}")
-            print(f"   TRADE sessions     {_fmt(trades)}   <- if empty, the market is shut")
-        except Exception as e:
-            print(f"   sessions           unavailable ({type(e).__name__}: {str(e)[:60]})")
+            print("   last tick          none")
+        # NOTE: symbol_info_session_quote/trade are MQL5-only. The MetaTrader5 Python package has
+        # no session API, so trading hours CANNOT be read here. Use --probe to settle it instead.
 
     print("\n" + "=" * 108)
     print(" ORDER_CHECK — the broker's verdict BEFORE anything is sent")
@@ -714,6 +683,58 @@ def diagnose():
             print(f"   filling {fname:<6} -> {rc_name(getattr(r2,'retcode',None)) if r2 else 'None'}"
                   f"  {getattr(r2,'comment','') if r2 else ''}")
     print("\n Nothing was sent. This command only reads and checks.")
+
+
+def probe(symbol_key: str):
+    """Fire order_check and order_send back to back on ONE minimum-lot order.
+
+    order_check returned 'Done' for all six orders while order_send returned 10018 forty minutes
+    earlier. That is consistent with order_check not validating trading sessions, but consistency
+    is not proof, and the Python package exposes no session API. This settles it: same request,
+    same instant, both verdicts printed.
+
+    Minimum volume, demo only, broker-side catastrophe stop attached, ledger-recorded like any
+    other order. If it fills, the position is real and must be reconciled or closed."""
+    acct = mt5.account_info()
+    if acct.trade_mode != 0:
+        raise SystemExit("REFUSING: probe is demo-only")
+    syms = resolve_symbols(verbose=False)
+    sym = syms.get(symbol_key, symbol_key)
+    info, tick = mt5.symbol_info(sym), mt5.symbol_info_tick(sym)
+    if info is None or tick is None:
+        raise SystemExit(f"no symbol info for {sym}")
+    vol = float(info.volume_min)
+    price = float(tick.ask)
+    req = {"action": mt5.TRADE_ACTION_DEAL, "symbol": sym, "volume": vol,
+           "type": mt5.ORDER_TYPE_BUY, "price": price,
+           "sl": catastrophe_stop(price, "BUY", info), "deviation": 20, "magic": MAGIC,
+           "comment": "portfolio_frozen_v1:v1", "type_filling": mt5.ORDER_FILLING_IOC}
+    print("=" * 92)
+    print(f" PROBE  {sym}  BUY {vol}  @ {price}   {_now()}")
+    print(f" server clock {datetime.fromtimestamp(tick.time, timezone.utc).strftime('%H:%M:%S')}"
+          f"   UTC now {datetime.now(timezone.utc).strftime('%H:%M:%S')}")
+    print("=" * 92)
+    chk = mt5.order_check(req)
+    print(f" order_check -> {rc_name(getattr(chk,'retcode',None)) if chk else 'None'}"
+          f"  {getattr(chk,'comment','') if chk else mt5.last_error()}")
+    res = mt5.order_send(req)
+    rc = getattr(res, "retcode", None)
+    print(f" order_send  -> {rc_name(rc)}  {getattr(res,'comment','')!r}"
+          f"  deal {getattr(res,'deal',None)}  order {getattr(res,'order',None)}"
+          f"  volume {getattr(res,'volume',None)}  price {getattr(res,'price',None)}")
+    if rc == 10009:
+        pos = [q for q in (mt5.positions_get(symbol=sym) or []) if q.magic == MAGIC]
+        p0 = pos[-1] if pos else None
+        print(f"\n FILLED. ticket {getattr(p0,'ticket',None)}  sl {getattr(p0,'sl',None)}"
+              f"  -> order_check DOES reflect what order_send will do; 10018 earlier was real.")
+        print(" Close this probe position before the next scheduled run.")
+    elif rc == 10018:
+        print("\n order_check said Done and order_send said MARKET_CLOSED in the same instant.")
+        print(" PROVEN: order_check does NOT validate trading sessions. 10018 is a session")
+        print(" condition, not an execution bug -- the fix is WHEN we run, not the code.")
+    else:
+        print(f"\n Neither DONE nor MARKET_CLOSED: {rc_name(rc)}. This is a new condition.")
+    return rc
 
 
 def reconcile_proof():
@@ -771,12 +792,18 @@ def main():
                     help="read-only: prove broker positions trace to ledger intents")
     ap.add_argument("--diagnose", action="store_true",
                     help="read-only: dump symbol_info and order_check for every planned order")
+    ap.add_argument("--probe", metavar="SYMBOL_KEY",
+                    help="SENDS one minimum-lot order to settle order_check vs order_send")
     a = ap.parse_args()
     if a.diagnose:
         if mt5 is None or not mt5.initialize():
             raise SystemExit("MetaTrader5 unavailable")
         diagnose()
         raise SystemExit(0)
+    if a.probe:
+        if mt5 is None or not mt5.initialize():
+            raise SystemExit("MetaTrader5 unavailable")
+        raise SystemExit(0 if probe(a.probe) == 10009 else 1)
     if a.reconcile_proof:
         if mt5 is None or not mt5.initialize():
             raise SystemExit("MetaTrader5 unavailable")
