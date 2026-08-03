@@ -386,3 +386,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | guardian: bind INITIAL_BALANCE to the connected account; fail closed on mismatch | git post-commit hook | 12d2a90 |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 7829fb5 |
 | 2026-08-03 | Obsidian Bridge / automated | manifest: regenerate at 7829fb5 so a synced VPS reads COMPLETE | git post-commit hook | 48ef05f |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | fce8a32 |
+| 2026-08-03 | Obsidian Bridge / automated | frozen portfolio: order submission, broker-side stop verification, fill audit | git post-commit hook | 53862f8 |
