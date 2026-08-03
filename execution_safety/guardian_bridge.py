@@ -27,6 +27,30 @@ def guardian_ok(day_start_equity=None, hwm=None, consecutive_losses=0, trades_to
         snap = mt5_snapshot(cfg)
         if snap is None or not getattr(snap, "ok", False):
             return False, {"reason": "GUARDIAN_SNAPSHOT_BAD"}
+
+        # ---- ACCOUNT BINDING. Every Guardian percentage is divided by INITIAL_BALANCE, so a
+        # config written for one account silently mis-scales every limit on another. Measured on
+        # 2026-08-03: guardian.env carried Pepperstone's 50000 while connected to FTMO at 100000,
+        # which reported total_drawdown_pct -100.0 and, worse, meant the TOTAL-loss stop could not
+        # fire until equity fell to 45000 -- a real drawdown of 55%. The daily stop was
+        # simultaneously over-tight. Both directions wrong from one stale constant.
+        #
+        # Fail CLOSED when the configured balance does not match the connected account.
+        try:
+            import MetaTrader5 as _mt5
+            _a = _mt5.account_info()
+        except Exception:
+            _a = None
+        if _a is not None:
+            _bal = float(getattr(_a, "balance", 0.0) or 0.0)
+            _cfg_bal = float(getattr(cfg, "INITIAL_BALANCE", 0.0) or 0.0)
+            if _bal > 0 and _cfg_bal > 0 and abs(_bal - _cfg_bal) / _bal > 0.02:
+                return False, {"reason": "GUARDIAN_BALANCE_MISMATCH",
+                               "account": getattr(_a, "login", None),
+                               "account_balance": _bal, "config_initial_balance": _cfg_bal,
+                               "hint": "config/guardian.env INITIAL_BALANCE does not match the "
+                                       "connected account; every drawdown limit would be "
+                                       "mis-scaled. Update it for THIS account before trading."}
         # V-04 fix: baselines come from PERSISTED safety state, not from current equity.
         # Defaulting to current equity made the baseline follow the account down, so realised
         # drawdown always read ~0 and the daily/total stop could never trigger.
