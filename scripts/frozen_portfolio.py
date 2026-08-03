@@ -193,9 +193,19 @@ def already_submitted_today(iid: str) -> bool:
     return False
 
 
-def submit_plan(acct, plan, syms, equity, guardian_detail):
+def submit_plan(acct, plan, syms, equity, checks, budget_money=None):
     """Execute the plan. Ledger BEFORE submit, broker-side stop WITH the order, verification and
-    reconciliation AFTER. Nothing here decides what to trade -- build_plan already did."""
+    reconciliation AFTER. Nothing here decides WHAT to trade -- build_plan already did.
+
+    TRANCHING. At the frozen 5% vol target the full book's catastrophe stress is 5.03% of equity
+    while FTMO's daily headroom is 5.00%, so the whole portfolio cannot be opened in a single run
+    without breaching the fail-closed rule. The engine therefore opens as much as the headroom
+    allows and completes the book on later runs. The TARGET WEIGHTS ARE UNCHANGED -- only the rate
+    of approach is limited. Because held state is read from the broker every run, the remainder is
+    picked up automatically with no resume bookkeeping.
+
+    REDUCE_OR_CLOSE is never budgeted: it lowers exposure, and refusing to de-risk because a risk
+    budget is exhausted would be exactly backwards."""
     from execution_safety.execution_guard import armed
     from execution_safety.gate import Signal, authorize
     from execution_safety.position_ledger import PositionLedger
@@ -210,6 +220,7 @@ def submit_plan(acct, plan, syms, equity, guardian_detail):
         raise SystemExit("strategy contract missing or unsigned — refusing to trade")
 
     submitted, results = 0, []
+    spent = 0.0
     for p in plan:
         if p["action"] not in ("REDUCE_OR_CLOSE", "OPEN_OR_INCREASE"):
             continue
@@ -218,6 +229,17 @@ def submit_plan(acct, plan, syms, equity, guardian_detail):
         if already_submitted_today(iid):
             print(f"  SKIP {sym}: intent {iid} already submitted today (idempotent)")
             continue
+
+        # tranche budget applies ONLY to exposure-increasing orders
+        add_cat = abs(p["delta_w"]) * equity * CATASTROPHE
+        if p["action"] == "OPEN_OR_INCREASE" and budget_money is not None:
+            if spent + add_cat > budget_money:
+                print(f"  DEFER {sym}: would add {add_cat:,.0f} catastrophe, "
+                      f"{budget_money - spent:,.0f} of budget left — next run")
+                results.append({"symbol": sym, "deferred": True,
+                                "catastrophe_needed": add_cat,
+                                "budget_remaining": budget_money - spent})
+                continue
 
         info, tick = mt5.symbol_info(sym), mt5.symbol_info_tick(sym)
         price = float(tick.ask if side == "BUY" else tick.bid)
@@ -261,19 +283,32 @@ def submit_plan(acct, plan, syms, equity, guardian_detail):
         with armed(dec["decision_id"]):
             res = mt5.order_send(req)
         rc = getattr(res, "retcode", None)
-        fill_px = float(getattr(res, "price", 0.0) or 0.0)
         latency_ms = (_t.time() - t0) * 1000.0
 
         # ---- POST-ORDER: verify the broker-side stop actually exists on the position
         ours = [q for q in (mt5.positions_get(symbol=sym) or []) if q.magic == MAGIC]
         pos = ours[-1] if ours else None
+        # res.price was 0.0 on the first live fill, which made slippage unmeasurable and the audit
+        # useless. Fall back to the deal, then to the position's price_open -- the broker's own
+        # record of what we actually paid.
+        fill_px = float(getattr(res, "price", 0.0) or 0.0)
+        if not fill_px and pos is not None:
+            fill_px = float(getattr(pos, "price_open", 0.0) or 0.0)
+        if not fill_px:
+            try:
+                d = mt5.history_deals_get(ticket=getattr(res, "deal", 0))
+                if d:
+                    fill_px = float(getattr(d[-1], "price", 0.0) or 0.0)
+            except Exception:
+                pass
         stop_verified = bool(pos and pos.sl and pos.sl > 0)
         recon = reconcile(magic=MAGIC)
         rec = {"ts": _now(), "intent_id": iid, "intent_ts": intent_ts, "symbol": sym,
                "name": p["name"], "direction": side, "target_w": p["target_w"],
                "held_w": p["held_w"], "delta_w": p["delta_w"], "volume": vol,
                "requested_price": price, "fill_price": fill_px,
-               "slippage": (fill_px - price) if fill_px else None,
+               "slippage": ((fill_px - price) * (1 if side == "BUY" else -1)) if fill_px else None,
+               "slippage_vs_spread": (abs(fill_px - price) / p["spread"]) if (fill_px and p.get("spread")) else None,
                "spread": p.get("spread"), "catastrophe_stop": sl,
                "broker_stop": (float(pos.sl) if pos else None),
                "stop_verified": stop_verified, "magic": MAGIC, "retcode": rc,
@@ -285,8 +320,19 @@ def submit_plan(acct, plan, syms, equity, guardian_detail):
             f.write(json.dumps(rec, default=str) + "\n")
         results.append(rec)
 
+        # PARTIAL FILL: the broker may fill less than requested. Record it explicitly; the next
+        # run reads held weights from the broker and re-trades the remainder automatically.
+        filled_vol = float(getattr(res, "volume", 0.0) or 0.0)
+        rec["requested_volume"] = vol
+        rec["filled_volume"] = filled_vol
+        rec["partial_fill"] = bool(filled_vol and abs(filled_vol - vol) > 1e-9)
+        if rec["partial_fill"]:
+            print(f"  PARTIAL {sym}: requested {vol}, filled {filled_vol}")
+            _notify("demo_fill", f"PARTIAL FILL {sym} requested {vol} filled {filled_vol}")
+
         if rc == 10009:
             submitted += 1
+            spent += add_cat
             try:
                 ss.record_trade(iid)
             except ss.EnvelopeExhausted as e:
@@ -362,7 +408,7 @@ def print_plan(acct, plan, diag, equity):
     return acts
 
 
-def preflight(acct):
+def preflight(acct, proposed_gross=0.0, proposed_catastrophe_pct=0.0):
     """Every gate that must pass before a single order may be sent. Returns (ok, report)."""
     checks = {}
     checks["account_is_demo"] = (acct.trade_mode == 0)
@@ -395,27 +441,72 @@ def preflight(acct):
     except Exception as e:
         checks["not_halted"] = False
         checks["_state_error"] = str(e)[:120]
+    # The old single-number Guardian collapsed vol risk, stress and rule headroom into
+    # distance-to-stop x size, and blocked a 0.02-lot position on a strategy whose measured risk
+    # is 5% annual vol. account_risk keeps the three apart. See execution_safety/account_risk.py.
     try:
-        from execution_safety.guardian_bridge import guardian_ok
-        g, det = guardian_ok(proposed_risk_pct=FROZEN_VOL / 10)
-        checks["guardian_allows"] = bool(g)
-        checks["_guardian"] = str(det)[:160]
+        from execution_safety import account_risk as ar
+        rep = ar.assess(mt5, magic=MAGIC, initial_balance=float(acct.balance or acct.equity),
+                        target_vol_annual=FROZEN_VOL,
+                        proposed_gross=proposed_gross,
+                        proposed_catastrophe_pct=proposed_catastrophe_pct)
+        checks["account_risk_ok"] = bool(rep.ok)
+        checks["_risk_report"] = rep
+        if not rep.ok:
+            checks["_risk_reasons"] = rep.reasons
     except Exception as e:
-        checks["guardian_allows"] = False
-        checks["_guardian_error"] = str(e)[:120]
+        checks["account_risk_ok"] = False
+        checks["_risk_error"] = f"{type(e).__name__}: {str(e)[:120]}"
     required = ["account_is_demo", "trade_expert_enabled", "trade_allowed",
                 "terminal_algotrading_on", "startup_reconciliation", "not_halted",
-                "guardian_allows"]
+                "account_risk_ok"]
     return all(checks.get(k) for k in required), checks
+
+
+def reconcile_proof():
+    """Prove every broker position traces to an exact ledger intent. Read-only.
+
+    Run this after repairing or closing an orphan. It prints the broker side and the ledger side
+    together so the match can be checked by eye, not asserted."""
+    from execution_safety.position_ledger import PositionLedger
+    from execution_safety.startup_reconciler import reconcile, report
+    led = PositionLedger()
+    raw = mt5.positions_get()
+    if raw is None:
+        print("  positions_get() FAILED — cannot prove anything"); return False
+    ours = [p for p in raw if p.magic == MAGIC]
+    foreign = [p for p in raw if p.magic != MAGIC]
+    print("=" * 92)
+    print(" RECONCILIATION PROOF")
+    print("=" * 92)
+    print(f" broker positions: {len(raw)}  ({len(ours)} ours magic={MAGIC}, {len(foreign)} foreign)")
+    for p in ours:
+        m = led.is_ours(MAGIC, p.comment or "")
+        print(f"   ticket {p.ticket:<12} {p.symbol:<12} vol {p.volume:<6} sl {p.sl:<12} "
+              f"comment {p.comment!r:<26} -> ledger match: {'YES' if m else 'NO (ORPHAN)'}")
+    print(f"\n ledger intents: {len(led.entries)}")
+    for e in list(led.entries.values())[-8:]:
+        print(f"   {e.intent_id:<22} {e.symbol:<12} magic {e.magic} comment {e.comment!r}")
+    r = reconcile(magic=MAGIC)
+    print("\n" + report(r))
+    clean = bool(r.get("trading_allowed")) and not r.get("findings")
+    print(f"\n RECONCILIATION: {'CLEAN' if clean else 'NOT CLEAN — halt must not be cleared'}")
+    return clean
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true", help="print the plan, submit nothing")
     ap.add_argument("--live", action="store_true", help="execute (demo accounts only)")
+    ap.add_argument("--reconcile-proof", action="store_true",
+                    help="read-only: prove broker positions trace to ledger intents")
     a = ap.parse_args()
+    if a.reconcile_proof:
+        if mt5 is None or not mt5.initialize():
+            raise SystemExit("MetaTrader5 unavailable")
+        raise SystemExit(0 if reconcile_proof() else 1)
     if not (a.dry_run or a.live):
-        ap.error("choose --dry-run or --live")
+        ap.error("choose --dry-run, --live or --reconcile-proof")
 
     if mt5 is None or not mt5.initialize():
         raise SystemExit("MetaTrader5 unavailable — run on the VPS with the terminal open")
@@ -432,8 +523,17 @@ def main():
     held = held_weights(syms, equity)
     plan = build_plan(acct, syms, w, held, equity)
 
-    ok, checks = preflight(acct)
+    # what the plan would ADD, in the two units the risk model needs
+    proposed_gross = float(sum(abs(p.get("target_w", 0.0)) for p in plan))
+    proposed_cat_pct = 100.0 * CATASTROPHE * float(
+        sum(abs(p.get("delta_w", 0.0)) for p in plan
+            if p["action"] == "OPEN_OR_INCREASE"))
+    ok, checks = preflight(acct, proposed_gross, proposed_cat_pct)
     acts = print_plan(acct, plan, diag, equity)
+    rep = checks.get("_risk_report")
+    if rep is not None:
+        from execution_safety import account_risk as ar
+        print("\n" + ar.render(rep))
     print("\n PREFLIGHT")
     for k, v in checks.items():
         if k.startswith("_"):
@@ -460,8 +560,10 @@ def main():
     if not ok:
         _notify("critical_error", f"FROZEN PORTFOLIO preflight NO-GO\n{checks}")
         raise SystemExit("preflight failed — no orders sent")
-    n, _ = submit_plan(acct, plan, syms, equity, checks)
-    print(f"\n SUBMITTED {n} order(s)")
+    budget = getattr(rep, "max_additional_catastrophe_money", None) if rep is not None else None
+    n, _ = submit_plan(acct, plan, syms, equity, checks, budget_money=budget)
+    print(f"\n SUBMITTED {n} order(s)"
+          + (f" (tranche budget {budget:,.0f})" if budget is not None else ""))
     audit_fills()
 
 

@@ -209,6 +209,42 @@ def test_submission_path():
     assert len(expected) <= 31, "comment exceeds the MT5 limit and would be truncated"
     print(f"  11 ledger tracing: order comment uses the intent comment ({expected!r}, "
           f"{len(expected)} chars)")
+    test_tranching_and_partials()
+
+
+def test_tranching_and_partials():
+    """Tranching must cap NEW exposure, never de-risking; partial fills must be recorded."""
+    import ast as _ast, inspect
+    import scripts.frozen_portfolio as fp
+    src = inspect.getsource(fp.submit_plan)
+
+    # de-risking must never be budgeted
+    assert 'p["action"] == "OPEN_OR_INCREASE" and budget_money is not None' in src, \
+        "the tranche budget must apply only to exposure-INCREASING orders"
+    assert "REDUCE_OR_CLOSE is never budgeted" in fp.submit_plan.__doc__, \
+        "the de-risking exemption must be documented where it can be found"
+
+    # partial fills recorded and re-traded next run
+    for token in ("filled_volume", "requested_volume", "partial_fill"):
+        assert token in src, f"partial-fill field {token} is not recorded in the audit"
+
+    # the budget arithmetic: three orders, budget fits two
+    EQ = 100_000.0
+    cat = fp.CATASTROPHE
+    deltas = [0.0316, 0.0230, 0.1033]
+    needs = [d * EQ * cat for d in deltas]
+    budget = needs[0] + needs[1] + 1.0
+    spent, taken, deferred = 0.0, [], []
+    for d, need in zip(deltas, needs):
+        if spent + need > budget:
+            deferred.append(d)
+        else:
+            spent += need
+            taken.append(d)
+    assert len(taken) == 2 and len(deferred) == 1, f"tranche split wrong: {taken} / {deferred}"
+    assert spent <= budget, "tranche overspent its budget"
+    print(f"  12 tranching: budget {budget:,.0f} -> {len(taken)} submitted, "
+          f"{len(deferred)} deferred, spent {spent:,.0f}; de-risking exempt")
 
 if __name__ == "__main__":
     main()

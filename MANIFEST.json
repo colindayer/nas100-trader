@@ -1,5 +1,5 @@
 {
- "commit": "61327b1090b8a69a7fa36c94d5dba3e22375902f",
+ "commit": "672b7ad96854d3d4572d56dfdd808e4d053c9968",
  "files": {
   "VERSION.json": {
    "sha256_16": "61e77b4fc94203dc",
@@ -10,8 +10,8 @@
    "bytes": 18392
   },
   "deploy.py": {
-   "sha256_16": "5626eb6f5c2324b7",
-   "bytes": 25666
+   "sha256_16": "1da702c1dfa1a5a2",
+   "bytes": 25706
   },
   "startup.py": {
    "sha256_16": "21399aa5999c6968",
@@ -34,8 +34,8 @@
    "bytes": 5058
   },
   "scripts/frozen_portfolio.py": {
-   "sha256_16": "5fcf58f3895b3d96",
-   "bytes": 23229
+   "sha256_16": "9590dd3a381e11f0",
+   "bytes": 29180
   },
   "execution_safety/__init__.py": {
    "sha256_16": "50522f235f395670",
@@ -80,6 +80,10 @@
   "execution_safety/guardian_bridge.py": {
    "sha256_16": "53aeb2d210a428d4",
    "bytes": 4224
+  },
+  "execution_safety/account_risk.py": {
+   "sha256_16": "97581dc9cccc17d7",
+   "bytes": 12254
   },
   "execution_safety/belief_reader.py": {
    "sha256_16": "0784e96749b3ccd4",
@@ -163,5 +167,5 @@
   }
  },
  "missing_at_build": [],
- "n_files": 40
+ "n_files": 41
 }
