@@ -1,5 +1,5 @@
 {
- "commit": "7829fb5dc15b1aa66beffc3e5296fd5a47b960bb",
+ "commit": "fce8a324e1c9e7c3f6bdd023a827b9bf28f3bbb0",
  "files": {
   "VERSION.json": {
    "sha256_16": "61e77b4fc94203dc",
@@ -10,8 +10,8 @@
    "bytes": 18392
   },
   "deploy.py": {
-   "sha256_16": "a9017069715efda7",
-   "bytes": 25648
+   "sha256_16": "5626eb6f5c2324b7",
+   "bytes": 25666
   },
   "startup.py": {
    "sha256_16": "21399aa5999c6968",
@@ -33,13 +33,9 @@
    "sha256_16": "6ef8cbdc20e2bd25",
    "bytes": 5058
   },
-  "scripts/backtest_portfolio.py": {
-   "sha256_16": "50b4aa48822b864b",
-   "bytes": 18013
-  },
   "scripts/frozen_portfolio.py": {
-   "sha256_16": "15a67ce56f5ba6ba",
-   "bytes": 11585
+   "sha256_16": "bcf57cd5b025dda9",
+   "bytes": 20475
   },
   "execution_safety/__init__.py": {
    "sha256_16": "50522f235f395670",
@@ -160,6 +156,10 @@
   "strategy_contracts/portfolio_multisleeve.json": {
    "sha256_16": "d1d340310d70ed19",
    "bytes": 1388
+  },
+  "strategy_contracts/portfolio_frozen_v1.json": {
+   "sha256_16": "8da3c9927595cd23",
+   "bytes": 1675
   }
  },
  "missing_at_build": [],

@@ -137,8 +137,48 @@ def main():
     print("  7 exits: executable code has no fixed TP and no trailing stop; "
           "catastrophe safeguard present")
 
+    test_submission_path()
     print("\nPASS — frozen rebalance loop behaves correctly under adversarial conditions")
 
+
+
+
+def test_submission_path():
+    """Guards on the SUBMISSION path: stop distance, idempotency across restarts and days."""
+    install_fake_mt5()
+    import importlib
+    import scripts.frozen_portfolio as fp
+    importlib.reload(fp)
+    fp.mt5 = sys.modules["MetaTrader5"]
+    import json, tempfile, pathlib
+    from datetime import datetime, timezone
+
+    class Info(FakeInfo):
+        digits = 2
+
+    # the gate blocks a stop further than 15% from entry (written after the BTC naked-stop bug),
+    # so a tick rounded the wrong way would make every order unsubmittable
+    worst = 0.0
+    for px in (4060.26, 58.223, 80.097, 653.40, 28409.78, 7524.20, 0.87):
+        for side in ("BUY", "SELL"):
+            lvl = fp.catastrophe_stop(px, side, Info())
+            d = abs(px - lvl) / px
+            worst = max(worst, d)
+            assert d <= 0.15 + 1e-12, f"{side} {px}: stop distance {d} exceeds 15%; gate would block"
+            assert (lvl < px) if side == "BUY" else (lvl > px), "stop on the wrong side of entry"
+    print(f"  8 catastrophe stop: max distance {worst:.6f} <= 0.15, correct side")
+
+    tmp = pathlib.Path(tempfile.mkdtemp()) / "fills.jsonl"
+    fp.FILLS_PATH = tmp
+    iid = fp.intent_id(1514166963, "XAUUSD", "BUY", 0.02)
+    assert not fp.already_submitted_today(iid)
+    tmp.write_text(json.dumps({"intent_id": iid,
+                               "ts": datetime.now(timezone.utc).isoformat()}) + "\n")
+    assert fp.already_submitted_today(iid), "a restart would DUPLICATE an already-submitted order"
+    assert not fp.already_submitted_today(fp.intent_id(1514166963, "XAUUSD", "SELL", 0.02))
+    tmp.write_text(json.dumps({"intent_id": iid, "ts": "2020-01-01T00:00:00+00:00"}) + "\n")
+    assert not fp.already_submitted_today(iid), "yesterday's intent wrongly blocks today"
+    print("  9 idempotency: replay skipped, different side allowed, stale day does not block")
 
 if __name__ == "__main__":
     main()

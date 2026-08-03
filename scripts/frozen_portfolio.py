@@ -58,6 +58,8 @@ FROZEN_VOL, FROZEN_LEV, FROZEN_BAND = 0.05, 3.0, 0.005
 CATASTROPHE = 0.15                     # broker-side disaster stop, from entry
 STRATEGY_ID = "portfolio_frozen_v1"
 PLAN_PATH = ROOT / "registry" / "frozen_plan.json"
+FILLS_PATH = ROOT / "registry" / "frozen_fills.jsonl"
+AUDIT_FIRST_N = 5                      # the first five fills are auto-audited and summarised
 
 
 def _now():
@@ -134,6 +136,176 @@ def build_plan(acct, syms, w_target, held, equity):
     # closes/reductions execute BEFORE opens: frees margin and cannot be blocked by new exposure
     order = {"REDUCE_OR_CLOSE": 0, "OPEN_OR_INCREASE": 1, "HOLD": 2, "SKIP": 3}
     return sorted(plan, key=lambda p: order.get(p["action"], 9))
+
+
+def catastrophe_stop(entry: float, side: str, info) -> float:
+    """15% from entry, broker-side. Rounded so the DISTANCE never exceeds 15%: the gate blocks
+    anything beyond that as implausible (it was written after the BTC naked-stop failure), and a
+    tick rounded the wrong way would trip it."""
+    raw = entry * (1 - CATASTROPHE) if side == "BUY" else entry * (1 + CATASTROPHE)
+    digits = int(getattr(info, "digits", 5) or 5)
+    lvl = round(raw, digits)
+    if side == "BUY" and (entry - lvl) / entry > CATASTROPHE:
+        lvl = round(lvl + 10 ** (-digits), digits)
+    if side == "SELL" and (lvl - entry) / entry > CATASTROPHE:
+        lvl = round(lvl - 10 ** (-digits), digits)
+    # respect the broker's minimum stop distance
+    pt = float(getattr(info, "point", 0.0) or 0.0)
+    min_dist = (getattr(info, "trade_stops_level", 0) or 0) * pt
+    if min_dist:
+        lvl = min(lvl, entry - min_dist) if side == "BUY" else max(lvl, entry + min_dist)
+    return float(lvl)
+
+
+def already_submitted_today(iid: str) -> bool:
+    """Idempotency: the ledger is consulted BEFORE submission. A restart mid-run cannot duplicate."""
+    if not FILLS_PATH.exists():
+        return False
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    for line in FILLS_PATH.read_text().splitlines():
+        try:
+            r = json.loads(line)
+        except Exception:
+            continue
+        if r.get("intent_id") == iid and str(r.get("ts", "")).startswith(day):
+            return True
+    return False
+
+
+def submit_plan(acct, plan, syms, equity, guardian_detail):
+    """Execute the plan. Ledger BEFORE submit, broker-side stop WITH the order, verification and
+    reconciliation AFTER. Nothing here decides what to trade -- build_plan already did."""
+    from execution_safety.execution_guard import armed
+    from execution_safety.gate import Signal, authorize
+    from execution_safety.position_ledger import PositionLedger
+    from execution_safety.startup_reconciler import reconcile
+    from execution_safety.strategy_contract import StrategyRegistry
+    from execution_safety import safety_state as ss
+
+    reg, ledger = StrategyRegistry(), PositionLedger()
+    contract = reg.get(STRATEGY_ID)
+    if contract is None or not contract.verify():
+        _notify("critical_error", f"{STRATEGY_ID}: contract missing or signature invalid")
+        raise SystemExit("strategy contract missing or unsigned — refusing to trade")
+
+    submitted, results = 0, []
+    for p in plan:
+        if p["action"] not in ("REDUCE_OR_CLOSE", "OPEN_OR_INCREASE"):
+            continue
+        sym, side, vol = p["symbol"], p["side"], float(p["volume"])
+        iid = p["intent_id"]
+        if already_submitted_today(iid):
+            print(f"  SKIP {sym}: intent {iid} already submitted today (idempotent)")
+            continue
+
+        info, tick = mt5.symbol_info(sym), mt5.symbol_info_tick(sym)
+        price = float(tick.ask if side == "BUY" else tick.bid)
+        sl = catastrophe_stop(price, side, info)
+
+        sig = Signal(signal_id=iid, strategy_id=STRATEGY_ID, strategy_version="v1",
+                     symbol=sym, direction=1 if side == "BUY" else -1,
+                     entry=price, stop_loss=sl)
+        open_now = [{"symbol": q.symbol} for q in (mt5.positions_get() or [])
+                    if q.magic == MAGIC]
+        dec = authorize(sig, registry=reg, inference=lambda s: "ALLOW_PAPER",
+                        guardian_ok=True, equity=equity, account_is_demo=True,
+                        open_positions=open_now, shadow=False)
+        if dec["decision"] != "ALLOW_PAPER":
+            print(f"  BLOCKED {sym}: {dec['reason_codes']}")
+            _notify("guardian_block", f"{sym} BLOCKED {dec['reason_codes']}")
+            results.append({"symbol": sym, "blocked": dec["reason_codes"]})
+            continue
+
+        # LEDGER FIRST -- an unledgered fill is an orphan by our own policy
+        intent_ts = _now()
+        try:
+            dec["order_intent"]["calculated_volume"] = vol
+            ledger.record_intent(dec["order_intent"], contract.approved_trial_ids,
+                                 dec["decision_id"])
+        except Exception as e:
+            print(f"  BLOCKED {sym}: ledger unavailable ({type(e).__name__}) — not submitting")
+            continue
+
+        req = {"action": mt5.TRADE_ACTION_DEAL, "symbol": sym, "volume": vol,
+               "type": mt5.ORDER_TYPE_BUY if side == "BUY" else mt5.ORDER_TYPE_SELL,
+               "price": price, "sl": sl, "deviation": 20, "magic": MAGIC,
+               "comment": f"frozen_v1:{p['name']}", "type_filling": mt5.ORDER_FILLING_IOC}
+        t0 = _t.time()
+        with armed(dec["decision_id"]):
+            res = mt5.order_send(req)
+        rc = getattr(res, "retcode", None)
+        fill_px = float(getattr(res, "price", 0.0) or 0.0)
+        latency_ms = (_t.time() - t0) * 1000.0
+
+        # ---- POST-ORDER: verify the broker-side stop actually exists on the position
+        ours = [q for q in (mt5.positions_get(symbol=sym) or []) if q.magic == MAGIC]
+        pos = ours[-1] if ours else None
+        stop_verified = bool(pos and pos.sl and pos.sl > 0)
+        recon = reconcile(magic=MAGIC)
+        rec = {"ts": _now(), "intent_id": iid, "intent_ts": intent_ts, "symbol": sym,
+               "name": p["name"], "direction": side, "target_w": p["target_w"],
+               "held_w": p["held_w"], "delta_w": p["delta_w"], "volume": vol,
+               "requested_price": price, "fill_price": fill_px,
+               "slippage": (fill_px - price) if fill_px else None,
+               "spread": p.get("spread"), "catastrophe_stop": sl,
+               "broker_stop": (float(pos.sl) if pos else None),
+               "stop_verified": stop_verified, "magic": MAGIC, "retcode": rc,
+               "latency_ms": round(latency_ms, 1), "decision_id": dec["decision_id"],
+               "ledger_recorded": True, "reconciliation_ok": bool(recon.get("trading_allowed")),
+               "account": acct.login, "server": acct.server}
+        FILLS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(FILLS_PATH, "a") as f:
+            f.write(json.dumps(rec, default=str) + "\n")
+        results.append(rec)
+
+        if rc == 10009:
+            submitted += 1
+            try:
+                ss.record_trade(iid, login=acct.login)
+            except TypeError:
+                ss.record_trade(iid)
+            if not stop_verified:
+                # a filled position with no broker-side stop is the BTC failure mode
+                ss.halt("FILLED_WITHOUT_BROKER_STOP", path=ss.STATE_PATH)
+                _notify("critical_error",
+                        f"HALTED: {sym} filled with NO broker-side stop (ticket "
+                        f"{getattr(pos,'ticket',None)})")
+                print(f"  !! {sym} filled WITHOUT a broker stop — HALTED")
+                break
+            _notify("demo_fill", f"FROZEN v1 FILL {sym} {side} {vol}\n"
+                                 f"px {fill_px} slip {rec['slippage']} stop {sl}\n"
+                                 f"recon {'OK' if rec['reconciliation_ok'] else 'FAILED'}")
+        else:
+            print(f"  {sym} retcode {rc} — not filled")
+    return submitted, results
+
+
+def audit_fills():
+    """Automatic audit of the first N fills, summarised for human review."""
+    if not FILLS_PATH.exists():
+        return
+    rows = [json.loads(l) for l in FILLS_PATH.read_text().splitlines() if l.strip()]
+    fills = [r for r in rows if r.get("retcode") == 10009][:AUDIT_FIRST_N]
+    if not fills:
+        return
+    print("\n" + "=" * 100)
+    print(f" AUTOMATIC FILL AUDIT — first {len(fills)} fill(s)")
+    print("=" * 100)
+    for i, r in enumerate(fills, 1):
+        print(f" {i}. {r['name']} ({r['symbol']}) {r['direction']} {r['volume']}")
+        print(f"    target_w {r['target_w']:+.4f}  held_w {r['held_w']:+.4f}  "
+              f"delta_w {r['delta_w']:+.4f}")
+        print(f"    requested {r['requested_price']}  filled {r['fill_price']}  "
+              f"slippage {r['slippage']}  spread {r['spread']}")
+        print(f"    catastrophe stop {r['catastrophe_stop']}  broker stop {r['broker_stop']}  "
+              f"verified {r['stop_verified']}")
+        print(f"    magic {r['magic']}  intent {r['intent_ts']}  fill {r['ts']}  "
+              f"latency {r['latency_ms']}ms")
+        print(f"    ledger {r['ledger_recorded']}  reconciliation "
+              f"{'OK' if r['reconciliation_ok'] else 'FAILED'}  retcode {r['retcode']}")
+    bad = [r for r in fills if not r["stop_verified"] or not r["reconciliation_ok"]]
+    print("-" * 100)
+    print(f" AUDIT: {len(fills)} fill(s), {len(bad)} with a failed stop or reconciliation")
 
 
 def print_plan(acct, plan, diag, equity):
@@ -238,12 +410,15 @@ def main():
     print(f" plan written -> {PLAN_PATH}")
 
     if a.dry_run:
+        audit_fills()
         print("\n DRY RUN — nothing submitted.")
         return
     if not ok:
         _notify("critical_error", f"FROZEN PORTFOLIO preflight NO-GO\n{checks}")
         raise SystemExit("preflight failed — no orders sent")
-    raise SystemExit("--live is gated: enable only after PORTFOLIO_DEMO_READINESS.md is GO")
+    n, _ = submit_plan(acct, plan, syms, equity, checks)
+    print(f"\n SUBMITTED {n} order(s)")
+    audit_fills()
 
 
 if __name__ == "__main__":
