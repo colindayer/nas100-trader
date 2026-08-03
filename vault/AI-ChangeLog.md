@@ -408,3 +408,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | preflight: require a single writer on the account | git post-commit hook | 264be66 |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 8b57874 |
 | 2026-08-03 | Obsidian Bridge / automated | manifest: restamp | git post-commit hook | e1711cf |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | d1d1ccd |
+| 2026-08-03 | Obsidian Bridge / automated | reconcile-proof: match the gate's bar instead of being stricter than it | git post-commit hook | a96b1fe |
