@@ -388,3 +388,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | manifest: regenerate at 7829fb5 so a synced VPS reads COMPLETE | git post-commit hook | 48ef05f |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | fce8a32 |
 | 2026-08-03 | Obsidian Bridge / automated | frozen portfolio: order submission, broker-side stop verification, fill audit | git post-commit hook | 53862f8 |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | c13ce29 |
+| 2026-08-03 | Obsidian Bridge / automated | preflight: check the terminal AlgoTrading switch; pre-trade rejections stay r... | git post-commit hook | 85ed30c |
