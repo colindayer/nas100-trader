@@ -398,3 +398,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | fix four defects the first live dry-run exposed | git post-commit hook | 69134bd |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 5dffe09 |
 | 2026-08-03 | Obsidian Bridge / automated | manifest: restamp at shipping commit | git post-commit hook | 2d8ebbb |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 7fa04c7 |
+| 2026-08-03 | Obsidian Bridge / automated | preflight: require a single writer on the account | git post-commit hook | 264be66 |
