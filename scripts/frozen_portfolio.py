@@ -59,7 +59,48 @@ CATASTROPHE = 0.15                     # broker-side disaster stop, from entry
 STRATEGY_ID = "portfolio_frozen_v1"
 PLAN_PATH = ROOT / "registry" / "frozen_plan.json"
 FILLS_PATH = ROOT / "registry" / "frozen_fills.jsonl"
+TELEMETRY_PATH = ROOT / "registry" / "frozen_telemetry.jsonl"
 AUDIT_FIRST_N = 5                      # the first five fills are auto-audited and summarised
+
+# ------------------------------------------------------------------ execution modes
+# Fail-closed is reserved for conditions that can LOSE MONEY or DUPLICATE EXPOSURE. Everything
+# else is a warning plus telemetry, because a demo that refuses to trade teaches nothing: the
+# point of the next seven days is to observe execution under realistic conditions, not to prove
+# perfection before the first order.
+#
+#   DEVELOPMENT  discover faults; only the two irreversible conditions block
+#   DEMO         the same, plus the halt gate. Rejected orders cost nothing here.
+#   FUNDED       strict: every check blocks. Real money, no discovery.
+MODES = ("DEVELOPMENT", "DEMO", "FUNDED")
+
+# Conditions that can lose money or duplicate exposure, in EVERY mode:
+#   account_is_demo   trading a REAL account from a demo-only runner
+#   single_writer     a second system holding positions under our magic
+ALWAYS_HARD = {"account_is_demo", "single_writer"}
+
+HARD_BY_MODE = {
+    # a halt is an explicit human-acknowledgement gate; honour it once we are past development
+    "DEVELOPMENT": ALWAYS_HARD,
+    "DEMO":        ALWAYS_HARD | {"not_halted", "startup_reconciliation"},
+    "FUNDED":      ALWAYS_HARD | {"not_halted", "startup_reconciliation", "account_risk_ok",
+                                  "trade_expert_enabled", "trade_allowed",
+                                  "terminal_algotrading_on"},
+}
+
+
+def current_mode() -> str:
+    m = (os.environ.get("FROZEN_MODE") or "DEMO").upper()
+    return m if m in MODES else "DEMO"
+
+
+def log_telemetry(record: dict):
+    """Every soft failure is recorded. A warning nobody can count is not a warning."""
+    try:
+        TELEMETRY_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(TELEMETRY_PATH, "a") as f:
+            f.write(json.dumps({"ts": _now(), **record}, default=str) + "\n")
+    except Exception:
+        pass
 
 
 def _now():
@@ -502,10 +543,20 @@ def preflight(acct, proposed_gross=0.0, proposed_catastrophe_pct=0.0):
     except Exception as e:
         checks["account_risk_ok"] = False
         checks["_risk_error"] = f"{type(e).__name__}: {str(e)[:120]}"
-    required = ["account_is_demo", "trade_expert_enabled", "trade_allowed",
-                "terminal_algotrading_on", "single_writer", "startup_reconciliation",
-                "not_halted", "account_risk_ok"]
-    return all(checks.get(k) for k in required), checks
+    all_checks = ["account_is_demo", "trade_expert_enabled", "trade_allowed",
+                  "terminal_algotrading_on", "single_writer", "startup_reconciliation",
+                  "not_halted", "account_risk_ok"]
+    mode = current_mode()
+    hard = HARD_BY_MODE[mode]
+    blocking = [k for k in all_checks if k in hard and not checks.get(k)]
+    warnings = [k for k in all_checks if k not in hard and not checks.get(k)]
+    checks["_mode"] = mode
+    checks["_blocking"] = blocking
+    checks["_warnings"] = warnings
+    for w in warnings:
+        log_telemetry({"kind": "soft_check_failed", "check": w, "mode": mode,
+                       "detail": str(checks.get("_" + w, ""))[:200]})
+    return (len(blocking) == 0), checks
 
 
 def reconcile_proof():
@@ -595,12 +646,24 @@ def main():
     if rep is not None:
         from execution_safety import account_risk as ar
         print("\n" + ar.render(rep))
-    print("\n PREFLIGHT")
+    mode = checks.get("_mode", "DEMO")
+    hard = HARD_BY_MODE[mode]
+    print(f"\n PREFLIGHT   mode={mode}   "
+          f"(fail-closed on: {', '.join(sorted(hard))})")
     for k, v in checks.items():
         if k.startswith("_"):
+            if k in ("_mode", "_blocking", "_warnings"):
+                continue
             print(f"   ({k[1:]}: {v})")
         else:
-            print(f"   {'PASS' if v else 'FAIL'}  {k}")
+            if v:
+                tag = "PASS"
+            else:
+                tag = "BLOCK" if k in hard else "WARN "
+            print(f"   {tag}  {k}")
+    if checks.get("_warnings"):
+        print(f"   -> {len(checks['_warnings'])} warning(s) logged to telemetry, not blocking "
+              f"in {mode}: {', '.join(checks['_warnings'])}")
     if missing:
         print(f"   FAIL  symbol_mapping — unresolved: {missing}")
         ok = False

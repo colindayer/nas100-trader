@@ -251,9 +251,41 @@ def test_tranching_and_partials():
     # headroom. Preflight must require single_writer.
     src = (ROOT / "scripts" / "frozen_portfolio.py").read_text()
     assert '"single_writer"' in src, "preflight must detect a second writer on the account"
-    assert '"single_writer",' in src.split("required = [")[1].split("]")[0], \
-        "single_writer must be a REQUIRED preflight check, not merely reported"
-    print("  13 single writer: a foreign-symbol position with our magic blocks the run")
+    import importlib
+    import scripts.frozen_portfolio as _fp
+    importlib.reload(_fp)
+    assert "single_writer" in _fp.ALWAYS_HARD, \
+        "single_writer is duplicate exposure and must fail closed in EVERY mode"
+    print("  13 single writer: blocks in every mode (duplicate exposure)")
+
+    # 14 — execution modes. Fail-closed only for money-loss / duplicate-exposure conditions.
+    import importlib, os
+    import scripts.frozen_portfolio as fpm
+    importlib.reload(fpm)
+    # the two irreversible conditions are hard in EVERY mode
+    for m in fpm.MODES:
+        assert "account_is_demo" in fpm.HARD_BY_MODE[m], f"{m}: trading a real account must block"
+        assert "single_writer" in fpm.HARD_BY_MODE[m], f"{m}: duplicate exposure must block"
+    # a rejected order costs nothing on a demo, so terminal/permission checks must NOT block there
+    for soft in ("terminal_algotrading_on", "trade_expert_enabled", "trade_allowed"):
+        assert soft not in fpm.HARD_BY_MODE["DEMO"], f"{soft} must be a warning in DEMO"
+        assert soft not in fpm.HARD_BY_MODE["DEVELOPMENT"], f"{soft} must be a warning in DEV"
+        assert soft in fpm.HARD_BY_MODE["FUNDED"], f"{soft} must block in FUNDED"
+    # FUNDED is strictly the widest set
+    assert fpm.HARD_BY_MODE["DEVELOPMENT"] <= fpm.HARD_BY_MODE["DEMO"] <= fpm.HARD_BY_MODE["FUNDED"], \
+        "modes must be strictly nested from permissive to strict"
+    assert "account_risk_ok" in fpm.HARD_BY_MODE["FUNDED"], "FTMO rules must block on real money"
+    # default mode is DEMO, and an unknown value falls back to DEMO rather than something laxer
+    os.environ.pop("FROZEN_MODE", None)
+    assert fpm.current_mode() == "DEMO"
+    os.environ["FROZEN_MODE"] = "nonsense"
+    assert fpm.current_mode() == "DEMO", "an unrecognised mode must fall back to DEMO, not DEVELOPMENT"
+    os.environ["FROZEN_MODE"] = "funded"
+    assert fpm.current_mode() == "FUNDED", "mode should be case-insensitive"
+    os.environ.pop("FROZEN_MODE", None)
+    print(f"  14 modes: DEV {len(fpm.HARD_BY_MODE['DEVELOPMENT'])} / DEMO "
+          f"{len(fpm.HARD_BY_MODE['DEMO'])} / FUNDED {len(fpm.HARD_BY_MODE['FUNDED'])} hard checks; "
+          f"unknown mode -> DEMO")
 
 if __name__ == "__main__":
     main()
