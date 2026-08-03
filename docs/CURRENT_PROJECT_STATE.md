@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+1f33b9b  manifest: restamp at the shipping commit
+1f68df2  Obsidian bridge auto-sync [bridge-auto]
 85ed30c  preflight: check the terminal AlgoTrading switch; pre-trade rejections stay retryable
 c13ce29  Obsidian bridge auto-sync [bridge-auto]
 53862f8  frozen portfolio: order submission, broker-side stop verification, fill audit
 fce8a32  Obsidian bridge auto-sync [bridge-auto]
 48ef05f  manifest: regenerate at 7829fb5 so a synced VPS reads COMPLETE
 7829fb5  Obsidian bridge auto-sync [bridge-auto]
-12d2a90  guardian: bind INITIAL_BALANCE to the connected account; fail closed on mismatch
-4dd6dee  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
