@@ -418,3 +418,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | manifest: restamp | git post-commit hook | 084999d |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 5a20c84 |
 | 2026-08-03 | Obsidian Bridge / automated | diagnostics: order_check before every send, full symbol metadata, named retcodes | git post-commit hook | b26d7cb |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | e5b3e28 |
+| 2026-08-03 | Obsidian Bridge / automated | manifest: restamp | git post-commit hook | 5c1ebb2 |
