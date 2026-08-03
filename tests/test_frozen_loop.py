@@ -194,5 +194,21 @@ def test_submission_path():
     assert fp.already_submitted_today(iid), "an unreadable ledger must fail CLOSED"
     print("  10 idempotency: pre-trade rejections retryable; filled/unknown/corrupt block")
 
+    # 11 — the order comment must equal the ledger comment, or reconciliation calls our own
+    # position an ORPHAN. This is not cosmetic: it halted the first live run after one fill.
+    import re
+    src = (ROOT / "scripts" / "frozen_portfolio.py").read_text()
+    m = re.search(r'"comment":\s*(.+?),\n', src)
+    assert m, "no comment field found in the order request"
+    assert 'order_intent' in m.group(1), (
+        f'order comment is {m.group(1)!r}; it must be dec["order_intent"]["comment"] so that '
+        "position_ledger.is_ours() can trace the position back to the ledger")
+    from execution_safety.gate import Signal
+    # the gate builds comment = f"{strategy_id}:{version}"; assert MT5's 31-char limit holds
+    expected = "portfolio_frozen_v1:v1"
+    assert len(expected) <= 31, "comment exceeds the MT5 limit and would be truncated"
+    print(f"  11 ledger tracing: order comment uses the intent comment ({expected!r}, "
+          f"{len(expected)} chars)")
+
 if __name__ == "__main__":
     main()

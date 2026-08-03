@@ -250,7 +250,13 @@ def submit_plan(acct, plan, syms, equity, guardian_detail):
         req = {"action": mt5.TRADE_ACTION_DEAL, "symbol": sym, "volume": vol,
                "type": mt5.ORDER_TYPE_BUY if side == "BUY" else mt5.ORDER_TYPE_SELL,
                "price": price, "sl": sl, "deviation": 20, "magic": MAGIC,
-               "comment": f"frozen_v1:{p['name']}", "type_filling": mt5.ORDER_FILLING_IOC}
+               # THE COMMENT MUST MATCH THE LEDGER ENTRY. position_ledger.is_ours() traces a
+               # broker position back to the ledger BY COMMENT, and the gate writes
+               # f"{strategy_id}:{version}". Sending our own string made the very position we had
+               # just opened look like an ORPHAN_POSITION -- a CRITICAL finding -- which halted the
+               # run after the first fill on 2026-08-03.
+               "comment": dec["order_intent"]["comment"],
+               "type_filling": mt5.ORDER_FILLING_IOC}
         t0 = _t.time()
         with armed(dec["decision_id"]):
             res = mt5.order_send(req)
@@ -282,9 +288,13 @@ def submit_plan(acct, plan, syms, equity, guardian_detail):
         if rc == 10009:
             submitted += 1
             try:
-                ss.record_trade(iid, login=acct.login)
-            except TypeError:
                 ss.record_trade(iid)
+            except ss.EnvelopeExhausted as e:
+                # a halt raised mid-loop must stop the run cleanly, not crash it: the fill has
+                # already happened and its record must still be written and reported
+                print(f"  !! halted while recording {sym}: {e}")
+                _notify("critical_error", f"FROZEN v1 halted after {sym} fill: {e}")
+                break
             if not stop_verified:
                 # a filled position with no broker-side stop is the BTC failure mode
                 ss.halt("FILLED_WITHOUT_BROKER_STOP", path=ss.STATE_PATH)
