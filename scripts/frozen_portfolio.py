@@ -263,6 +263,10 @@ def submit_plan(acct, plan, syms, equity, checks, budget_money=None):
         intent_ts = _now()
         try:
             dec["order_intent"]["calculated_volume"] = vol
+            # gate.py hardcodes magic_number=770001 while this system trades with MAGIC=880001,
+            # and position_ledger.is_ours() matches on magic AND comment. Every position we opened
+            # was therefore a permanent ORPHAN. Bind the intent to the magic the order will carry.
+            dec["order_intent"]["magic_number"] = MAGIC
             ledger.record_intent(dec["order_intent"], contract.approved_trial_ids,
                                  dec["decision_id"])
         except Exception as e:
@@ -271,7 +275,8 @@ def submit_plan(acct, plan, syms, equity, checks, budget_money=None):
 
         req = {"action": mt5.TRADE_ACTION_DEAL, "symbol": sym, "volume": vol,
                "type": mt5.ORDER_TYPE_BUY if side == "BUY" else mt5.ORDER_TYPE_SELL,
-               "price": price, "sl": sl, "deviation": 20, "magic": MAGIC,
+               "price": price, "sl": sl, "deviation": 20,
+               "magic": dec["order_intent"]["magic_number"],
                # THE COMMENT MUST MATCH THE LEDGER ENTRY. position_ledger.is_ours() traces a
                # broker position back to the ledger BY COMMENT, and the gate writes
                # f"{strategy_id}:{version}". Sending our own string made the very position we had
@@ -408,6 +413,17 @@ def print_plan(acct, plan, diag, equity):
     return acts
 
 
+def _configured_initial_balance(acct) -> float:
+    """The account's INITIAL balance from config/guardian.env, which is bound to this login."""
+    try:
+        for line in (ROOT / "config" / "guardian.env").read_text().splitlines():
+            if line.strip().startswith("INITIAL_BALANCE"):
+                return float(line.split("=", 1)[1].strip())
+    except Exception:
+        pass
+    return float(getattr(acct, "balance", 0.0) or getattr(acct, "equity", 0.0))
+
+
 def preflight(acct, proposed_gross=0.0, proposed_catastrophe_pct=0.0):
     """Every gate that must pass before a single order may be sent. Returns (ok, report)."""
     checks = {}
@@ -446,7 +462,10 @@ def preflight(acct, proposed_gross=0.0, proposed_catastrophe_pct=0.0):
     # is 5% annual vol. account_risk keeps the three apart. See execution_safety/account_risk.py.
     try:
         from execution_safety import account_risk as ar
-        rep = ar.assess(mt5, magic=MAGIC, initial_balance=float(acct.balance or acct.equity),
+        # NOT acct.balance: that drifts with P&L, so every FTMO limit would move with the
+        # account. The configured INITIAL_BALANCE is bound to this login and guardian_bridge
+        # already fails closed if it disagrees with the broker.
+        rep = ar.assess(mt5, magic=MAGIC, initial_balance=_configured_initial_balance(acct),
                         target_vol_annual=FROZEN_VOL,
                         proposed_gross=proposed_gross,
                         proposed_catastrophe_pct=proposed_catastrophe_pct)

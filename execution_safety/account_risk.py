@@ -102,9 +102,13 @@ def _deals_today(mt5, login):
         return None, None, None
     if deals is None:
         return None, None, None
-    pnl = sum(float(getattr(d, "profit", 0.0) or 0.0) for d in deals)
-    com = sum(float(getattr(d, "commission", 0.0) or 0.0) for d in deals)
-    swp = sum(float(getattr(d, "swap", 0.0) or 0.0) for d in deals)
+    # EXCLUDE balance/credit operations. The initial 100,000 deposit is a DEAL_TYPE_BALANCE and
+    # summing it produced "realised P&L today: 100,000.00" on a day with no closed trades.
+    BALANCE_TYPES = {2, 3, 4, 5, 6}      # BALANCE, CREDIT, CHARGE, CORRECTION, BONUS
+    trades = [d for d in deals if int(getattr(d, "type", 0)) not in BALANCE_TYPES]
+    pnl = sum(float(getattr(d, "profit", 0.0) or 0.0) for d in trades)
+    com = sum(float(getattr(d, "commission", 0.0) or 0.0) for d in trades)
+    swp = sum(float(getattr(d, "swap", 0.0) or 0.0) for d in trades)
     return pnl, com, swp
 
 
@@ -181,7 +185,12 @@ def assess(mt5, magic: int, initial_balance: float, target_vol_annual: float,
             continue
         frac = abs(price - sl) / price if (sl > 0 and price > 0) else catastrophe_frac
         stress += notional * frac
-    stress += equity * float(proposed_catastrophe_pct) / 100.0
+    # CURRENT stress is what is already on the book. The PROPOSED amount is checked against the
+    # budget separately -- folding it into `stress` and then subtracting it made the budget
+    # arithmetic self-cancelling and returned 0.00 allowed on a completely flat account.
+    current_stress = stress
+    proposed_stress = equity * float(proposed_catastrophe_pct) / 100.0
+    stress = current_stress + proposed_stress
 
     # ================= 3. FTMO RULE HEADROOM =================
     daily_limit = initial_balance * rules["daily_loss_pct"] / 100.0
@@ -196,14 +205,17 @@ def assess(mt5, magic: int, initial_balance: float, target_vol_annual: float,
 
     # How much MORE catastrophe stress may be added before either boundary is threatened.
     # Fail-closed: the tighter of the two, minus what is already exposed, minus buffers.
-    allowed = min(daily_headroom, total_headroom) - stress - buffer_money - margin_money
+    allowed = min(daily_headroom, total_headroom) - current_stress - buffer_money - margin_money
     allowed = max(0.0, allowed)
 
     if daily_headroom <= 0:
         reasons.append("DAILY_LOSS_BOUNDARY_REACHED")
     if total_headroom <= 0:
         reasons.append("TOTAL_LOSS_BOUNDARY_REACHED")
-    if stress + buffer_money + margin_money >= min(daily_headroom, total_headroom):
+    # Only the EXISTING book breaching headroom is a blocking condition. A plan that wants more
+    # than the budget is not an error: the engine tranches it. Blocking there would mean a flat
+    # account could never open anything.
+    if current_stress + buffer_money + margin_money >= min(daily_headroom, total_headroom):
         reasons.append("CATASTROPHE_STRESS_EXCEEDS_HEADROOM")
     if expected_bad_day >= daily_headroom:
         reasons.append("EXPECTED_BAD_DAY_EXCEEDS_DAILY_HEADROOM")
