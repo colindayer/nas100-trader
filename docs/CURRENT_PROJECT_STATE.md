@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+084999d  manifest: restamp
+f69c54f  Obsidian bridge auto-sync [bridge-auto]
 2df8566  execution modes: fail-closed only where money or duplicate exposure is at stake
 b214145  Obsidian bridge auto-sync [bridge-auto]
 576830a  manifest: restamp
 9a43fb6  Obsidian bridge auto-sync [bridge-auto]
 a96b1fe  reconcile-proof: match the gate's bar instead of being stricter than it
 d1d1ccd  Obsidian bridge auto-sync [bridge-auto]
-e1711cf  manifest: restamp
-8b57874  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

@@ -408,3 +408,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | manifest: restamp | git post-commit hook | 576830a |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | b214145 |
 | 2026-08-03 | Obsidian Bridge / automated | execution modes: fail-closed only where money or duplicate exposure is at stake | git post-commit hook | 2df8566 |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | f69c54f |
+| 2026-08-03 | Obsidian Bridge / automated | manifest: restamp | git post-commit hook | 084999d |
