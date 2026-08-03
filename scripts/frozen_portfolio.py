@@ -442,6 +442,32 @@ def preflight(acct, proposed_gross=0.0, proposed_catastrophe_pct=0.0):
     except Exception as e:
         checks["terminal_algotrading_on"] = False
         checks["_terminal_error"] = str(e)[:120]
+    # ONE WRITER PER ACCOUNT. The old --demo-limited runner shares MAGIC 880001 but trades a
+    # 13-symbol universe. held_weights() skips symbols outside FROZEN_UNIVERSE, so such a position
+    # is invisible to the plan while still consuming FTMO headroom -- an unmanaged position wearing
+    # our own magic. Refuse to trade until it is gone.
+    try:
+        raw = mt5.positions_get()
+        if raw is None:
+            checks["single_writer"] = False
+            checks["_single_writer"] = "positions_get() failed"
+        else:
+            # compare against the RESOLVED broker names for the frozen six
+            try:
+                allowed = {resolve_symbols(verbose=False).get(k) for k in FROZEN_UNIVERSE}
+            except Exception:
+                allowed = set()
+            stray = [p for p in raw if p.magic == MAGIC and p.symbol not in allowed]
+            checks["single_writer"] = (len(stray) == 0)
+            if stray:
+                checks["_single_writer"] = (
+                    "positions with OUR magic outside the frozen universe: "
+                    + ", ".join(f"{q.symbol}#{q.ticket} vol {q.volume}" for q in stray)
+                    + " -- another runner is trading this account")
+    except Exception as e:
+        checks["single_writer"] = False
+        checks["_single_writer_error"] = str(e)[:120]
+
     try:
         from execution_safety.startup_reconciler import reconcile
         r = reconcile(magic=MAGIC)
@@ -477,8 +503,8 @@ def preflight(acct, proposed_gross=0.0, proposed_catastrophe_pct=0.0):
         checks["account_risk_ok"] = False
         checks["_risk_error"] = f"{type(e).__name__}: {str(e)[:120]}"
     required = ["account_is_demo", "trade_expert_enabled", "trade_allowed",
-                "terminal_algotrading_on", "startup_reconciliation", "not_halted",
-                "account_risk_ok"]
+                "terminal_algotrading_on", "single_writer", "startup_reconciliation",
+                "not_halted", "account_risk_ok"]
     return all(checks.get(k) for k in required), checks
 
 

@@ -246,5 +246,14 @@ def test_tranching_and_partials():
     print(f"  12 tranching: budget {budget:,.0f} -> {len(taken)} submitted, "
           f"{len(deferred)} deferred, spent {spent:,.0f}; de-risking exempt")
 
+    # 13 — a position with OUR magic in a symbol outside the frozen universe means a second
+    # runner is writing to this account. It is invisible to held_weights() but consumes FTMO
+    # headroom. Preflight must require single_writer.
+    src = (ROOT / "scripts" / "frozen_portfolio.py").read_text()
+    assert '"single_writer"' in src, "preflight must detect a second writer on the account"
+    assert '"single_writer",' in src.split("required = [")[1].split("]")[0], \
+        "single_writer must be a REQUIRED preflight check, not merely reported"
+    print("  13 single writer: a foreign-symbol position with our magic blocks the run")
+
 if __name__ == "__main__":
     main()
