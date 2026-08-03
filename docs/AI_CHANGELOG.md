@@ -390,3 +390,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | live fix: order comment must match the ledger, or we orphan our own position | git post-commit hook | 563a61f |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 61327b1 |
 | 2026-08-03 | Obsidian Bridge / automated | manifest: restamp at shipping commit | git post-commit hook | 2104a97 |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 672b7ad |
+| 2026-08-03 | Obsidian Bridge / automated | execution: three-concept account risk, tranching, partial fills, reconciliati... | git post-commit hook | 60ecc79 |

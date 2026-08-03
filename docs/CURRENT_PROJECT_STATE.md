@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+60ecc79  execution: three-concept account risk, tranching, partial fills, reconciliation proof
+672b7ad  Obsidian bridge auto-sync [bridge-auto]
 2104a97  manifest: restamp at shipping commit
 61327b1  Obsidian bridge auto-sync [bridge-auto]
 563a61f  live fix: order comment must match the ledger, or we orphan our own position
 ca841a4  Obsidian bridge auto-sync [bridge-auto]
 1f33b9b  manifest: restamp at the shipping commit
 1f68df2  Obsidian bridge auto-sync [bridge-auto]
-85ed30c  preflight: check the terminal AlgoTrading switch; pre-trade rejections stay retryable
-c13ce29  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
