@@ -420,3 +420,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | manifest: restamp | git post-commit hook | 50b41f3 |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | e237b07 |
 | 2026-08-03 | Obsidian Bridge / automated | diagnose: remove a call to an API that does not exist; add --probe to settle ... | git post-commit hook | c59ba01 |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | f23ed08 |
+| 2026-08-03 | Obsidian Bridge / automated | manifest: restamp | git post-commit hook | adccc1e |
