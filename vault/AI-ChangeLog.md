@@ -380,3 +380,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | export_history: per-symbol progress + flush; --daily-only; lighter H1 default | git post-commit hook | f275df2 |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 8c0aa72 |
 | 2026-08-03 | Obsidian Bridge / automated | backtest: universe tiers + a window-equivalence proof before any speed shortcut | git post-commit hook | 3dad140 |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | d87985a |
+| 2026-08-03 | Obsidian Bridge / automated | frozen portfolio: autonomous rebalance loop, parity proven, execution still g... | git post-commit hook | 183c1a5 |
