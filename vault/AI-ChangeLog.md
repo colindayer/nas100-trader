@@ -400,3 +400,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | execution: three-concept account risk, tranching, partial fills, reconciliati... | git post-commit hook | 60ecc79 |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 4d58b18 |
 | 2026-08-03 | Obsidian Bridge / automated | manifest: restamp at shipping commit | git post-commit hook | 64c89a0 |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | e5ad178 |
+| 2026-08-03 | Obsidian Bridge / automated | fix four defects the first live dry-run exposed | git post-commit hook | 69134bd |
