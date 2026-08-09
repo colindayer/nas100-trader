@@ -436,3 +436,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-09 | Obsidian Bridge / automated | Fix zero-history bug: bar request equalled terminal maxbars | git post-commit hook | cb07de1 |
 | 2026-08-09 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 25b53ad |
 | 2026-08-09 | Obsidian Bridge / automated | Probe blocked on multi-year history downloads; shrink requests, add live prog... | git post-commit hook | 2f95b02 |
+| 2026-08-09 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | c519222 |
+| 2026-08-09 | Obsidian Bridge / automated | BrokerProfile: separate TRADABLE from RESEARCHABLE; frozen-six financing | git post-commit hook | f3d6147 |
