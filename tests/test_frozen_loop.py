@@ -289,3 +289,45 @@ def test_tranching_and_partials():
 
 if __name__ == "__main__":
     main()
+
+
+def test_account_identity_guard():
+    """The guard added 2026-08-05 after the VPS terminal was found on Pepperstone-Demo
+    61552095 while the FrozenPortfolio task sat Ready and armed for FTMO 1514166963.
+
+    Account identity is part of the STRATEGY CONTRACT. A scheduled bot must never be able to
+    follow the terminal onto whatever account happens to be logged in."""
+    import scripts.frozen_portfolio as FP
+
+    class Acct:
+        def __init__(self, login, server):
+            self.login, self.server = login, server
+            self.trade_mode = 0
+            self.trade_expert = True
+            self.trade_allowed = True
+            self.balance = self.equity = 100000.0
+
+    want_login, want_server = FP.bound_identity()
+    assert want_login == 1514166963, f"guardian.env binds {want_login}, expected 1514166963"
+    assert want_server == "FTMO", f"guardian.env binds server~{want_server}, expected FTMO"
+
+    # the exact account the strategy is bound to -> identity passes
+    ok = FP.preflight(Acct(1514166963, "FTMO-Demo"))[1]
+    assert ok["account_identity"] is True, "correct account rejected"
+
+    # the account actually found connected on 2026-08-05 -> must FAIL
+    bad = FP.preflight(Acct(61552095, "Pepperstone-Demo"))[1]
+    assert bad["account_identity"] is False, "PEPPERSTONE ACCOUNT ACCEPTED — guard is broken"
+
+    # right login, wrong broker: logins are not unique across brokers
+    bad2 = FP.preflight(Acct(1514166963, "Pepperstone-Demo"))[1]
+    assert bad2["account_identity"] is False, "server not checked — login alone is insufficient"
+
+    # right broker, wrong login
+    bad3 = FP.preflight(Acct(9999999, "FTMO-Demo"))[1]
+    assert bad3["account_identity"] is False, "login not checked"
+
+    # and it must be HARD in every mode, including DEVELOPMENT
+    for mode in FP.MODES:
+        assert "account_identity" in FP.HARD_BY_MODE[mode], f"not hard in {mode}"
+    print("  account_identity guard OK — wrong account halts in all modes")

@@ -74,9 +74,15 @@ AUDIT_FIRST_N = 5                      # the first five fills are auto-audited a
 MODES = ("DEVELOPMENT", "DEMO", "FUNDED")
 
 # Conditions that can lose money or duplicate exposure, in EVERY mode:
+#   account_identity  the terminal is logged into a DIFFERENT account than the strategy is
+#                     bound to. On 2026-08-05 the VPS terminal was found connected to
+#                     Pepperstone-Demo 61552095 while the FrozenPortfolio task sat Ready and
+#                     armed for FTMO 1514166963. Account identity is part of the STRATEGY
+#                     CONTRACT, never an environmental assumption -- a scheduled bot must not
+#                     be able to follow the terminal onto whatever account happens to be open.
 #   account_is_demo   trading a REAL account from a demo-only runner
 #   single_writer     a second system holding positions under our magic
-ALWAYS_HARD = {"account_is_demo", "single_writer"}
+ALWAYS_HARD = {"account_identity", "account_is_demo", "single_writer"}
 
 HARD_BY_MODE = {
     # a halt is an explicit human-acknowledgement gate; honour it once we are past development
@@ -500,9 +506,41 @@ def _configured_initial_balance(acct) -> float:
     return float(getattr(acct, "balance", 0.0) or getattr(acct, "equity", 0.0))
 
 
+def bound_identity() -> tuple:
+    """(login, server_substring) this strategy is CONTRACTUALLY bound to, from guardian.env.
+    Returns (None, None) only if the file is unreadable -- which itself fails the check."""
+    login, server = None, None
+    try:
+        for line in (ROOT / "config" / "guardian.env").read_text().splitlines():
+            s = line.strip()
+            if s.startswith("ACCOUNT_LOGIN"):
+                login = int(s.split("=", 1)[1].strip())
+            elif s.startswith("ACCOUNT_SERVER_CONTAINS"):
+                server = s.split("=", 1)[1].strip().upper()
+    except Exception:
+        return None, None
+    return login, server
+
+
 def preflight(acct, proposed_gross=0.0, proposed_catastrophe_pct=0.0):
     """Every gate that must pass before a single order may be sent. Returns (ok, report)."""
     checks = {}
+
+    # ACCOUNT IDENTITY -- fail closed. This must be the FIRST check: everything below it
+    # (balance, headroom, positions, single-writer) is meaningless if measured against the
+    # wrong account. Both the login AND the server must match what the strategy is bound to,
+    # because logins are not globally unique across brokers.
+    want_login, want_server = bound_identity()
+    have_login = int(getattr(acct, "login", 0) or 0)
+    have_server = str(getattr(acct, "server", "") or "").upper()
+    checks["account_identity"] = bool(
+        want_login is not None and want_server
+        and have_login == want_login and want_server in have_server)
+    if not checks["account_identity"]:
+        checks["_account_identity"] = (
+            f"BOUND TO login={want_login} server~{want_server} but CONNECTED TO "
+            f"login={have_login} server={have_server}")
+
     checks["account_is_demo"] = (acct.trade_mode == 0)
     # account_info().trade_expert is the SERVER permission. It says nothing about the AlgoTrading
     # button in this terminal, which is what retcode 10027 (CLIENT_DISABLES_AT) reports. Preflight
@@ -578,7 +616,7 @@ def preflight(acct, proposed_gross=0.0, proposed_catastrophe_pct=0.0):
     except Exception as e:
         checks["account_risk_ok"] = False
         checks["_risk_error"] = f"{type(e).__name__}: {str(e)[:120]}"
-    all_checks = ["account_is_demo", "trade_expert_enabled", "trade_allowed",
+    all_checks = ["account_identity", "account_is_demo", "trade_expert_enabled", "trade_allowed",
                   "terminal_algotrading_on", "single_writer", "startup_reconciliation",
                   "not_halted", "account_risk_ok"]
     mode = current_mode()
