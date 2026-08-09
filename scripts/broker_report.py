@@ -52,6 +52,48 @@ def show(p: BrokerProfile, equity: float):
     for l in rep["limitations"]:
         print(f"    - {l}")
 
+    # ---- SECTION 2/3: history depth and data-quality status
+    print(f"\n  RESEARCH CAPABILITY — tradable is NOT researchable")
+    rc = rep["research_capability"]
+    print(f"    can compute a 252d signal   {rc['can_signal_252d']:>4}")
+    print(f"    can validate over 5 years   {rc['can_validate_5y']:>4}")
+    print(f"    can validate over 10 years  {rc['can_validate_10y']:>4}")
+    print(f"\n  DATA STATUS")
+    for k, v in rep["data_status"].items():
+        print(f"    {k:<24}{v:>5}")
+
+    print(f"\n  HISTORY DEPTH BY CLASS (D1 bars)")
+    print(f"    {'class':<16}{'n':>4}{'min':>7}{'median':>8}{'max':>7}{'>=10y':>7}{'>=5y':>6}{'>=252d':>8}")
+    for cls in sorted(rep["asset_classes"]):
+        g = p.by_class(cls)
+        b = sorted(s.d1_bars for s in g)
+        if not b:
+            continue
+        print(f"    {cls:<16}{len(g):>4}{b[0]:>7}{b[len(b)//2]:>8}{b[-1]:>7}"
+              f"{sum(1 for s in g if s.can_validate_10y):>7}"
+              f"{sum(1 for s in g if s.can_validate_5y):>6}"
+              f"{sum(1 for s in g if s.can_signal_252d):>8}")
+
+    # ---- SECTION 4: financing on the frozen six
+    f6 = p.frozen_six_financing(equity)
+    print(f"\n  FROZEN SIX FINANCING — ABSENT FROM EVERY HISTORICAL BACKTEST")
+    print(f"    {'leg':<8}{'symbol':<12}{'d1':>6}{'status':<22}"
+          f"{'L $/nt':>9}{'S $/nt':>9}{'L ann':>8}{'S ann':>8}")
+    for _, r in f6.iterrows():
+        if not r.get("reliable"):
+            print(f"    {r['leg']:<8}{str(r.get('symbol','?')):<12}  UNCONVERTIBLE OR NOT FOUND")
+            continue
+        print(f"    {r['leg']:<8}{r['symbol']:<12}{r['d1_bars']:>6}{r['data_status']:<22}"
+              f"{r['long_usd_night']:>9.2f}{r['short_usd_night']:>9.2f}"
+              f"{r['long_ann_drag']:>8.2%}{r['short_ann_drag']:>8.2%}")
+    print(f"    horizons (long, % of ${equity:,.0f} equity per 1.0 lot):")
+    print(f"    {'leg':<8}{'5d':>9}{'20d':>9}{'60d':>9}{'120d':>9}")
+    for _, r in f6.iterrows():
+        if r.get("reliable"):
+            print(f"    {r['leg']:<8}{r['long_5d']:>9.3%}{r['long_20d']:>9.3%}"
+                  f"{r['long_60d']:>9.3%}{r['long_120d']:>9.3%}")
+    f6.to_csv(UNI / "FROZEN_SIX_FINANCING.csv", index=False)
+
     fin = p.financing_table(equity)
     rel = fin[fin.reliable]
     if len(rel):

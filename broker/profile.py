@@ -17,7 +17,12 @@ import pandas as pd
 from broker.classify import classify
 from broker.financing import swap_usd_per_lot_night, financing_drag
 
-TREND_MIN_D1_BARS = 1000
+# Research-capability thresholds in D1 bars. "Tradable" and "researchable" are DIFFERENT
+# properties and this project conflated them once already.
+SIGNAL_MIN_D1 = 300      # a 252-day signal plus warmup -- can TRADE the strategy
+VALID_5Y_D1 = 1260       # ~5 years -- minimal out-of-sample validation
+VALID_10Y_D1 = 2520      # ~10 years -- validation spanning more than one regime
+TREND_MIN_D1_BARS = SIGNAL_MIN_D1
 
 
 @dataclass
@@ -52,8 +57,35 @@ class SymbolSpec:
         return self.trade_mode == "FULL"
 
     @property
+    def can_signal_252d(self) -> bool:
+        """Enough history to COMPUTE a 252-day signal live. Says nothing about validating it."""
+        return self.tradable and self.d1_bars >= SIGNAL_MIN_D1
+
+    @property
+    def can_validate_5y(self) -> bool:
+        return self.tradable and self.d1_bars >= VALID_5Y_D1
+
+    @property
+    def can_validate_10y(self) -> bool:
+        return self.tradable and self.d1_bars >= VALID_10Y_D1
+
+    @property
     def trend_suitable(self) -> bool:
-        return self.tradable and self.d1_bars >= TREND_MIN_D1_BARS
+        return self.can_signal_252d
+
+    @property
+    def data_status(self) -> str:
+        """TRADABLE != RESEARCHABLE. A symbol can be fully live and still be useless for
+        validation. Copper is live with ~1.7 years of broker history."""
+        if not self.tradable or self.d1_bars <= 0:
+            return "UNAVAILABLE" if self.d1_bars <= 0 else "METADATA_ONLY"
+        if self.d1_bars >= VALID_10Y_D1:
+            return "LIVE_AND_LONG_HISTORY"
+        if self.d1_bars >= VALID_5Y_D1:
+            return "LIVE_LIMITED_HISTORY"
+        if self.d1_bars >= SIGNAL_MIN_D1:
+            return "LIVE_SIGNAL_ONLY"
+        return "METADATA_ONLY"
 
     def financing(self):
         return swap_usd_per_lot_night(self.swap_long, self.swap_short, self.swap_mode,
@@ -159,6 +191,12 @@ class BrokerProfile:
                 "success_rate": (len(hist) / len(self.symbols)) if self.symbols else 0.0,
             },
             "trend_universe_size": len(self.trend_universe()),
+            "data_status": _count(self.symbols.values(), "data_status"),
+            "research_capability": {
+                "can_signal_252d": len([s for s in self.symbols.values() if s.can_signal_252d]),
+                "can_validate_5y": len([s for s in self.symbols.values() if s.can_validate_5y]),
+                "can_validate_10y": len([s for s in self.symbols.values() if s.can_validate_10y]),
+            },
             "limitations": self._limitations(),
         }
 
@@ -178,7 +216,44 @@ class BrokerProfile:
         low = [s.symbol for s in self.symbols.values() if s.classifier_confidence < 0.5]
         if low:
             lim.append(f"{len(low)} symbols classified with confidence <0.5 — review before use")
+        sig = len([s for s in self.symbols.values() if s.can_signal_252d])
+        v10 = len([s for s in self.symbols.values() if s.can_validate_10y])
+        if sig > v10:
+            lim.append(f"{sig} symbols can COMPUTE a 252d signal but only {v10} have 10y of "
+                       f"broker history — TRADABLE != RESEARCHABLE. Strategies validated on "
+                       f"external reference data cannot be re-validated on this broker's own.")
         return lim
+
+    def frozen_six_financing(self, equity: float, lots: float = 1.0) -> pd.DataFrame:
+        """Financing on the six symbols the production portfolio actually holds.
+
+        CRITICAL: financing was ABSENT from every historical backtest of that portfolio. Its
+        cost has never been measured, only assumed to be negligible."""
+        PATTERNS = {"GOLD": ["XAUUSD"], "SILVER": ["XAGUSD"],
+                    "OIL": ["USOIL", "UKOIL", "WTI", "BRENT"], "COPPER": ["XCUUSD", "COPPER"],
+                    "NAS100": ["US100", "NAS100", "USTEC"], "SP500": ["US500", "SP500", "SPX"]}
+        rows = []
+        for leg, pats in PATTERNS.items():
+            hits = [s for s in self.symbols.values()
+                    if any(p in s.symbol.upper() for p in pats)]
+            if not hits:
+                rows.append({"leg": leg, "symbol": "NOT FOUND", "reliable": False})
+                continue
+            s = max(hits, key=lambda x: x.d1_bars)
+            f = s.financing()
+            dL = financing_drag(f.long_usd_per_lot_night, lots, equity)
+            dS = financing_drag(f.short_usd_per_lot_night, lots, equity)
+            rows.append({
+                "leg": leg, "symbol": s.symbol, "asset_class": s.asset_class,
+                "d1_bars": s.d1_bars, "data_status": s.data_status,
+                "swap_mode": s.swap_mode, "reliable": f.reliable,
+                "long_usd_night": f.long_usd_per_lot_night,
+                "short_usd_night": f.short_usd_per_lot_night,
+                "long_ann_drag": dL["120d"] * (252 / 120) if dL["120d"] == dL["120d"] else float("nan"),
+                "short_ann_drag": dS["120d"] * (252 / 120) if dS["120d"] == dS["120d"] else float("nan"),
+                **{f"long_{k}": v for k, v in dL.items()},
+                **{f"short_{k}": v for k, v in dS.items()}})
+        return pd.DataFrame(rows)
 
     def financing_table(self, equity: float, lots: float = 1.0) -> pd.DataFrame:
         rows = []
