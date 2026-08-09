@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+87c842e  Broker intelligence layer: BrokerProfile, async history, multi-field classifier
+74f9eaf  Obsidian bridge auto-sync [bridge-auto]
 f7ccf9d  Bind execution to account identity; add FTMO universe inventory
 64c6791  Obsidian bridge auto-sync [bridge-auto]
 adccc1e  manifest: restamp
 f23ed08  Obsidian bridge auto-sync [bridge-auto]
 c59ba01  diagnose: remove a call to an API that does not exist; add --probe to settle 10018
 e237b07  Obsidian bridge auto-sync [bridge-auto]
-50b41f3  manifest: restamp
-6590495  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
