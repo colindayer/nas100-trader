@@ -422,3 +422,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-03 | Obsidian Bridge / automated | diagnose: remove a call to an API that does not exist; add --probe to settle ... | git post-commit hook | c59ba01 |
 | 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | f23ed08 |
 | 2026-08-03 | Obsidian Bridge / automated | manifest: restamp | git post-commit hook | adccc1e |
+| 2026-08-03 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 64c6791 |
+| 2026-08-09 | Obsidian Bridge / automated | Bind execution to account identity; add FTMO universe inventory | git post-commit hook | f7ccf9d |
