@@ -426,3 +426,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-09 | Obsidian Bridge / automated | Bind execution to account identity; add FTMO universe inventory | git post-commit hook | f7ccf9d |
 | 2026-08-09 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 74f9eaf |
 | 2026-08-09 | Obsidian Bridge / automated | Broker intelligence layer: BrokerProfile, async history, multi-field classifier | git post-commit hook | 87c842e |
+| 2026-08-09 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 8fd279d |
+| 2026-08-09 | Obsidian Bridge / automated | Fix zero-history bug: bar request equalled terminal maxbars | git post-commit hook | cb07de1 |
