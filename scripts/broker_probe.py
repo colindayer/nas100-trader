@@ -31,13 +31,17 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "universe"
 
-HISTORY_TIMEOUT_S = 12.0
+HISTORY_TIMEOUT_S = 6.0
 
 # MT5 returns None when the requested count EQUALS terminal_info().maxbars (typically 100000).
 # v2 and the first version of this probe both hardcoded 100000 and read the resulting None as
 # "no history", reporting 0 bars for all 166 FTMO symbols. XAUUSD in fact serves 5000+ bars on
 # the FIRST call with no wait. Diagnosed 2026-08-09. Request is now clamped below maxbars.
-MAX_BARS_REQUEST = 50000
+# Requesting 50000 H1 bars (~20 years) forces the terminal to DOWNLOAD that history from the
+# server before returning, per symbol. On 166 cold symbols the probe blocked with near-zero CPU.
+# D1 depth is what the trend strategy needs; H1 only needs to be shown to exist.
+MAX_BARS_D1 = 6000        # ~24 years of daily -- more than any CFD history
+MAX_BARS_H1 = 2000        # ~3 months of hourly -- enough to prove availability
 BACKOFF = (0.05, 0.15, 0.4, 1.0, 2.0, 4.0)
 
 TM = {0: "DISABLED", 1: "LONGONLY", 2: "SHORTONLY", 3: "CLOSEONLY", 4: "FULL"}
@@ -63,18 +67,18 @@ def bound_identity():
     return login, server
 
 
-def _bar_cap() -> int:
+def _bar_cap(want: int) -> int:
     """Stay strictly BELOW the terminal's maxbars: requesting exactly maxbars returns None."""
     try:
         mb = int(getattr(mt5.terminal_info(), "maxbars", 0) or 0)
     except Exception:
         mb = 0
-    return max(1000, min(MAX_BARS_REQUEST, mb - 1)) if mb else MAX_BARS_REQUEST
+    return max(500, min(want, mb - 1)) if mb else want
 
 
-def history_with_backoff(symbol: str, timeframe, timeout=HISTORY_TIMEOUT_S):
+def history_with_backoff(symbol: str, timeframe, timeout=HISTORY_TIMEOUT_S, want=MAX_BARS_D1):
     """Poll until history materialises. Returns (bars, first, last, latency_s, attempts)."""
-    cap = _bar_cap()
+    cap = _bar_cap(want)
     t0 = time.time()
     for attempt, wait in enumerate(BACKOFF + (0.0,) * 40, 1):
         try:
@@ -134,9 +138,13 @@ def main():
             added.append(inf.name)
             inf = mt5.symbol_info(inf.name)
         tk = mt5.symbol_info_tick(inf.name)
-        d1n, d1a, d1b, lat, att = history_with_backoff(inf.name, mt5.TIMEFRAME_D1)
-        h1n, _, _, _, _ = history_with_backoff(inf.name, mt5.TIMEFRAME_H1,
-                                               timeout=4.0) if d1n else (0, "", "", 0.0, 0)
+        d1n, d1a, d1b, lat, att = history_with_backoff(inf.name, mt5.TIMEFRAME_D1,
+                                                       want=MAX_BARS_D1)
+        h1n, _, _, _, _ = (history_with_backoff(inf.name, mt5.TIMEFRAME_H1, timeout=4.0,
+                                                want=MAX_BARS_H1) if d1n
+                           else (0, "", "", 0.0, 0))
+        print(f"  [{i:>3}/{len(syms)}] {inf.name:<16} D1 {d1n:>6}  H1 {h1n:>6}  "
+              f"{lat:>5.2f}s", flush=True)
         rows.append({
             "symbol": inf.name, "description": inf.description, "path": inf.path,
             "sector": getattr(inf, "sector_name", ""), "exchange": getattr(inf, "exchange", ""),
@@ -159,8 +167,8 @@ def main():
         })
         if i % 25 == 0:
             ok = sum(1 for r in rows if r["d1_bars"] > 0)
-            print(f"  ...{i}/{len(syms)}  history {ok}/{len(rows)} "
-                  f"({time.time()-t_start:.0f}s elapsed)")
+            print(f"  --- {i}/{len(syms)}  history {ok}/{len(rows)}  "
+                  f"{time.time()-t_start:.0f}s elapsed", flush=True)
 
     df = pd.DataFrame(rows)
     OUT.mkdir(parents=True, exist_ok=True)

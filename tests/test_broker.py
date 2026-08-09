@@ -117,10 +117,13 @@ def test_bar_request_stays_below_maxbars():
     """
     import re
     src = (Path(__file__).resolve().parents[1] / "scripts" / "broker_probe.py").read_text()
-    assert "MAX_BARS_REQUEST" in src, "bar-count cap is gone"
-    cap = int(re.search(r"MAX_BARS_REQUEST\s*=\s*(\d+)", src).group(1))
-    assert cap < 100000, f"MAX_BARS_REQUEST={cap} is not below the typical maxbars of 100000"
+    caps = [int(m) for m in re.findall(r"MAX_BARS_(?:D1|H1)\s*=\s*(\d+)", src)]
+    assert len(caps) == 2, "bar-count caps are gone"
+    assert all(c < 100000 for c in caps), f"caps {caps} not below the typical maxbars of 100000"
+    assert all(c <= 10000 for c in caps), (
+        f"caps {caps} are large enough to force a multi-year server download per symbol; "
+        "that blocked the probe at near-zero CPU on 166 cold symbols")
     assert "0, 100000)" not in src, "a hardcoded 100000-bar request is back in the probe"
     assert "mb - 1" in src, "cap is not clamped relative to the live terminal maxbars"
-    print(f"  bar request capped at {cap:,} and clamped to maxbars-1 "
-          f"(the boundary that returned None)")
+    print(f"  bar requests capped at D1={caps[0]:,} H1={caps[1]:,}, clamped to maxbars-1 "
+          f"(the boundary that returned None; large values blocked on downloads)")
