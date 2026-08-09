@@ -106,3 +106,21 @@ if __name__ == "__main__":
     test_financing_points_conversion()
     test_financing_drag_counts_weekend_nights()
     print("\nPASS — broker intelligence layer")
+
+
+def test_bar_request_stays_below_maxbars():
+    """MT5 returns None when count == terminal maxbars. That single boundary made both probes
+    report 0 bars for all 166 FTMO symbols, when XAUUSD actually serves 5000+ on the first call.
+
+    Verified on FTMO-Demo 2026-08-09: maxbars=100000, request 100000 -> None,
+    request 5000 -> 5000 bars, err=(1,'Success').
+    """
+    import re
+    src = (Path(__file__).resolve().parents[1] / "scripts" / "broker_probe.py").read_text()
+    assert "MAX_BARS_REQUEST" in src, "bar-count cap is gone"
+    cap = int(re.search(r"MAX_BARS_REQUEST\s*=\s*(\d+)", src).group(1))
+    assert cap < 100000, f"MAX_BARS_REQUEST={cap} is not below the typical maxbars of 100000"
+    assert "0, 100000)" not in src, "a hardcoded 100000-bar request is back in the probe"
+    assert "mb - 1" in src, "cap is not clamped relative to the live terminal maxbars"
+    print(f"  bar request capped at {cap:,} and clamped to maxbars-1 "
+          f"(the boundary that returned None)")

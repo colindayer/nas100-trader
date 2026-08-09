@@ -32,6 +32,12 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "data" / "universe"
 
 HISTORY_TIMEOUT_S = 12.0
+
+# MT5 returns None when the requested count EQUALS terminal_info().maxbars (typically 100000).
+# v2 and the first version of this probe both hardcoded 100000 and read the resulting None as
+# "no history", reporting 0 bars for all 166 FTMO symbols. XAUUSD in fact serves 5000+ bars on
+# the FIRST call with no wait. Diagnosed 2026-08-09. Request is now clamped below maxbars.
+MAX_BARS_REQUEST = 50000
 BACKOFF = (0.05, 0.15, 0.4, 1.0, 2.0, 4.0)
 
 TM = {0: "DISABLED", 1: "LONGONLY", 2: "SHORTONLY", 3: "CLOSEONLY", 4: "FULL"}
@@ -57,12 +63,22 @@ def bound_identity():
     return login, server
 
 
+def _bar_cap() -> int:
+    """Stay strictly BELOW the terminal's maxbars: requesting exactly maxbars returns None."""
+    try:
+        mb = int(getattr(mt5.terminal_info(), "maxbars", 0) or 0)
+    except Exception:
+        mb = 0
+    return max(1000, min(MAX_BARS_REQUEST, mb - 1)) if mb else MAX_BARS_REQUEST
+
+
 def history_with_backoff(symbol: str, timeframe, timeout=HISTORY_TIMEOUT_S):
     """Poll until history materialises. Returns (bars, first, last, latency_s, attempts)."""
+    cap = _bar_cap()
     t0 = time.time()
     for attempt, wait in enumerate(BACKOFF + (0.0,) * 40, 1):
         try:
-            r = mt5.copy_rates_from_pos(symbol, timeframe, 0, 100000)
+            r = mt5.copy_rates_from_pos(symbol, timeframe, 0, cap)
         except Exception:
             r = None
         if r is not None and len(r):
