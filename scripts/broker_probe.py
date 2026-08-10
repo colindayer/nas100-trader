@@ -42,6 +42,16 @@ HISTORY_TIMEOUT_S = 6.0
 # D1 depth is what the trend strategy needs; H1 only needs to be shown to exist.
 MAX_BARS_D1 = 6000        # ~24 years of daily -- more than any CFD history
 MAX_BARS_H1 = 2000        # ~3 months of hourly -- enough to prove availability
+
+# Measured 2026-08-09 on FTMO-Demo: these are LISTED but serve ZERO bars, and each burns
+# ~250-345s inside ONE uninterruptible copy_rates call. Skipping them turns a 2-hour run into
+# ~40 minutes. They are still recorded, with d1_bars=0 and history_skipped=True, because
+# "listed but no data" is itself a broker capability finding.
+KNOWN_NO_HISTORY = {
+    "SOLUSD", "AVAUSD", "ETCUSD", "DOGEUSD", "XMRUSD", "BNBUSD", "SANUSD", "LNKUSD",
+    "NERUSD", "ALGUSD", "ICPUSD", "AAVUSD", "BARUSD", "GALUSD", "GRTUSD", "MANUSD",
+    "XLMUSD", "UNIUSD", "XTZUSD",
+}
 BACKOFF = (0.05, 0.15, 0.4, 1.0, 2.0, 4.0)
 
 TM = {0: "DISABLED", 1: "LONGONLY", 2: "SHORTONLY", 3: "CLOSEONLY", 4: "FULL"}
@@ -122,6 +132,17 @@ def main():
         print("--any-account: identity check WAIVED deliberately (cross-broker profiling)")
     print(f"balance {acct.balance:.2f} {acct.currency}\n")
 
+    # A full capture died at the final write with ENOSPC after two hours of measurement.
+    # Check before starting, not after.
+    import shutil
+    OUT.mkdir(parents=True, exist_ok=True)
+    free_mb = shutil.disk_usage(OUT).free / 1e6
+    print(f"free disk at output path: {free_mb:,.0f} MB")
+    if free_mb < 50:
+        mt5.shutdown()
+        sys.exit(f"HALT: only {free_mb:.0f} MB free. Free space before running -- the previous "
+                 f"capture lost 2 hours of work to ENOSPC at the final write.")
+
     syms = mt5.symbols_get()
     if a.max_symbols:
         syms = syms[:a.max_symbols]
@@ -138,8 +159,12 @@ def main():
             added.append(inf.name)
             inf = mt5.symbol_info(inf.name)
         tk = mt5.symbol_info_tick(inf.name)
-        d1n, d1a, d1b, lat, att = history_with_backoff(inf.name, mt5.TIMEFRAME_D1,
-                                                       want=MAX_BARS_D1)
+        if inf.name.upper() in KNOWN_NO_HISTORY:
+            d1n, d1a, d1b, lat, att, skipped = 0, "", "", 0.0, 0, True
+        else:
+            d1n, d1a, d1b, lat, att = history_with_backoff(inf.name, mt5.TIMEFRAME_D1,
+                                                           want=MAX_BARS_D1)
+            skipped = False
         h1n, _, _, _, _ = (history_with_backoff(inf.name, mt5.TIMEFRAME_H1, timeout=4.0,
                                                 want=MAX_BARS_H1) if d1n
                            else (0, "", "", 0.0, 0))
@@ -164,7 +189,16 @@ def main():
             "margin_initial": inf.margin_initial, "was_visible": was_visible.get(inf.name, False),
             "d1_bars": d1n, "d1_from": d1a, "d1_to": d1b, "h1_bars": h1n,
             "history_latency_s": round(lat, 3), "history_attempts": att,
+            "history_skipped": skipped,
         })
+        # INCREMENTAL WRITE. The previous run measured all 166 symbols and lost every one of
+        # them because the only write was at the end and the disk was full.
+        if i % 10 == 0 or i == len(syms):
+            try:
+                pd.DataFrame(rows).to_csv(OUT / f"BROKER_RAW_{str(acct.server).replace(' ','_')}"
+                                                f".partial.csv", index=False)
+            except OSError as e:
+                print(f"  !! partial write failed: {e}", flush=True)
         if i % 25 == 0:
             ok = sum(1 for r in rows if r["d1_bars"] > 0)
             print(f"  --- {i}/{len(syms)}  history {ok}/{len(rows)}  "
