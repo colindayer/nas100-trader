@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+c7b360e  Metadata-only probe: recover BrokerProfile without re-downloading 26 GB
+c017f38  Obsidian bridge auto-sync [bridge-auto]
 0b94c54  Probe: incremental write, free-space guard, skip zero-history symbols
 569f5e3  Obsidian bridge auto-sync [bridge-auto]
 f3d6147  BrokerProfile: separate TRADABLE from RESEARCHABLE; frozen-six financing
 c519222  Obsidian bridge auto-sync [bridge-auto]
 2f95b02  Probe blocked on multi-year history downloads; shrink requests, add live progress
 25b53ad  Obsidian bridge auto-sync [bridge-auto]
-cb07de1  Fix zero-history bug: bar request equalled terminal maxbars
-8fd279d  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

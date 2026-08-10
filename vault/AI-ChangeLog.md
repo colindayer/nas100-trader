@@ -440,3 +440,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-09 | Obsidian Bridge / automated | BrokerProfile: separate TRADABLE from RESEARCHABLE; frozen-six financing | git post-commit hook | f3d6147 |
 | 2026-08-09 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 569f5e3 |
 | 2026-08-10 | Obsidian Bridge / automated | Probe: incremental write, free-space guard, skip zero-history symbols | git post-commit hook | 0b94c54 |
+| 2026-08-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | c017f38 |
+| 2026-08-10 | Obsidian Bridge / automated | Metadata-only probe: recover BrokerProfile without re-downloading 26 GB | git post-commit hook | c7b360e |
