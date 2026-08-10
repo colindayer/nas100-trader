@@ -442,3 +442,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-10 | Obsidian Bridge / automated | Probe: incremental write, free-space guard, skip zero-history symbols | git post-commit hook | 0b94c54 |
 | 2026-08-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | c017f38 |
 | 2026-08-10 | Obsidian Bridge / automated | Metadata-only probe: recover BrokerProfile without re-downloading 26 GB | git post-commit hook | c7b360e |
+| 2026-08-10 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | fea15a7 |
+| 2026-08-11 | Obsidian Bridge / automated | Phase 1: exact broker specs for the frozen legs, no assumed conventions | git post-commit hook | 6bd4b3e |
