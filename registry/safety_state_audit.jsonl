@@ -1352,3 +1352,168 @@
 {"ts": 1785455719.474874, "utc": "2026-07-30T23:55:19.474874+00:00", "event": "HALT", "reason": "critical execution failure: reconciliation_passed"}
 {"ts": 1785455719.4764538, "utc": "2026-07-30T23:55:19.476454+00:00", "event": "state_initialised", "equity": null}
 {"ts": 1785455719.4774559, "utc": "2026-07-30T23:55:19.477456+00:00", "event": "HALT", "reason": "critical execution failure: stop_verified"}
+{"ts": 1785705269.288586, "utc": "2026-08-02T21:14:29.288586+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785705269.288952, "utc": "2026-08-02T21:14:29.288952+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785705269.289407, "utc": "2026-08-02T21:14:29.289407+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785705269.310722, "utc": "2026-08-02T21:14:29.310729+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785705269.3111749, "utc": "2026-08-02T21:14:29.311175+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785705269.311681, "utc": "2026-08-02T21:14:29.311681+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785705269.3120902, "utc": "2026-08-02T21:14:29.312091+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785709237.305553, "utc": "2026-08-02T22:20:37.305554+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785709237.3064, "utc": "2026-08-02T22:20:37.306401+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785709237.306905, "utc": "2026-08-02T22:20:37.306906+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785709237.325446, "utc": "2026-08-02T22:20:37.325447+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785709237.3258398, "utc": "2026-08-02T22:20:37.325840+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785709237.3262541, "utc": "2026-08-02T22:20:37.326254+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785709237.326605, "utc": "2026-08-02T22:20:37.326605+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785709614.55809, "utc": "2026-08-02T22:26:54.558090+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785709614.5586739, "utc": "2026-08-02T22:26:54.558675+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785709614.559165, "utc": "2026-08-02T22:26:54.559165+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785709614.5826712, "utc": "2026-08-02T22:26:54.582672+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785709614.583243, "utc": "2026-08-02T22:26:54.583243+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785709614.58386, "utc": "2026-08-02T22:26:54.583860+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785709614.5846322, "utc": "2026-08-02T22:26:54.584633+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785710004.786724, "utc": "2026-08-02T22:33:24.786724+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785710004.787162, "utc": "2026-08-02T22:33:24.787163+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785710004.787649, "utc": "2026-08-02T22:33:24.787649+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785710004.810087, "utc": "2026-08-02T22:33:24.810088+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785710004.8104792, "utc": "2026-08-02T22:33:24.810480+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785710004.8108711, "utc": "2026-08-02T22:33:24.810871+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785710004.811214, "utc": "2026-08-02T22:33:24.811214+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785741197.770259, "utc": "2026-08-03T07:13:17.770259+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785741197.770839, "utc": "2026-08-03T07:13:17.770839+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785741197.7715771, "utc": "2026-08-03T07:13:17.771577+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785741197.790504, "utc": "2026-08-03T07:13:17.790504+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785741197.790866, "utc": "2026-08-03T07:13:17.790866+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785741197.791262, "utc": "2026-08-03T07:13:17.791262+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785741197.7916129, "utc": "2026-08-03T07:13:17.791613+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785743174.112301, "utc": "2026-08-03T07:46:14.112302+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785743174.1127648, "utc": "2026-08-03T07:46:14.112765+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785743174.1131752, "utc": "2026-08-03T07:46:14.113175+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785743174.131565, "utc": "2026-08-03T07:46:14.131566+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785743174.132055, "utc": "2026-08-03T07:46:14.132055+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785743174.132565, "utc": "2026-08-03T07:46:14.132565+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785743174.132916, "utc": "2026-08-03T07:46:14.132916+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785745512.640171, "utc": "2026-08-03T08:25:12.640171+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785745512.6406841, "utc": "2026-08-03T08:25:12.640684+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785745512.641091, "utc": "2026-08-03T08:25:12.641092+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785745512.6609159, "utc": "2026-08-03T08:25:12.660917+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785745512.661261, "utc": "2026-08-03T08:25:12.661261+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785745512.661752, "utc": "2026-08-03T08:25:12.661752+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785745512.662186, "utc": "2026-08-03T08:25:12.662187+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785745889.619869, "utc": "2026-08-03T08:31:29.619869+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785745889.620317, "utc": "2026-08-03T08:31:29.620317+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785745889.620799, "utc": "2026-08-03T08:31:29.620799+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785745889.639327, "utc": "2026-08-03T08:31:29.639328+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785745889.639797, "utc": "2026-08-03T08:31:29.639797+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785745889.6403909, "utc": "2026-08-03T08:31:29.640391+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785745889.6408699, "utc": "2026-08-03T08:31:29.640870+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785758507.949553, "utc": "2026-08-03T12:01:47.949554+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785758507.950131, "utc": "2026-08-03T12:01:47.950132+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785758507.9505851, "utc": "2026-08-03T12:01:47.950586+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785758507.969208, "utc": "2026-08-03T12:01:47.969209+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785758507.9695659, "utc": "2026-08-03T12:01:47.969566+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785758507.970002, "utc": "2026-08-03T12:01:47.970002+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785758507.9706051, "utc": "2026-08-03T12:01:47.970605+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785767564.762895, "utc": "2026-08-03T14:32:44.762896+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785767843.565393, "utc": "2026-08-03T14:37:23.565394+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785767843.565977, "utc": "2026-08-03T14:37:23.565977+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785767843.5664818, "utc": "2026-08-03T14:37:23.566482+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785767843.585351, "utc": "2026-08-03T14:37:23.585352+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785767843.58571, "utc": "2026-08-03T14:37:23.585711+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785767843.58612, "utc": "2026-08-03T14:37:23.586120+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785767843.5864599, "utc": "2026-08-03T14:37:23.586460+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785768094.9525278, "utc": "2026-08-03T14:41:34.952529+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768127.280051, "utc": "2026-08-03T14:42:07.280052+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768127.297351, "utc": "2026-08-03T14:42:07.297351+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768127.297517, "utc": "2026-08-03T14:42:07.297517+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768127.297638, "utc": "2026-08-03T14:42:07.297638+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768127.297753, "utc": "2026-08-03T14:42:07.297753+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768127.2978508, "utc": "2026-08-03T14:42:07.297851+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768127.2979462, "utc": "2026-08-03T14:42:07.297946+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768146.451512, "utc": "2026-08-03T14:42:26.451513+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768146.466866, "utc": "2026-08-03T14:42:26.466867+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768146.466989, "utc": "2026-08-03T14:42:26.466989+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768146.467086, "utc": "2026-08-03T14:42:26.467086+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768146.467181, "utc": "2026-08-03T14:42:26.467181+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768146.4672608, "utc": "2026-08-03T14:42:26.467261+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768146.467341, "utc": "2026-08-03T14:42:26.467341+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785768146.495476, "utc": "2026-08-03T14:42:26.495477+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785768146.495865, "utc": "2026-08-03T14:42:26.495865+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785768146.49635, "utc": "2026-08-03T14:42:26.496350+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785768146.508578, "utc": "2026-08-03T14:42:26.508579+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785768146.509011, "utc": "2026-08-03T14:42:26.509011+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785768146.5094578, "utc": "2026-08-03T14:42:26.509458+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785768146.509842, "utc": "2026-08-03T14:42:26.509842+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785789508.6001961, "utc": "2026-08-03T20:38:28.600196+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785789508.6157482, "utc": "2026-08-03T20:38:28.615748+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785789508.6158679, "utc": "2026-08-03T20:38:28.615868+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785789508.615963, "utc": "2026-08-03T20:38:28.615963+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785789508.616064, "utc": "2026-08-03T20:38:28.616064+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785789508.616172, "utc": "2026-08-03T20:38:28.616172+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785789508.6162539, "utc": "2026-08-03T20:38:28.616254+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785789508.643732, "utc": "2026-08-03T20:38:28.643732+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785789508.644147, "utc": "2026-08-03T20:38:28.644147+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785789508.6445599, "utc": "2026-08-03T20:38:28.644560+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785789508.656331, "utc": "2026-08-03T20:38:28.656332+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785789508.656681, "utc": "2026-08-03T20:38:28.656681+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785789508.6571362, "utc": "2026-08-03T20:38:28.657136+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785789508.657496, "utc": "2026-08-03T20:38:28.657496+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785790502.535966, "utc": "2026-08-03T20:55:02.535967+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790502.554869, "utc": "2026-08-03T20:55:02.554869+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790502.555008, "utc": "2026-08-03T20:55:02.555008+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790502.555108, "utc": "2026-08-03T20:55:02.555108+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790502.5552042, "utc": "2026-08-03T20:55:02.555204+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790502.555285, "utc": "2026-08-03T20:55:02.555285+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790502.555365, "utc": "2026-08-03T20:55:02.555365+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790502.583616, "utc": "2026-08-03T20:55:02.583616+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785790502.584021, "utc": "2026-08-03T20:55:02.584021+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785790502.5844932, "utc": "2026-08-03T20:55:02.584493+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785790502.5968142, "utc": "2026-08-03T20:55:02.596815+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785790502.5972638, "utc": "2026-08-03T20:55:02.597265+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785790502.597743, "utc": "2026-08-03T20:55:02.597743+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785790502.5981388, "utc": "2026-08-03T20:55:02.598139+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785790530.127365, "utc": "2026-08-03T20:55:30.127365+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790530.144238, "utc": "2026-08-03T20:55:30.144239+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790530.1444, "utc": "2026-08-03T20:55:30.144400+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790530.144521, "utc": "2026-08-03T20:55:30.144521+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790530.144636, "utc": "2026-08-03T20:55:30.144636+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790530.144734, "utc": "2026-08-03T20:55:30.144734+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790530.144829, "utc": "2026-08-03T20:55:30.144829+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790530.17522, "utc": "2026-08-03T20:55:30.175221+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785790530.1758451, "utc": "2026-08-03T20:55:30.175845+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785790530.176397, "utc": "2026-08-03T20:55:30.176397+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785790530.1899679, "utc": "2026-08-03T20:55:30.189970+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785790530.190349, "utc": "2026-08-03T20:55:30.190350+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785790530.1907861, "utc": "2026-08-03T20:55:30.190787+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785790530.1911721, "utc": "2026-08-03T20:55:30.191172+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785790831.320897, "utc": "2026-08-03T21:00:31.320898+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790831.3432121, "utc": "2026-08-03T21:00:31.343212+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790831.343374, "utc": "2026-08-03T21:00:31.343374+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790831.343492, "utc": "2026-08-03T21:00:31.343493+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790831.343606, "utc": "2026-08-03T21:00:31.343607+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790831.343702, "utc": "2026-08-03T21:00:31.343702+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790831.343791, "utc": "2026-08-03T21:00:31.343791+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1785790831.377269, "utc": "2026-08-03T21:00:31.377269+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1785790831.3777359, "utc": "2026-08-03T21:00:31.377736+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1785790831.3783932, "utc": "2026-08-03T21:00:31.378393+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1785790831.392276, "utc": "2026-08-03T21:00:31.392278+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1785790831.392711, "utc": "2026-08-03T21:00:31.392712+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1785790831.393165, "utc": "2026-08-03T21:00:31.393165+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1785790831.393559, "utc": "2026-08-03T21:00:31.393559+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1786272865.318899, "utc": "2026-08-09T10:54:25.318900+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["RECONCILIATION_FAILED"]}
+{"ts": 1786272865.3195462, "utc": "2026-08-09T10:54:25.319546+00:00", "event": "state_schema_mismatch", "found": 1, "expected": 2}
+{"ts": 1786272865.339608, "utc": "2026-08-09T10:54:25.339608+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["RECONCILIATION_FAILED"]}
+{"ts": 1786272865.340111, "utc": "2026-08-09T10:54:25.340111+00:00", "event": "account_changed", "from": 1514166963, "to": 61552095, "discarded_day_start": null, "discarded_hwm": null, "halt_preserved": true}
+{"ts": 1786272865.340616, "utc": "2026-08-09T10:54:25.340616+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["RECONCILIATION_FAILED"]}
+{"ts": 1786272865.340996, "utc": "2026-08-09T10:54:25.340996+00:00", "event": "account_changed", "from": 61552095, "to": 1514166963, "discarded_day_start": null, "discarded_hwm": null, "halt_preserved": true}
+{"ts": 1786272865.341433, "utc": "2026-08-09T10:54:25.341433+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["RECONCILIATION_FAILED"]}
+{"ts": 1786272865.341802, "utc": "2026-08-09T10:54:25.341802+00:00", "event": "account_changed", "from": 1514166963, "to": 9999999, "discarded_day_start": null, "discarded_hwm": null, "halt_preserved": true}
+{"ts": 1786303577.924277, "utc": "2026-08-09T19:26:17.924279+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["RECONCILIATION_FAILED"]}
+{"ts": 1786303577.9254642, "utc": "2026-08-09T19:26:17.925465+00:00", "event": "account_changed", "from": 9999999, "to": 1514166963, "discarded_day_start": null, "discarded_hwm": null, "halt_preserved": true}
+{"ts": 1786303577.927367, "utc": "2026-08-09T19:26:17.927367+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["RECONCILIATION_FAILED"]}
+{"ts": 1786303577.9289548, "utc": "2026-08-09T19:26:17.928956+00:00", "event": "account_changed", "from": 1514166963, "to": 61552095, "discarded_day_start": null, "discarded_hwm": null, "halt_preserved": true}
+{"ts": 1786303577.930223, "utc": "2026-08-09T19:26:17.930223+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["RECONCILIATION_FAILED"]}
+{"ts": 1786303577.930631, "utc": "2026-08-09T19:26:17.930631+00:00", "event": "account_changed", "from": 61552095, "to": 1514166963, "discarded_day_start": null, "discarded_hwm": null, "halt_preserved": true}
+{"ts": 1786303577.9316218, "utc": "2026-08-09T19:26:17.931622+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["RECONCILIATION_FAILED"]}
+{"ts": 1786303577.9328861, "utc": "2026-08-09T19:26:17.932886+00:00", "event": "account_changed", "from": 1514166963, "to": 9999999, "discarded_day_start": null, "discarded_hwm": null, "halt_preserved": true}

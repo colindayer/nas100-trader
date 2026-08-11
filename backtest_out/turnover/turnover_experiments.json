@@ -1,0 +1,197 @@
+{
+ "candidate_v2": {
+  "sharpe": 0.6501697284467183,
+  "gross_sharpe": 0.6891753699324065,
+  "maxdd": -0.16083779473612048,
+  "cagr": 0.05294904662694089,
+  "vol": 0.0848827078527274,
+  "cost_yr": 0.0033131612967371915,
+  "turnover_day": 0.043824884877476086,
+  "positive_years": "13/20"
+ },
+ "results": [
+  {
+   "variant": "1_periodic_5d",
+   "sharpe": 0.5799019436947012,
+   "gross_sharpe": 0.5982307545696062,
+   "maxdd": -0.17309644723010797,
+   "cagr": 0.04732222799282715,
+   "vol": 0.08610810907452116,
+   "cost_yr": 0.001580359625252428,
+   "turnover_day": 0.02090422784725434,
+   "positive_years": "13/20",
+   "d_sharpe": -0.07026778475201712,
+   "d_maxdd": -0.012258652493987499,
+   "train_sharpe": 0.46954957691337645,
+   "oos_sharpe": 0.41534225846608636,
+   "verdict": "reject: no Sharpe gain"
+  },
+  {
+   "variant": "1_periodic_10d",
+   "sharpe": 0.5873071144532185,
+   "gross_sharpe": 0.5994334303752543,
+   "maxdd": -0.17073008771623077,
+   "cagr": 0.04939315276456213,
+   "vol": 0.08878729199764133,
+   "cost_yr": 0.0010797171560875665,
+   "turnover_day": 0.01428197296412125,
+   "positive_years": "14/20",
+   "d_sharpe": -0.0628626139934998,
+   "d_maxdd": -0.009892292980110295,
+   "train_sharpe": 0.5149483547649639,
+   "oos_sharpe": 0.39402884665915483,
+   "verdict": "reject: no Sharpe gain"
+  },
+  {
+   "variant": "2_band_0.005",
+   "sharpe": 0.6625001697789775,
+   "gross_sharpe": 0.6978958760927377,
+   "maxdd": -0.15869091691073267,
+   "cagr": 0.05409793549288788,
+   "vol": 0.08495227798729302,
+   "cost_yr": 0.003009027484618695,
+   "turnover_day": 0.03980195085474464,
+   "positive_years": "13/20",
+   "d_sharpe": 0.012330441332259245,
+   "d_maxdd": 0.002146877825387805,
+   "train_sharpe": 0.5644550036832569,
+   "oos_sharpe": 0.5767840722826044,
+   "verdict": "ACCEPT-CANDIDATE"
+  },
+  {
+   "variant": "2_band_0.01",
+   "sharpe": 0.6504336213740234,
+   "gross_sharpe": 0.6844657243627444,
+   "maxdd": -0.15914415114575087,
+   "cagr": 0.05285505112056166,
+   "vol": 0.08468344769606209,
+   "cost_yr": 0.002883983811714722,
+   "turnover_day": 0.03814793401739051,
+   "positive_years": "13/20",
+   "d_sharpe": 0.0002638929273051094,
+   "d_maxdd": 0.001693643590369609,
+   "train_sharpe": 0.5609758709083369,
+   "oos_sharpe": 0.5545970314693384,
+   "verdict": "ACCEPT-CANDIDATE"
+  },
+  {
+   "variant": "2_band_0.02",
+   "sharpe": 0.6473975874880722,
+   "gross_sharpe": 0.6795543349484804,
+   "maxdd": -0.16201579617331585,
+   "cagr": 0.05324072115807521,
+   "vol": 0.08578697427589875,
+   "cost_yr": 0.002760074795985265,
+   "turnover_day": 0.036508925872820966,
+   "positive_years": "13/20",
+   "d_sharpe": -0.0027721409586460855,
+   "d_maxdd": -0.001178001437195375,
+   "train_sharpe": 0.5360068234003268,
+   "oos_sharpe": 0.5729904947555569,
+   "verdict": "reject: no Sharpe gain"
+  },
+  {
+   "variant": "3_minhold_5d",
+   "sharpe": 0.6590859649263651,
+   "gross_sharpe": 0.6759310230315826,
+   "maxdd": -0.18832522575103927,
+   "cagr": 0.05442481210265937,
+   "vol": 0.08600540688562833,
+   "cost_yr": 0.0014505389837260203,
+   "turnover_day": 0.01918702359425953,
+   "positive_years": "13/20",
+   "d_sharpe": 0.008916236479646789,
+   "d_maxdd": -0.027487431014918795,
+   "train_sharpe": 0.5446876408420454,
+   "oos_sharpe": 0.5816914725830625,
+   "verdict": "reject: drawdown"
+  },
+  {
+   "variant": "3_minhold_10d",
+   "sharpe": 0.5381253371666448,
+   "gross_sharpe": 0.5503300558349379,
+   "maxdd": -0.20192039699290487,
+   "cagr": 0.04420401799315443,
+   "vol": 0.087469533811066,
+   "cost_yr": 0.0010663668876316115,
+   "turnover_day": 0.014105382111529249,
+   "positive_years": "12/20",
+   "d_sharpe": -0.11204439128007349,
+   "d_maxdd": -0.041082602256784395,
+   "train_sharpe": 0.440957463330078,
+   "oos_sharpe": 0.5553124491102401,
+   "verdict": "reject: no Sharpe gain"
+  },
+  {
+   "variant": "3_minhold_20d",
+   "sharpe": 0.5126508036776003,
+   "gross_sharpe": 0.5217166473475059,
+   "maxdd": -0.21644296558448073,
+   "cagr": 0.043346576215792076,
+   "vol": 0.09080225572215697,
+   "cost_yr": 0.0008228542720129686,
+   "turnover_day": 0.010884315767367309,
+   "positive_years": "13/20",
+   "d_sharpe": -0.13751892476911798,
+   "d_maxdd": -0.05560517084836025,
+   "train_sharpe": 0.42893426100371546,
+   "oos_sharpe": 0.570815303230898,
+   "verdict": "reject: no Sharpe gain"
+  }
+ ],
+ "rejected": [
+  {
+   "variant": "1_periodic_5d",
+   "reason": "reject: no Sharpe gain",
+   "d_sharpe": -0.0703
+  },
+  {
+   "variant": "1_periodic_10d",
+   "reason": "reject: no Sharpe gain",
+   "d_sharpe": -0.0629
+  },
+  {
+   "variant": "2_band_0.02",
+   "reason": "reject: no Sharpe gain",
+   "d_sharpe": -0.0028
+  },
+  {
+   "variant": "3_minhold_5d",
+   "reason": "reject: drawdown",
+   "d_sharpe": 0.0089
+  },
+  {
+   "variant": "3_minhold_10d",
+   "reason": "reject: no Sharpe gain",
+   "d_sharpe": -0.112
+  },
+  {
+   "variant": "3_minhold_20d",
+   "reason": "reject: no Sharpe gain",
+   "d_sharpe": -0.1375
+  }
+ ],
+ "grids": {
+  "periodic_days": [
+   5,
+   10
+  ],
+  "band": [
+   0.005,
+   0.01,
+   0.02
+  ],
+  "minhold": [
+   5,
+   10,
+   20
+  ]
+ },
+ "acceptance": [
+  "net_sharpe",
+  "max_drawdown",
+  "annual_costs",
+  "turnover",
+  "cagr"
+ ]
+}

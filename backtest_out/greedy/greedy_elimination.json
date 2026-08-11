@@ -1,0 +1,663 @@
+{
+ "locked_baseline": {
+  "sharpe": 0.363,
+  "cagr": 0.0269,
+  "vol": 0.0824,
+  "maxdd": -0.2059,
+  "cost_yr": 0.00912,
+  "code": "4d0e06ad576c00be",
+  "data": "9ff394f01bb02981"
+ },
+ "history": [
+  {
+   "round": 0,
+   "removed": null,
+   "n_symbols": 13,
+   "symbols": [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "AUDUSD",
+    "USDCAD",
+    "USDCHF",
+    "NZDUSD",
+    "GOLD",
+    "SILVER",
+    "OIL",
+    "COPPER",
+    "NAS100",
+    "SP500"
+   ],
+   "sharpe": 0.36319749992471384,
+   "gross_sharpe": 0.4738808944698255,
+   "cagr": 0.026892635787147068,
+   "vol": 0.08241712970709457,
+   "maxdd": -0.20594737337506364,
+   "cost_yr": 0.009119969034704663,
+   "turnover_day": 0.120634511041067,
+   "positive_years": "11/20",
+   "start": "2007-07-10",
+   "end": "2026-08-03"
+  },
+  {
+   "round": 1,
+   "n_symbols": 12,
+   "symbols": [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "AUDUSD",
+    "USDCAD",
+    "NZDUSD",
+    "GOLD",
+    "SILVER",
+    "OIL",
+    "COPPER",
+    "NAS100",
+    "SP500"
+   ],
+   "sharpe": 0.4729282921435348,
+   "gross_sharpe": 0.5747208567453163,
+   "cagr": 0.03616548548327825,
+   "vol": 0.08227934420525637,
+   "maxdd": -0.1949576392950335,
+   "cost_yr": 0.008374735905120572,
+   "turnover_day": 0.11077692996191232,
+   "positive_years": "13/20",
+   "start": "2007-07-10",
+   "end": "2026-08-03",
+   "removed": "USDCHF",
+   "d_sharpe": 0.10973079221882098,
+   "d_maxdd": 0.010989734080030122
+  },
+  {
+   "round": 2,
+   "n_symbols": 11,
+   "symbols": [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "AUDUSD",
+    "USDCAD",
+    "GOLD",
+    "SILVER",
+    "OIL",
+    "COPPER",
+    "NAS100",
+    "SP500"
+   ],
+   "sharpe": 0.5352191361161217,
+   "gross_sharpe": 0.6356318292630166,
+   "cagr": 0.04164194230542906,
+   "vol": 0.08259922046399558,
+   "maxdd": -0.20029429268932797,
+   "cost_yr": 0.008288238797847892,
+   "turnover_day": 0.10963278833132133,
+   "positive_years": "13/20",
+   "start": "2007-07-10",
+   "end": "2026-08-03",
+   "removed": "NZDUSD",
+   "d_sharpe": 0.062290843972586885,
+   "d_maxdd": -0.005336653394294455
+  },
+  {
+   "round": 3,
+   "n_symbols": 10,
+   "symbols": [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "AUDUSD",
+    "GOLD",
+    "SILVER",
+    "OIL",
+    "COPPER",
+    "NAS100",
+    "SP500"
+   ],
+   "sharpe": 0.6019799427156338,
+   "gross_sharpe": 0.6901182291223177,
+   "cagr": 0.047715356561137456,
+   "vol": 0.08317377753054438,
+   "maxdd": -0.20020141395208868,
+   "cost_yr": 0.007327534820609572,
+   "turnover_day": 0.09692506376467688,
+   "positive_years": "14/20",
+   "start": "2007-07-10",
+   "end": "2026-08-03",
+   "removed": "USDCAD",
+   "d_sharpe": 0.06676080659951211,
+   "d_maxdd": 9.287873723928808e-05
+  },
+  {
+   "round": 4,
+   "n_symbols": 9,
+   "symbols": [
+    "EURUSD",
+    "USDJPY",
+    "AUDUSD",
+    "GOLD",
+    "SILVER",
+    "OIL",
+    "COPPER",
+    "NAS100",
+    "SP500"
+   ],
+   "sharpe": 0.6523787235408098,
+   "gross_sharpe": 0.7295680370531453,
+   "cagr": 0.05229667080258582,
+   "vol": 0.08347389806065621,
+   "maxdd": -0.18736168918461882,
+   "cost_yr": 0.00644013545411782,
+   "turnover_day": 0.08518697690632036,
+   "positive_years": "14/20",
+   "start": "2007-07-10",
+   "end": "2026-08-03",
+   "removed": "GBPUSD",
+   "d_sharpe": 0.050398780825176015,
+   "d_maxdd": 0.012839724767469862
+  },
+  {
+   "round": 5,
+   "n_symbols": 8,
+   "symbols": [
+    "EURUSD",
+    "USDJPY",
+    "AUDUSD",
+    "GOLD",
+    "OIL",
+    "COPPER",
+    "NAS100",
+    "SP500"
+   ],
+   "sharpe": 0.6796819256002846,
+   "gross_sharpe": 0.7601843948893826,
+   "cagr": 0.05480311277523797,
+   "vol": 0.08363576492115767,
+   "maxdd": -0.1763480470326625,
+   "cost_yr": 0.0067316324996364784,
+   "turnover_day": 0.08904275793169948,
+   "positive_years": "13/20",
+   "start": "2007-07-10",
+   "end": "2026-08-03",
+   "removed": "SILVER",
+   "d_sharpe": 0.027303202059474785,
+   "d_maxdd": 0.011013642151956327
+  },
+  {
+   "round": 6,
+   "n_symbols": 7,
+   "symbols": [
+    "USDJPY",
+    "AUDUSD",
+    "GOLD",
+    "OIL",
+    "COPPER",
+    "NAS100",
+    "SP500"
+   ],
+   "sharpe": 0.7043058373579526,
+   "gross_sharpe": 0.7722270871046679,
+   "cagr": 0.05729902455509306,
+   "vol": 0.08412038760529848,
+   "maxdd": -0.17012524754502123,
+   "cost_yr": 0.005708394882159833,
+   "turnover_day": 0.07550786881163801,
+   "positive_years": "13/20",
+   "start": "2007-07-10",
+   "end": "2026-08-03",
+   "removed": "EURUSD",
+   "d_sharpe": 0.024623911757667982,
+   "d_maxdd": 0.006222799487641262
+  },
+  {
+   "round": 7,
+   "n_symbols": 6,
+   "symbols": [
+    "USDJPY",
+    "GOLD",
+    "OIL",
+    "COPPER",
+    "NAS100",
+    "SP500"
+   ],
+   "sharpe": 0.7043536749250343,
+   "gross_sharpe": 0.7618890355473114,
+   "cagr": 0.05746226443471025,
+   "vol": 0.0843615166418072,
+   "maxdd": -0.15968513477367152,
+   "cost_yr": 0.004844112706834869,
+   "turnover_day": 0.06407556490522313,
+   "positive_years": "13/20",
+   "start": "2007-07-10",
+   "end": "2026-08-03",
+   "removed": "AUDUSD",
+   "d_sharpe": 4.783756708170994e-05,
+   "d_maxdd": 0.010440112771349708
+  }
+ ],
+ "final": {
+  "n_symbols": 6,
+  "symbols": [
+   "USDJPY",
+   "GOLD",
+   "OIL",
+   "COPPER",
+   "NAS100",
+   "SP500"
+  ],
+  "sharpe": 0.7043536749250343,
+  "gross_sharpe": 0.7618890355473114,
+  "cagr": 0.05746226443471025,
+  "vol": 0.0843615166418072,
+  "maxdd": -0.15968513477367152,
+  "cost_yr": 0.004844112706834869,
+  "turnover_day": 0.06407556490522313,
+  "positive_years": "13/20",
+  "start": "2007-07-10",
+  "end": "2026-08-03"
+ },
+ "rejected": [
+  {
+   "round": 1,
+   "removed": "AUDUSD",
+   "d_sharpe": -0.010045450637341524,
+   "d_maxdd": -0.010018062456012777,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 1,
+   "removed": "USDJPY",
+   "d_sharpe": -0.012662136915536415,
+   "d_maxdd": 0.003165052820378045,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 1,
+   "removed": "SILVER",
+   "d_sharpe": -0.02079343839587955,
+   "d_maxdd": 0.008351512194724298,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 1,
+   "removed": "COPPER",
+   "d_sharpe": -0.03764821081082964,
+   "d_maxdd": -0.019261689934556236,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 1,
+   "removed": "SP500",
+   "d_sharpe": -0.04334827538982389,
+   "d_maxdd": -0.02510350060542277,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 1,
+   "removed": "GOLD",
+   "d_sharpe": -0.05262346372106791,
+   "d_maxdd": 0.01087370691641798,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 1,
+   "removed": "OIL",
+   "d_sharpe": -0.0770427701376209,
+   "d_maxdd": 0.0009506528538413272,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 1,
+   "removed": "NAS100",
+   "d_sharpe": -0.08733616605934452,
+   "d_maxdd": -0.034302756320328975,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 2,
+   "removed": "USDJPY",
+   "d_sharpe": -0.009377841198219383,
+   "d_maxdd": -0.010333894054912918,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 2,
+   "removed": "SILVER",
+   "d_sharpe": -0.01308740680917414,
+   "d_maxdd": -0.0021596094676633593,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 2,
+   "removed": "COPPER",
+   "d_sharpe": -0.03481127308492998,
+   "d_maxdd": -0.004254440804034365,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 2,
+   "removed": "SP500",
+   "d_sharpe": -0.0393064833817402,
+   "d_maxdd": -0.01036583451647044,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 2,
+   "removed": "GOLD",
+   "d_sharpe": -0.047421293599476055,
+   "d_maxdd": -0.004798185457138393,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 2,
+   "removed": "OIL",
+   "d_sharpe": -0.08023098863747874,
+   "d_maxdd": -0.020982616515962893,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 2,
+   "removed": "NAS100",
+   "d_sharpe": -0.08536926184658383,
+   "d_maxdd": -0.020825310495471983,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 3,
+   "removed": "SILVER",
+   "d_sharpe": -0.0006641676109485628,
+   "d_maxdd": 0.000459488406583608,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 3,
+   "removed": "AUDUSD",
+   "d_sharpe": -0.007016699883078514,
+   "d_maxdd": -0.0010722785915220356,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 3,
+   "removed": "USDJPY",
+   "d_sharpe": -0.010232968131399511,
+   "d_maxdd": -0.01357651168744034,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 3,
+   "removed": "COPPER",
+   "d_sharpe": -0.03267045914779099,
+   "d_maxdd": 0.0025220563552713626,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 3,
+   "removed": "SP500",
+   "d_sharpe": -0.034043237995141196,
+   "d_maxdd": -0.0012768029438720019,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 3,
+   "removed": "GOLD",
+   "d_sharpe": -0.04108909324452387,
+   "d_maxdd": -0.005613269124517539,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 3,
+   "removed": "OIL",
+   "d_sharpe": -0.08258513234991766,
+   "d_maxdd": -0.01843056563369727,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 3,
+   "removed": "NAS100",
+   "d_sharpe": -0.08668786680273766,
+   "d_maxdd": -0.013674957117645659,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 4,
+   "removed": "AUDUSD",
+   "d_sharpe": -0.014186757725161203,
+   "d_maxdd": 0.002542000657168586,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 4,
+   "removed": "USDJPY",
+   "d_sharpe": -0.0147989462397905,
+   "d_maxdd": 0.000908924386207266,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 4,
+   "removed": "SP500",
+   "d_sharpe": -0.02667309021193276,
+   "d_maxdd": -0.003026963382158132,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 4,
+   "removed": "COPPER",
+   "d_sharpe": -0.028471819004185717,
+   "d_maxdd": 0.001629521215724128,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 4,
+   "removed": "GOLD",
+   "d_sharpe": -0.03502177222188185,
+   "d_maxdd": 0.009185912178261701,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 4,
+   "removed": "OIL",
+   "d_sharpe": -0.07766555864446578,
+   "d_maxdd": -0.0049002165993884406,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 4,
+   "removed": "NAS100",
+   "d_sharpe": -0.08885484778248642,
+   "d_maxdd": -0.003246344344181029,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 5,
+   "removed": "AUDUSD",
+   "d_sharpe": -0.013351410198085945,
+   "d_maxdd": 0.0076137710183020735,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 5,
+   "removed": "USDJPY",
+   "d_sharpe": -0.016699356969553825,
+   "d_maxdd": 0.0009353872882678083,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 5,
+   "removed": "SP500",
+   "d_sharpe": -0.019002766741329502,
+   "d_maxdd": 0.010594132061340744,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 5,
+   "removed": "COPPER",
+   "d_sharpe": -0.022640438315847167,
+   "d_maxdd": -0.028093183122714804,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 5,
+   "removed": "GOLD",
+   "d_sharpe": -0.028076876197703715,
+   "d_maxdd": 0.016179244427308226,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 5,
+   "removed": "OIL",
+   "d_sharpe": -0.07542744042806615,
+   "d_maxdd": -0.01553221635392299,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 5,
+   "removed": "NAS100",
+   "d_sharpe": -0.08714752196936171,
+   "d_maxdd": -0.0011861784237618966,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 6,
+   "removed": "AUDUSD",
+   "d_sharpe": -0.0059941274508240605,
+   "d_maxdd": 0.007001858325005661,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 6,
+   "removed": "SP500",
+   "d_sharpe": -0.01316714563635868,
+   "d_maxdd": 0.005519788791242708,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 6,
+   "removed": "USDJPY",
+   "d_sharpe": -0.016929705416774188,
+   "d_maxdd": -0.00027649350153968744,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 6,
+   "removed": "COPPER",
+   "d_sharpe": -0.02714592854536313,
+   "d_maxdd": -0.029178245261727742,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 6,
+   "removed": "GOLD",
+   "d_sharpe": -0.0615782231119647,
+   "d_maxdd": 0.018948093002101096,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 6,
+   "removed": "NAS100",
+   "d_sharpe": -0.08405654941288354,
+   "d_maxdd": 0.0018737790263507748,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 6,
+   "removed": "OIL",
+   "d_sharpe": -0.08524037610907387,
+   "d_maxdd": -0.017593202121528484,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 7,
+   "removed": "USDJPY",
+   "d_sharpe": -1.3805068947214671e-05,
+   "d_maxdd": 0.005709331831306397,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 7,
+   "removed": "SP500",
+   "d_sharpe": -0.010953056145868723,
+   "d_maxdd": 0.00032379171197194356,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 7,
+   "removed": "COPPER",
+   "d_sharpe": -0.02440490456253397,
+   "d_maxdd": -0.03338132762563073,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 7,
+   "removed": "GOLD",
+   "d_sharpe": -0.06261001010688538,
+   "d_maxdd": 0.01881716512559073,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 7,
+   "removed": "OIL",
+   "d_sharpe": -0.0850934817328104,
+   "d_maxdd": -0.019585812972994443,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 7,
+   "removed": "NAS100",
+   "d_sharpe": -0.0859117463808099,
+   "d_maxdd": -0.007456060690297361,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 8,
+   "removed": "USDJPY",
+   "d_sharpe": -0.0030086648105535074,
+   "d_maxdd": 0.0009976760768750648,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 8,
+   "removed": "SP500",
+   "d_sharpe": -0.003913581794226739,
+   "d_maxdd": -0.00502426430723335,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 8,
+   "removed": "COPPER",
+   "d_sharpe": -0.02319330999504099,
+   "d_maxdd": -0.03786355011806597,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 8,
+   "removed": "GOLD",
+   "d_sharpe": -0.06770774573953497,
+   "d_maxdd": -0.0021231826919357877,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 8,
+   "removed": "OIL",
+   "d_sharpe": -0.07801654774671829,
+   "d_maxdd": -0.019956017570270435,
+   "reason": "sharpe did not improve"
+  },
+  {
+   "round": 8,
+   "removed": "NAS100",
+   "d_sharpe": -0.09496758184790854,
+   "d_maxdd": -0.000713976520233639,
+   "reason": "sharpe did not improve"
+  }
+ ],
+ "acceptance_rule_priority": [
+  "net_sharpe",
+  "max_drawdown",
+  "annual_costs",
+  "turnover",
+  "cagr"
+ ],
+ "rule": "remove iff d_sharpe > 0 and d_maxdd >= -0.01",
+ "parity_check_max_diff": 0.0
+}

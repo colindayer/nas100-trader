@@ -1,0 +1,63 @@
+{
+ "panel_hash": "7b05af0d71120cfd",
+ "n_symbols": 13,
+ "rows": 6933,
+ "start": "2000-01-03",
+ "end": "2026-08-03",
+ "universes": {
+  "U1_incumbent_6": [
+   "GOLD",
+   "SILVER",
+   "OIL",
+   "COPPER",
+   "NAS100",
+   "SP500"
+  ],
+  "U2_index_only": [
+   "NAS100",
+   "SP500"
+  ],
+  "U3_commodity_only": [
+   "GOLD",
+   "SILVER",
+   "OIL",
+   "COPPER"
+  ],
+  "U4_fx_only": [
+   "EURUSD",
+   "GBPUSD",
+   "USDJPY",
+   "AUDUSD",
+   "USDCAD",
+   "USDCHF",
+   "NZDUSD"
+  ],
+  "U5_incumbent_plus_fx_majors": [
+   "GOLD",
+   "SILVER",
+   "OIL",
+   "COPPER",
+   "NAS100",
+   "SP500",
+   "EURUSD",
+   "GBPUSD",
+   "USDJPY"
+  ],
+  "U6_all_13": [
+   "EURUSD",
+   "GBPUSD",
+   "USDJPY",
+   "AUDUSD",
+   "USDCAD",
+   "USDCHF",
+   "NZDUSD",
+   "GOLD",
+   "SILVER",
+   "OIL",
+   "COPPER",
+   "NAS100",
+   "SP500"
+  ]
+ },
+ "note": "NO BONDS \u2014 see DATA_ROADMAP.md"
+}

@@ -1,0 +1,63 @@
+{
+ "config": "funded",
+ "source": "reference",
+ "universe": "full",
+ "symbols": [
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "AUDUSD",
+  "USDCAD",
+  "USDCHF",
+  "NZDUSD",
+  "GOLD",
+  "SILVER",
+  "OIL",
+  "COPPER",
+  "NAS100",
+  "SP500"
+ ],
+ "window": "full_expanding",
+ "sleeves": [
+  "TREND"
+ ],
+ "period": [
+  "2007-07-10",
+  "2026-08-03"
+ ],
+ "years": 19.73,
+ "sharpe": 0.363,
+ "total_return": 0.6881,
+ "vol": 0.0824,
+ "max_dd_close": -0.2059,
+ "positive_years": "11/20",
+ "by_year": {
+  "2007": 0.0183,
+  "2008": 0.0986,
+  "2009": -0.0615,
+  "2010": 0.0815,
+  "2011": -0.0781,
+  "2012": -0.0293,
+  "2013": 0.0784,
+  "2014": 0.2005,
+  "2015": 0.0831,
+  "2016": -0.143,
+  "2017": 0.1022,
+  "2018": -0.0945,
+  "2019": -0.014,
+  "2020": 0.2243,
+  "2021": -0.0263,
+  "2022": 0.0689,
+  "2023": -0.0323,
+  "2024": 0.0343,
+  "2025": 0.1077,
+  "2026": -0.0056
+ },
+ "cost_bps_per_side": 3.0,
+ "carry_excluded": true,
+ "caveats": [
+  "close-based DD understates intraday excursion (prop_audit defect)",
+  "CARRY sleeve not backtestable: no swap-rate history in MT5",
+  "no stop-loss or take-profit \u2014 the strategy has none"
+ ]
+}

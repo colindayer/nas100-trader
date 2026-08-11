@@ -1,0 +1,111 @@
+{
+ "rule": {
+  "gate_asset": "NAS100",
+  "gate": "close > SMA(200)",
+  "universe": [
+   "GOLD",
+   "SILVER",
+   "OIL",
+   "COPPER",
+   "NAS100",
+   "SP500"
+  ],
+  "lookback": 252,
+  "band": 0.005,
+  "cost_bps": 3.0,
+  "target_vol": 0.05,
+  "scaled_vol": 0.025,
+  "implementations": [
+   "FROZEN",
+   "FLAT",
+   "NO_NEW_RISK",
+   "SCALE_HALF"
+  ]
+ },
+ "rule_hash": "d9c86065d9f516d1",
+ "n_boot": 1000,
+ "empirical_p": 0.016983016983016984,
+ "stats": {
+  "FROZEN": {
+   "CAGR": 0.03382847446228543,
+   "vol": 0.053119463114679716,
+   "Sharpe": 0.6528145506835029,
+   "maxDD": -0.10186641362500737,
+   "worst_12m": -0.09656170142227583,
+   "positive_years": 0.65,
+   "time_invested": 1.0,
+   "turnover_per_day": 0.024148072459567103,
+   "annual_cost": 0.0018255942779432728
+  },
+  "FLAT": {
+   "CAGR": 0.037267094968211234,
+   "vol": 0.04496550449613187,
+   "Sharpe": 0.8361842264118059,
+   "maxDD": -0.09170754694114547,
+   "worst_12m": -0.04896649730340574,
+   "positive_years": 0.65,
+   "time_invested": 0.7948511665325825,
+   "turnover_per_day": 0.026019418074141803,
+   "annual_cost": 0.0019670680064051206
+  },
+  "NO_NEW_RISK": {
+   "CAGR": 0.04280549847405846,
+   "vol": 0.052992105517997636,
+   "Sharpe": 0.8174258399128214,
+   "maxDD": -0.09708642114871069,
+   "worst_12m": -0.0781683806313268,
+   "positive_years": 0.75,
+   "time_invested": 1.0,
+   "turnover_per_day": 0.01763510049253575,
+   "annual_cost": 0.0013332135972357027
+  },
+  "SCALE_HALF": {
+   "CAGR": 0.0355589366993021,
+   "vol": 0.04711240675497153,
+   "Sharpe": 0.7651894328416363,
+   "maxDD": -0.08760834742391022,
+   "worst_12m": -0.0661875601725076,
+   "positive_years": 0.65,
+   "time_invested": 1.0,
+   "turnover_per_day": 0.02494563715925802,
+   "annual_cost": 0.0018858901692399063
+  }
+ },
+ "folds": [
+  {
+   "fold": "2013-2015",
+   "selected": "positive_12m",
+   "frozen": 1.6520953894835653,
+   "filtered": 1.7669590020920931,
+   "delta": 0.11486361260852784
+  },
+  {
+   "fold": "2016-2018",
+   "selected": "positive_12m",
+   "frozen": -0.010560424707705842,
+   "filtered": 0.35600109260714635,
+   "delta": 0.3665615173148522
+  },
+  {
+   "fold": "2019-2021",
+   "selected": "positive_12m",
+   "frozen": 0.9097733362262321,
+   "filtered": 0.938819706321854,
+   "delta": 0.029046370095621832
+  },
+  {
+   "fold": "2022-2024",
+   "selected": "positive_12m",
+   "frozen": 0.08665419266182714,
+   "filtered": 0.574413312453392,
+   "delta": 0.48775911979156483
+  },
+  {
+   "fold": "2025-2027",
+   "selected": "positive_12m",
+   "frozen": 1.5990918380533656,
+   "filtered": 1.4927835067315514,
+   "delta": -0.10630833132181428
+  }
+ ]
+}

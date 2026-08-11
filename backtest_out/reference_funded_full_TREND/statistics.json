@@ -1,0 +1,59 @@
+{
+ "source": "reference",
+ "config": "funded",
+ "universe": "full",
+ "symbols": [
+  "EURUSD",
+  "GBPUSD",
+  "USDJPY",
+  "AUDUSD",
+  "USDCAD",
+  "USDCHF",
+  "NZDUSD",
+  "GOLD",
+  "SILVER",
+  "OIL",
+  "COPPER",
+  "NAS100",
+  "SP500"
+ ],
+ "sleeves_tested": [
+  "TREND"
+ ],
+ "carry_excluded": true,
+ "period_start": "2007-07-10",
+ "period_end": "2026-08-03",
+ "years": 19.73,
+ "n_days": 4972,
+ "total_return": 0.6881,
+ "cagr": 0.0269,
+ "volatility": 0.0824,
+ "sharpe": 0.363,
+ "max_drawdown_close": -0.2059,
+ "max_drawdown_date": "2019-01-31",
+ "max_drawdown_monthly": -0.1964,
+ "positive_years": "11/20",
+ "best_year": {
+  "2020": 0.2243
+ },
+ "worst_year": {
+  "2016": -0.143
+ },
+ "best_12m_rolling": 0.3203,
+ "worst_12m_rolling": -0.189,
+ "best_month": {
+  "2014-09-30": 0.091
+ },
+ "worst_month": {
+  "2011-09-30": -0.0712
+ },
+ "avg_daily_turnover": 0.1206,
+ "total_cost_pct": 17.994,
+ "cost_pct_per_year": 0.912,
+ "rebalance_rows": 64636,
+ "position_changes_per_year": 3276.0,
+ "cost_bps_per_side": 3.0,
+ "window": "full_expanding",
+ "code_sha256_portfolio_mt5": "4d0e06ad576c00be",
+ "data_sha256": "9ff394f01bb02981"
+}

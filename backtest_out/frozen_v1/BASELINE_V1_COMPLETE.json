@@ -1,0 +1,123 @@
+{
+ "name": "BASELINE_V1_COMPLETE",
+ "frozen_utc": "2026-08-03",
+ "signal": "portfolio_mt5.target_weights, sleeves=('TREND',), lookback 252",
+ "universe": [
+  "GOLD",
+  "SILVER",
+  "OIL",
+  "COPPER",
+  "NAS100",
+  "SP500"
+ ],
+ "band": 0.005,
+ "cost_bps_per_side": 3.0,
+ "max_leverage": 3.0,
+ "target_vol": "FREE PARAMETER \u2014 pure scaling; chosen by prop constraints, not Sharpe",
+ "parity_vs_production": 0.0,
+ "code_sha256_portfolio_mt5": "4d0e06ad576c00be",
+ "data_sha256": "9ff394f01bb02981",
+ "rejected_permanently": {
+  "periodic_rebalance_5d_10d": "Sharpe fell 0.063-0.070 despite 52-67% lower cost",
+  "min_holding_5_10_20d": "drawdown worsened 2.75-5.56pp",
+  "band_0.01_0.02": "no Sharpe gain over 0.005",
+  "lookback_126": "train 0.768 -> OOS 0.546, overfit",
+  "lookback_189_378": "unstable and worse on every metric",
+  "CARRY": "unvalidatable: no deferred contracts for term structure; V2 has no FX",
+  "leave_one_out_universe_search": "selection bias; train-selected 3-symbol universe collapsed 0.754 -> 0.316 out of sample"
+ },
+ "ftmo_simulation": {
+  "vol_0.04": {
+   "phase1_historical": {
+    "n": 4720,
+    "pass_%": 88.94067796610169,
+    "breach_total_%": 0.0,
+    "breach_daily_%": 0.0,
+    "timeout_%": 11.059322033898304,
+    "median_days_to_pass": 635.0,
+    "p90_days_to_pass": 1081.0
+   },
+   "phase1_bootstrap": {
+    "n": 4000,
+    "pass_%": 78.45,
+    "breach_total_%": 2.5,
+    "breach_daily_%": 0.0,
+    "timeout_%": 19.05,
+    "median_days_to_pass": 575.0,
+    "p90_days_to_pass": 1060.0
+   },
+   "sharpe": 0.6504336213740234,
+   "maxdd": -0.08213307853653506,
+   "cagr": 0.02700294091745925
+  },
+  "vol_0.05": {
+   "phase1_historical": {
+    "n": 4720,
+    "pass_%": 94.89406779661017,
+    "breach_total_%": 0.0635593220338983,
+    "breach_daily_%": 0.0,
+    "timeout_%": 5.0423728813559325,
+    "median_days_to_pass": 454.0,
+    "p90_days_to_pass": 1126.2000000000003
+   },
+   "phase1_bootstrap": {
+    "n": 4000,
+    "pass_%": 83.9,
+    "breach_total_%": 5.175,
+    "breach_daily_%": 0.0,
+    "timeout_%": 10.925,
+    "median_days_to_pass": 449.5,
+    "p90_days_to_pass": 954.0
+   },
+   "sharpe": 0.6528145506835029,
+   "maxdd": -0.10186641362500737,
+   "cagr": 0.03382847446228543
+  },
+  "vol_0.06": {
+   "phase1_historical": {
+    "n": 4720,
+    "pass_%": 92.52118644067797,
+    "breach_total_%": 6.080508474576271,
+    "breach_daily_%": 0.0,
+    "timeout_%": 1.3983050847457628,
+    "median_days_to_pass": 327.0,
+    "p90_days_to_pass": 861.0
+   },
+   "phase1_bootstrap": {
+    "n": 4000,
+    "pass_%": 85.575,
+    "breach_total_%": 8.6,
+    "breach_daily_%": 0.0,
+    "timeout_%": 5.825,
+    "median_days_to_pass": 366.0,
+    "p90_days_to_pass": 860.0
+   },
+   "sharpe": 0.6598404850120416,
+   "maxdd": -0.12176472026473906,
+   "cagr": 0.04082963453662525
+  },
+  "vol_0.08": {
+   "phase1_historical": {
+    "n": 4720,
+    "pass_%": 80.95338983050847,
+    "breach_total_%": 19.046610169491526,
+    "breach_daily_%": 0.0,
+    "timeout_%": 0.0,
+    "median_days_to_pass": 226.0,
+    "p90_days_to_pass": 602.0
+   },
+   "phase1_bootstrap": {
+    "n": 4000,
+    "pass_%": 83.575,
+    "breach_total_%": 15.275,
+    "breach_daily_%": 0.0,
+    "timeout_%": 1.15,
+    "median_days_to_pass": 244.0,
+    "p90_days_to_pass": 614.8000000000002
+   },
+   "sharpe": 0.6625001697789775,
+   "maxdd": -0.15869091691073267,
+   "cagr": 0.05409793549288788
+  }
+ }
+}

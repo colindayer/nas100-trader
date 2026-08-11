@@ -180,10 +180,25 @@ class ChallengeState:
         return None
 
 
+def brain_multiplier(bot: Bot) -> tuple[float, str]:
+    """Ask the Brain what experience says about this bot. Bounded [0.5, 1.5] so a memory
+    bug can never size a trade dangerously. Brain unavailable -> 1.0, desk keeps trading."""
+    try:
+        from trading_brain import recall
+        r = recall(bot.strategy_id, bot.prior_expectancy_R, bot.prior_n)
+        return max(0.5, min(1.5, r["risk_multiplier"])), r["why"]
+    except Exception as e:
+        return 1.0, f"brain unavailable ({e})"
+
+
 def risk_for(bot: Bot, st: ChallengeState) -> float:
-    """LOSS_AWARE + TARGET_AWARE. Predeclared. Never increases after a loss."""
+    """LOSS_AWARE + TARGET_AWARE + EXPERIENCE_AWARE. Never increases after a loss:
+    the Brain's multiplier is a function of the whole history, not the last outcome."""
     base = RISK_ESTABLISHED if bot.stage in ("DEMO_PROVEN", "CHALLENGE_CANDIDATE") \
         else RISK_EXPERIMENTAL
+    mult, why = brain_multiplier(bot)
+    bot.brain_note = why
+    base = min(base * mult, RISK_ESTABLISHED)      # experience may not exceed the hard cap
     # taper as either boundary approaches, and as the target comes into reach
     hd = max(st.daily_headroom / MAX_DAILY_LOSS_PCT, 0.0)
     ht = max(st.total_headroom / MAX_TOTAL_LOSS_PCT, 0.0)
@@ -369,6 +384,14 @@ def main():
     print(f"DEMO GATE OK -> {acct.login} {acct.server} equity {acct.equity:.2f}")
     if a.dry_run:
         print("DRY RUN: intents will be printed, nothing sent.\n")
+
+    try:                                   # the Brain ingests before the desk decides
+        from trading_brain import learn
+        n = learn()
+        if n:
+            print(f"BRAIN: learned from {n} newly closed trade(s)")
+    except Exception as e:
+        print(f"BRAIN: unavailable ({e}) -- trading continues on priors")
 
     trades = load_trades()
     traded_today = {}

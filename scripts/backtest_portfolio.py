@@ -57,11 +57,13 @@ sys.path.insert(0, str(ROOT))
 from scripts.portfolio_mt5 import CONFIGS, target_weights          # PRODUCTION function
 
 DATA = ROOT / "data" / "mt5"
+REFERENCE = ROOT / "data" / "reference"      # 20y Yahoo series; see fetch_reference_history.py
 COST_BPS_PER_SIDE = 3.0        # strategy_contracts/portfolio_multisleeve.json: "3bps/side"
 
 
-def load(label: str) -> pd.DataFrame | None:
-    for p in (DATA / f"portfolio_{label}.parquet", DATA / f"portfolio_{label}.csv"):
+def load(label: str, source: str = "mt5") -> pd.DataFrame | None:
+    root = REFERENCE if source == "reference" else DATA
+    for p in (root / f"portfolio_{label}.parquet", root / f"portfolio_{label}.csv"):
         if p.exists():
             d = pd.read_parquet(p) if p.suffix == ".parquet" else pd.read_csv(
                 p, index_col=0, parse_dates=True)
@@ -114,10 +116,11 @@ def verify_window(close, cfg, window, n=12, seed=0):
 
 
 def run(config: str, sleeves: tuple | None, warmup: int, intraday: bool,
-        universe: str = "full", window: int = 2000, check: bool = True):
-    panel = load("D1")
+        universe: str = "full", window: int = 2000, check: bool = True,
+        source: str = "mt5"):
+    panel = load("D1", source)
     if panel is None:
-        raise SystemExit(f"no daily export found in {DATA} — run scripts/export_history.py first")
+        raise SystemExit(f"no daily export found for source={source} — run export_history.py (mt5) or fetch_reference_history.py (reference)")
     close = field(panel, "close").ffill().dropna(how="all")
     if TIERS.get(universe):
         keep = [c for c in TIERS[universe] if c in close.columns]
@@ -220,9 +223,77 @@ def run(config: str, sleeves: tuple | None, warmup: int, intraday: bool,
             print(f"\n  H1 export present: {len(h1):,} bars. Intraday drawdown modelling is the "
                   "next\n  step and is what FTMO's 10%/5% rules actually require.")
 
-    out = ROOT / "registry" / f"backtest_{config}_{universe}_{'_'.join(tested)}.json"
+    # ---------- ARTIFACTS: the raw material, not a summary ----------
+    art = ROOT / "backtest_out" / f"{source}_{config}_{universe}_{'_'.join(tested)}"
+    art.mkdir(parents=True, exist_ok=True)
+
+    W = pd.DataFrame(weights, index=d.index)
+    eq_df = pd.DataFrame({"gross_return": d["gross"], "cost": d["cost"], "net_return": d["net"],
+                          "equity": eq, "drawdown": dd, "turnover": d["turnover"]})
+    eq_df.index.name = "date"
+    eq_df.to_csv(art / "equity_curve.csv")
+    eq_df[["net_return"]].to_csv(art / "daily_returns.csv")
+    W.to_csv(art / "weights.csv")
+    by_year.rename("net_return").to_csv(art / "yearly_returns.csv")
+
+    dW = W.diff().fillna(W.iloc[0])
+    log = (dW.stack().rename("delta_weight").reset_index()
+             .rename(columns={"level_0": "date", "level_1": "symbol"}))
+    log = log[log["delta_weight"].abs() > 1e-9].copy()
+    log["target_weight"] = [W.at[r.date, r.symbol] for r in log.itertuples()]
+    log["cost"] = log["delta_weight"].abs() * COST_BPS_PER_SIDE / 1e4
+    log.to_csv(art / "rebalance_log.csv", index=False)
+
+    m = eq_df["net_return"].resample("ME").apply(lambda x: (1 + x).prod() - 1)
+    meq = (1 + m).cumprod()
+    mdd = meq / meq.cummax() - 1
+    pd.DataFrame({"monthly_return": m, "monthly_equity": meq,
+                  "monthly_drawdown": mdd}).to_csv(art / "monthly.csv")
+
+    roll = eq_df["net_return"].rolling(252).apply(lambda x: (1 + x).prod() - 1).dropna()
+    stats = {
+        "source": source, "config": config, "universe": universe,
+        "symbols": list(close.columns), "sleeves_tested": list(tested),
+        "carry_excluded": "CARRY" in CONFIGS[config]["sleeves"],
+        "period_start": str(d.index[0].date()), "period_end": str(d.index[-1].date()),
+        "years": round(yrs, 2), "n_days": int(len(d)),
+        "total_return": round(float(eq.iloc[-1] - 1), 4),
+        "cagr": round(float(eq.iloc[-1] ** (1 / yrs) - 1), 4),
+        "volatility": round(float(d["net"].std() * np.sqrt(252)), 4),
+        "sharpe": round(float(sharpe), 3),
+        "max_drawdown_close": round(float(dd.min()), 4),
+        "max_drawdown_date": str(dd.idxmin().date()),
+        "max_drawdown_monthly": round(float(mdd.min()), 4),
+        "positive_years": f"{pos}/{len(by_year)}",
+        "best_year": {str(by_year.idxmax()): round(float(by_year.max()), 4)},
+        "worst_year": {str(by_year.idxmin()): round(float(by_year.min()), 4)},
+        "best_12m_rolling": round(float(roll.max()), 4) if len(roll) else None,
+        "worst_12m_rolling": round(float(roll.min()), 4) if len(roll) else None,
+        "best_month": {str(m.idxmax().date()): round(float(m.max()), 4)},
+        "worst_month": {str(m.idxmin().date()): round(float(m.min()), 4)},
+        "avg_daily_turnover": round(float(d["turnover"].mean()), 4),
+        "total_cost_pct": round(float(d["cost"].sum()) * 100, 3),
+        "cost_pct_per_year": round(float(d["cost"].sum() / yrs) * 100, 3),
+        "rebalance_rows": int(len(log)),
+        "position_changes_per_year": round(len(log) / yrs, 1),
+        "cost_bps_per_side": COST_BPS_PER_SIDE,
+        "window": window if window < 10 ** 8 else "full_expanding",
+        "code_sha256_portfolio_mt5": __import__("hashlib").sha256(
+            (ROOT / "scripts" / "portfolio_mt5.py").read_bytes()).hexdigest()[:16],
+        "data_sha256": __import__("hashlib").sha256(
+            (REFERENCE if source == "reference" else DATA).joinpath(
+                "portfolio_D1.csv").read_bytes()).hexdigest()[:16]
+        if (REFERENCE if source == "reference" else DATA).joinpath("portfolio_D1.csv").exists()
+        else None,
+    }
+    json.dump(stats, open(art / "statistics.json", "w"), indent=1)
+    print(f"\n  ARTIFACTS -> {art}")
+    for f in sorted(art.iterdir()):
+        print(f"    {f.name:<22} {f.stat().st_size:>10,} bytes")
+
+    out = ROOT / "registry" / f"backtest_{source}_{config}_{universe}_{'_'.join(tested)}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
-    json.dump({"config": config, "universe": universe, "symbols": list(close.columns),
+    json.dump({"config": config, "source": source, "universe": universe, "symbols": list(close.columns),
                "window": window if window < 10 ** 8 else "full_expanding", "sleeves": list(tested),
                "period": [str(d.index[0].date()), str(d.index[-1].date())],
                "years": round(yrs, 2), "sharpe": round(float(sharpe), 3),
@@ -254,16 +325,18 @@ def main():
                     help="trailing bars fed to target_weights (verified equivalent before use)")
     ap.add_argument("--no-check", action="store_true", help="skip the window equivalence proof")
     ap.add_argument("--tiers", action="store_true", help="run every universe and compare")
+    ap.add_argument("--source", default="mt5", choices=["mt5", "reference"],
+                    help="mt5 = broker series (authoritative, short); reference = 20y Yahoo")
     a = ap.parse_args()
     if a.tiers:
         for u in TIERS:
             print("\n" + "#" * 74 + f"\n# UNIVERSE: {u}\n" + "#" * 74)
             try:
-                run(a.config, a.sleeves, a.warmup, False, u, a.window, not a.no_check)
+                run(a.config, a.sleeves, a.warmup, False, u, a.window, not a.no_check, a.source)
             except SystemExit as e:
                 print(f"  skipped: {e}")
     else:
-        run(a.config, a.sleeves, a.warmup, a.intraday, a.universe, a.window, not a.no_check)
+        run(a.config, a.sleeves, a.warmup, a.intraday, a.universe, a.window, not a.no_check, a.source)
 
 
 if __name__ == "__main__":

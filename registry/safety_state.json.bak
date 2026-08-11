@@ -1,16 +1,17 @@
 {
  "payload": {
-  "schema_version": 1,
-  "day": "2026-07-30",
+  "schema_version": 2,
+  "day": "2026-08-09",
   "trades_today": 0,
   "halted": true,
-  "halt_reason": "critical execution failure: stop_verified",
-  "halt_ts": 1784981661.208111,
+  "halt_reason": "STATE_SCHEMA_1_EXPECTED_2",
+  "halt_ts": 1786272865.3195121,
   "halt_ack_required": true,
-  "day_start_equity": 50000.0,
-  "high_water_mark": 50000.0,
-  "last_update": 1785455120.186832,
-  "last_intent_id": null
+  "day_start_equity": null,
+  "high_water_mark": null,
+  "last_update": 1786303577.931894,
+  "last_intent_id": null,
+  "account_login": 1514166963
  },
- "digest": "6dbac0179585e63e544f423a7eb2418c"
+ "digest": "6958c16f6e7145b222985ed6a7440fb9"
 }
