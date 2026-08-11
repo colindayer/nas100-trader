@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+e249daf  Head trader: reconciliation, no-signal diagnosis, BOT_C-F, scoreboard
+e474dca  Obsidian bridge auto-sync [bridge-auto]
 a6bd3c9  BOT_B: NAS100 US-open breakout, shared breakout base, instrument-relative learning
 137d0fc  Obsidian bridge auto-sync [bridge-auto]
 a559ddd  Trading Brain: experience layer above the controller
 0e27574  Obsidian bridge auto-sync [bridge-auto]
 a354e8d  FTMO challenge learning controller: demo-only, live trades are the evidence
 7863939  Obsidian bridge auto-sync [bridge-auto]
-6bd4b3e  Phase 1: exact broker specs for the frozen legs, no assumed conventions
-fea15a7  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
