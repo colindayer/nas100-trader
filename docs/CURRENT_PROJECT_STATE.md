@@ -1,4 +1,4 @@
-# CURRENT PROJECT STATE — 2026-08-11
+# CURRENT PROJECT STATE — 2026-08-12
 
 _Onboarding snapshot for any agent/human joining. Sources: LIVE_TRADING_PARITY,
 PRODUCTION_READINESS_REVIEW, NEXT_30_DAY_MONITORING_PLAN, LIVE_TRADE_REVIEW,
@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+a354e8d  FTMO challenge learning controller: demo-only, live trades are the evidence
+7863939  Obsidian bridge auto-sync [bridge-auto]
 6bd4b3e  Phase 1: exact broker specs for the frozen legs, no assumed conventions
 fea15a7  Obsidian bridge auto-sync [bridge-auto]
 c7b360e  Metadata-only probe: recover BrokerProfile without re-downloading 26 GB
 c017f38  Obsidian bridge auto-sync [bridge-auto]
 0b94c54  Probe: incremental write, free-space guard, skip zero-history symbols
 569f5e3  Obsidian bridge auto-sync [bridge-auto]
-f3d6147  BrokerProfile: separate TRADABLE from RESEARCHABLE; frozen-six financing
-c519222  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
