@@ -67,19 +67,34 @@ def closed_trades() -> list:
 
 
 # ==================================================================== regime
-def regime_of(trade: dict) -> str:
+def _medians(strategy_id: str) -> dict:
+    """Per-bot scale. Absolute thresholds cannot work across instruments -- a $12 range is
+    wide for gold and invisible on an index. Labels are relative to the bot's own history."""
+    ts = [t for t in closed_trades() if t.get("strategy_id") == strategy_id]
+    out = {}
+    for key, get in (("pre_range", lambda t: (t.get("feature_snapshot") or {}).get("pre_range")),
+                     ("spread", lambda t: t.get("spread"))):
+        vals = [v for v in (get(t) for t in ts) if v is not None]
+        if vals:
+            out[key] = statistics.median(vals)
+    return out
+
+
+def regime_of(trade: dict, med: dict | None = None) -> str:
     """Coarse, cheap labels attached at trade time. Diagnostic FIRST, filter only after a
     labelled interaction survives its own validation -- creating a filter the moment losses
     cluster in a bucket is how backtests get fitted to noise."""
+    if med is None:
+        med = _medians(trade.get("strategy_id", ""))
     f = trade.get("feature_snapshot", {}) or {}
-    rng = f.get("pre_range")
-    spr = trade.get("spread")
     bits = []
-    if rng is not None:
-        bits.append("wide_range" if rng > 12 else "narrow_range")
-    if spr is not None:
-        bits.append("wide_spread" if spr > 0.60 else "tight_spread")
-    m = f.get("minutes_since_0630")
+    rng, mr = f.get("pre_range"), med.get("pre_range")
+    if rng is not None and mr:
+        bits.append("wide_range" if rng > mr else "narrow_range")
+    spr, ms = trade.get("spread"), med.get("spread")
+    if spr is not None and ms:
+        bits.append("wide_spread" if spr > ms else "tight_spread")
+    m = f.get("minutes_since_entry", f.get("minutes_since_0630"))
     if m is not None:
         bits.append("early_break" if m <= 30 else "late_break")
     return "|".join(bits) if bits else "unlabelled"
@@ -107,11 +122,11 @@ def belief(strategy_id: str, prior_exp: float, prior_n: int) -> dict:
 
 
 def regime_table(strategy_id: str) -> dict:
-    out = {}
+    out, med = {}, _medians(strategy_id)
     for t in closed_trades():
         if t.get("strategy_id") != strategy_id:
             continue
-        r = regime_of(t)
+        r = regime_of(t, med)
         out.setdefault(r, []).append(t["R"])
     return {k: {"n": len(v), "mean_R": statistics.fmean(v)} for k, v in out.items()}
 
@@ -147,9 +162,13 @@ def learn() -> int:
         R = t["R"]
         slip = abs(t.get("actual_slippage") or 0)
 
+        # slippage matters in units of the trade's OWN risk, not in dollars
+        sl_dist = (t.get("feature_snapshot") or {}).get("sl_dist") or t.get("sl_dist")
+        slip_bad = slip > 0.1 * sl_dist if sl_dist else slip > 0.5
+
         if len(hist) < 10:
             lesson = "INSUFFICIENT_DATA"
-        elif slip > 0.5:
+        elif slip_bad:
             lesson = "EXECUTION_PROBLEM"
         elif sd and R < mean - 3 * sd:
             lesson = "REGIME_MISMATCH"

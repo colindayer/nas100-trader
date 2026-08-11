@@ -254,26 +254,24 @@ def diagnose(trade: dict, stats: dict) -> str:
     return "EXPECTED_WIN" if R > 0 else "EXPECTED_LOSS"
 
 
-# ==================================================================== BOT_A
-class GoldBreakout0630(Bot):
-    """BOT_A. Frozen spec: intraday-lab/gold0630/GOLD_BREAKOUT_FROZEN.md
+# ==================================================================== breakout family
+class SessionRangeBreakout(Bot):
+    """Shared mechanic: break of the pre-session range, flat before rollover.
 
-    Breakout of the 90-minute pre-06:30-London range. TP $60 / SL $30. Flat by 16:00 London,
-    so it pays ZERO overnight financing -- which is what killed the frozen portfolio.
+    ONE implementation, configured per bot. A copy-pasted second version is how the ablation
+    module went stale silently -- if this logic is wrong it must be wrong for every bot at once,
+    so live evidence compares like with like.
 
-    PRIOR from backtest: +0.39R over 60 days, t=+2.42, BUT chosen as best of 14 configurations,
-    so the honest prior shrinks it. prior_n is deliberately small: this prior is weak and live
-    evidence should dominate quickly.
+    Stops are either fixed (SL/TP in price units) or a multiple of the pre-range (SL_MULT/
+    TP_MULT). The multiple form is what makes the mechanic portable across instruments: a $30
+    stop is a sane gold stop and a nonsense index stop.
     """
-    strategy_id = "BOT_A_gold_0630_breakout"
-    strategy_version = "1.0.0"
-    symbol = "XAUUSD"
-    stage = "DEMO_CANDIDATE"
-    prior_expectancy_R = 0.15        # shrunk from +0.39 for best-of-14 selection
-    prior_n = 30
-
-    TP, SL, PRE_MIN = 60.0, 30.0, 90
-    ENTRY_H, ENTRY_M, EXIT_H, EXIT_M = 6, 30, 16, 0
+    PRE_MIN = 90
+    ENTRY_H = ENTRY_M = 0
+    EXIT_H, EXIT_M = 16, 0
+    SL = TP = None                    # fixed distance, price units
+    SL_MULT = TP_MULT = None          # or: fraction of the pre-session range
+    MIN_RANGE = 0.0                   # refuse a range too tight to survive the spread
 
     def generate_signal(self, ctx) -> Signal | None:
         import pandas as pd
@@ -292,23 +290,82 @@ class GoldBreakout0630(Bot):
         if len(pre) < 30:
             return None
         hi, lo = float(pre["high"].max()), float(pre["low"].min())
+        rng = hi - lo
         bid, ask = ctx["bid"], ctx["ask"]
+        spread = ask - bid
+        if rng < max(self.MIN_RANGE, 4 * spread):
+            return None                        # the range is inside the noise; not a breakout
         if ask >= hi:
             side, lvl = 1, hi
         elif bid <= lo:
             side, lvl = -1, lo
         else:
             return None
+        sl = self.SL if self.SL is not None else rng * self.SL_MULT
+        tp = self.TP if self.TP is not None else rng * self.TP_MULT
         entry = ask if side > 0 else bid
         return Signal(self.strategy_id, self.strategy_version, now.isoformat(), self.symbol,
-                      side, "market", entry, entry - side * self.SL, entry + side * self.TP,
+                      side, "market", entry, entry - side * sl, entry + side * tp,
                       int((cut - now).total_seconds() // 60),
                       ["pre_range_break", f"level={lvl:.2f}"],
-                      {"pre_high": hi, "pre_low": lo, "pre_range": hi - lo,
-                       "spread": ask - bid, "minutes_since_0630": int((now - t0).total_seconds()//60)})
+                      {"pre_high": hi, "pre_low": lo, "pre_range": rng, "sl_dist": sl,
+                       "tp_dist": tp, "spread": spread,
+                       "minutes_since_entry": int((now - t0).total_seconds() // 60)})
 
 
-BOTS = [GoldBreakout0630()]
+# ==================================================================== BOT_A
+class GoldBreakout0630(SessionRangeBreakout):
+    """BOT_A. Frozen spec: intraday-lab/gold0630/GOLD_BREAKOUT_FROZEN.md
+
+    Breakout of the 90-minute pre-06:30-London range. TP $60 / SL $30. Flat by 16:00 London,
+    so it pays ZERO overnight financing -- which is what killed the frozen portfolio.
+
+    PRIOR from backtest: +0.39R over 60 days, t=+2.42, BUT chosen as best of 14 configurations,
+    so the honest prior shrinks it. prior_n is deliberately small: this prior is weak and live
+    evidence should dominate quickly.
+    """
+    strategy_id = "BOT_A_gold_0630_breakout"
+    strategy_version = "1.1.0"       # shared base; parameters unchanged
+    symbol = "XAUUSD"
+    stage = "DEMO_CANDIDATE"
+    prior_expectancy_R = 0.15        # shrunk from +0.39 for best-of-14 selection
+    prior_n = 30
+
+    TP, SL, PRE_MIN = 60.0, 30.0, 90
+    ENTRY_H, ENTRY_M, EXIT_H, EXIT_M = 6, 30, 16, 0
+
+
+# ==================================================================== BOT_B
+class IndexBreakoutUSOpen(SessionRangeBreakout):
+    """BOT_B. US cash open, NAS100.
+
+    WHY THIS ONE, and not a fourteenth gold variant: the hourly control measured 50-60% larger
+    excursions in the 12:30-14:30 London window than at 06:30. Entry is the 14:30 US cash open,
+    breaking the 13:00-14:30 pre-open range. Flat by 20:00 London -- no financing, same as A.
+
+    Different symbol, different session, different driver (US equity open vs London gold fix),
+    so its trades are close to independent of BOT_A's. Two correlated bots would double the risk
+    while adding almost no evidence.
+
+    PRIOR = 0.00R, prior_n = 10. This bot has NO backtest and is not waiting for one. The prior
+    is deliberately empty and light so live trades dominate the posterior after ~10 of them.
+    It ships at 0.10% experimental risk; the desk finds out by trading, not by fitting.
+
+    Stops are 0.5x / 1.0x the pre-open range rather than fixed points -- an index needs
+    volatility-scaled distances, and a fixed gold-sized stop would be meaningless here.
+    """
+    strategy_id = "BOT_B_nas100_usopen_breakout"
+    strategy_version = "1.0.0"
+    symbol = "US100.cash"
+    stage = "DEMO_CANDIDATE"
+    prior_expectancy_R = 0.00        # no backtest. none claimed.
+    prior_n = 10                     # so ~10 live trades outweigh the prior
+
+    SL_MULT, TP_MULT, PRE_MIN = 0.5, 1.0, 90
+    ENTRY_H, ENTRY_M, EXIT_H, EXIT_M = 14, 30, 20, 0
+
+
+BOTS = [GoldBreakout0630(), IndexBreakoutUSOpen()]
 
 
 # ==================================================================== execution
