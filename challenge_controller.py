@@ -81,6 +81,14 @@ class Bot:
     stage = "IDEA"
     prior_expectancy_R = 0.0        # from backtest -- a PRIOR, not a promise
     prior_n = 0
+    risk_override = None            # new bots start smaller than experimental
+
+    def _no(self, reason: str) -> None:
+        """Record WHY there was no trade. 'NO SIGNAL' is not a diagnosis: a bot that is
+        silent because its window is shut and one that is silent because its data is
+        missing look identical, and only one of them is working correctly."""
+        self.no_signal_reason = reason
+        return None
 
     def generate_signal(self, ctx) -> Signal | None:
         raise NotImplementedError
@@ -194,8 +202,9 @@ def brain_multiplier(bot: Bot) -> tuple[float, str]:
 def risk_for(bot: Bot, st: ChallengeState) -> float:
     """LOSS_AWARE + TARGET_AWARE + EXPERIENCE_AWARE. Never increases after a loss:
     the Brain's multiplier is a function of the whole history, not the last outcome."""
-    base = RISK_ESTABLISHED if bot.stage in ("DEMO_PROVEN", "CHALLENGE_CANDIDATE") \
-        else RISK_EXPERIMENTAL
+    base = bot.risk_override or (
+        RISK_ESTABLISHED if bot.stage in ("DEMO_PROVEN", "CHALLENGE_CANDIDATE")
+        else RISK_EXPERIMENTAL)
     mult, why = brain_multiplier(bot)
     bot.brain_note = why
     base = min(base * mult, RISK_ESTABLISHED)      # experience may not exceed the hard cap
@@ -206,6 +215,81 @@ def risk_for(bot: Bot, st: ChallengeState) -> float:
     if st.profit_remaining < 0.02:            # within 2% of target: protect the pass
         taper = min(taper, 0.5)
     return round(base * taper, 6)
+
+
+# ==================================================================== reconciliation
+OPEN_STATE = DATA / "open_positions.json"
+
+
+def reconcile(mt5, magic=990001) -> int:
+    """Turn fills into evidence. Runs every cycle, before any new decision.
+
+    Without this the ledger holds R=None forever and the Brain learns from nothing --
+    the desk would trade for months and know exactly as much as on day one.
+
+    Append-only: a close is a NEW record sharing the intent_id, never an edit of the
+    pre-trade row. MFE/MAE are sampled each cycle while the position lives; they are
+    running extremes, not evidence, so they live in a separate mutable file.
+    """
+    rows = load_trades()
+    open_rows = {r["intent_id"]: r for r in rows
+                 if r.get("ticket") and r.get("kind") != "close"}
+    closed_ids = {r["intent_id"] for r in rows if r.get("kind") == "close"}
+    pending = {k: v for k, v in open_rows.items() if k not in closed_ids}
+    if not pending:
+        return 0
+
+    live = {p.ticket: p for p in (mt5.positions_get() or []) if p.magic == magic}
+    track = json.loads(OPEN_STATE.read_text()) if OPEN_STATE.exists() else {}
+    n_closed = 0
+
+    for iid, r in pending.items():
+        tk = r["ticket"]
+        st = track.setdefault(str(tk), {"mfe": 0.0, "mae": 0.0, "samples": 0})
+        if tk in live:
+            p = live[tk]
+            excursion = (p.price_current - r["entry"]) * r["side"]
+            st["mfe"] = max(st["mfe"], excursion)
+            st["mae"] = min(st["mae"], excursion)
+            st["samples"] += 1
+            continue
+
+        # gone from the book -> closed. Reconstruct from the broker's own deals.
+        deals = mt5.history_deals_get(position=tk)
+        if not deals:
+            # not yet in history; try again next cycle rather than guessing
+            continue
+        d = sorted(deals, key=lambda x: x.time)
+        net = sum(x.profit + x.swap + x.commission for x in d)
+        exit_px = d[-1].price
+        risk_money = r["risk_pct"] * r["account_equity"]
+        R = net / risk_money if risk_money else None
+        dist = abs(r["entry"] - r["stop"])
+        if abs(exit_px - r["target"]) < abs(exit_px - r["stop"]):
+            outcome = "target"
+        elif abs(exit_px - r["stop"]) <= dist * 0.25:
+            outcome = "stop"
+        else:
+            outcome = "time_or_manual"
+
+        append_trade({
+            "kind": "close", "intent_id": iid, "strategy_id": r["strategy_id"],
+            "ticket": tk, "closed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            "exit": exit_px, "gross": sum(x.profit for x in d),
+            "swap": sum(x.swap for x in d), "commission": sum(x.commission for x in d),
+            "net": net, "R": R, "outcome": outcome,
+            "mfe": st["mfe"], "mae": st["mae"], "mfe_R": st["mfe"] / dist if dist else None,
+            "mae_R": st["mae"] / dist if dist else None, "samples": st["samples"],
+            "holding_minutes": int((d[-1].time - d[0].time) / 60),
+        })
+        track.pop(str(tk), None)
+        n_closed += 1
+        print(f"  CLOSED {r['strategy_id']} {outcome} R={R:+.3f} net={net:+.2f} "
+              f"(swap {sum(x.swap for x in d):+.2f})  MFE {st['mfe']:+.2f} MAE {st['mae']:+.2f}")
+
+    DATA.mkdir(parents=True, exist_ok=True)
+    OPEN_STATE.write_text(json.dumps(track, indent=1))
+    return n_closed
 
 
 # ==================================================================== ledger
@@ -278,29 +362,35 @@ class SessionRangeBreakout(Bot):
         now = ctx["now_london"]
         bars = ctx["m1"]                       # DataFrame indexed in Europe/London
         if bars is None or len(bars) < self.PRE_MIN + 5:
-            return None
+            return self._no(f"only {0 if bars is None else len(bars)} M1 bars, "
+                            f"need {self.PRE_MIN + 5}")
         day = now.normalize()
         t0 = day + pd.Timedelta(hours=self.ENTRY_H, minutes=self.ENTRY_M)
         cut = day + pd.Timedelta(hours=self.EXIT_H, minutes=self.EXIT_M)
         if not (t0 <= now < cut):
-            return None
+            return self._no(f"outside window: {now:%H:%M} London, opens "
+                            f"{self.ENTRY_H:02d}:{self.ENTRY_M:02d} closes "
+                            f"{self.EXIT_H:02d}:{self.EXIT_M:02d}")
         if ctx.get("traded_today", {}).get(self.strategy_id):
-            return None
+            return self._no("already traded today (one trade per session)")
         pre = bars[(bars.index >= t0 - pd.Timedelta(minutes=self.PRE_MIN)) & (bars.index < t0)]
         if len(pre) < 30:
-            return None
+            return self._no(f"pre-session range has {len(pre)} bars, need 30 "
+                            f"(market closed or data gap)")
         hi, lo = float(pre["high"].max()), float(pre["low"].min())
         rng = hi - lo
         bid, ask = ctx["bid"], ctx["ask"]
         spread = ask - bid
         if rng < max(self.MIN_RANGE, 4 * spread):
-            return None                        # the range is inside the noise; not a breakout
+            return self._no(f"pre-range {rng:.2f} inside the noise "
+                            f"(spread {spread:.2f}, need > {max(self.MIN_RANGE, 4*spread):.2f})")
         if ask >= hi:
             side, lvl = 1, hi
         elif bid <= lo:
             side, lvl = -1, lo
         else:
-            return None
+            return self._no(f"no break: bid/ask {bid:.2f}/{ask:.2f} inside "
+                            f"[{lo:.2f}, {hi:.2f}], needs {hi-ask:+.2f} up or {lo-bid:+.2f} down")
         sl = self.SL if self.SL is not None else rng * self.SL_MULT
         tp = self.TP if self.TP is not None else rng * self.TP_MULT
         entry = ask if side > 0 else bid
@@ -365,7 +455,134 @@ class IndexBreakoutUSOpen(SessionRangeBreakout):
     ENTRY_H, ENTRY_M, EXIT_H, EXIT_M = 14, 30, 20, 0
 
 
-BOTS = [GoldBreakout0630(), IndexBreakoutUSOpen()]
+# ==================================================================== BOT_C
+class SP500LondonBreakout(SessionRangeBreakout):
+    """BOT_C. US500 on the LONDON session, not the US open.
+
+    Deliberately NOT the US open: SP500 and NAS100 run ~0.9 correlated in the first US hour,
+    so a US-open S&P bot would mostly re-observe BOT_B at double the risk. On the London
+    session the driver is European flow, which BOT_B never sees.
+    """
+    strategy_id = "BOT_C_sp500_london_breakout"
+    strategy_version = "1.0.0"
+    symbol = "US500.cash"
+    stage = "DEMO_CANDIDATE"
+    prior_expectancy_R, prior_n = 0.00, 10
+    risk_override = 0.0005
+    SL_MULT, TP_MULT, PRE_MIN = 0.5, 1.0, 90
+    ENTRY_H, ENTRY_M, EXIT_H, EXIT_M = 8, 0, 16, 30
+
+
+# ==================================================================== BOT_D
+class GoldNYBreakout(SessionRangeBreakout):
+    """BOT_D. Gold at the NY open -- same instrument as BOT_A, different session.
+
+    A and D share an asset, so their trades are NOT independent; the Brain will see that as
+    correlated evidence and it is worth having anyway, because it directly answers a question
+    the desk cannot otherwise settle: is BOT_A's edge about GOLD, or about 06:30?
+    """
+    strategy_id = "BOT_D_gold_ny_breakout"
+    strategy_version = "1.0.0"
+    symbol = "XAUUSD"
+    stage = "DEMO_CANDIDATE"
+    prior_expectancy_R, prior_n = 0.00, 10
+    risk_override = 0.0005
+    SL_MULT, TP_MULT, PRE_MIN = 0.5, 1.0, 90
+    ENTRY_H, ENTRY_M, EXIT_H, EXIT_M = 14, 30, 20, 0
+
+
+# ==================================================================== BOT_E
+class EURUSDLondonBreakout(SessionRangeBreakout):
+    """BOT_E. EURUSD London open. FX, not an index or a metal.
+
+    NOT the news bot you asked for. A news bot needs a scheduled-event calendar with
+    embargo timestamps; this desk has no such feed and buying one needs your approval, so
+    inventing an event list would be fabricating data. FX at the London open is the nearest
+    honest thing already available: different market structure, different participants,
+    different liquidity cycle. Say the word and I will spec the calendar acquisition.
+    """
+    strategy_id = "BOT_E_eurusd_london_breakout"
+    strategy_version = "1.0.0"
+    symbol = "EURUSD"
+    stage = "DEMO_CANDIDATE"
+    prior_expectancy_R, prior_n = 0.00, 10
+    risk_override = 0.0005
+    SL_MULT, TP_MULT, PRE_MIN = 0.5, 1.0, 90
+    ENTRY_H, ENTRY_M, EXIT_H, EXIT_M = 8, 0, 17, 0
+
+
+# ==================================================================== BOT_F
+class VWAPReversion(Bot):
+    """BOT_F. The only bot on the desk that is not a breakout.
+
+    Every other bot profits when a move continues. This one profits when a move exhausts, so
+    its returns should be NEGATIVELY correlated with the rest -- which is worth more to a
+    challenge than a sixth trend bot would be. It fades BOT_B's instrument on purpose: when
+    breakouts fail, this is what the desk earns instead.
+
+    Entry: price >= K sigma from the session VWAP, fade toward VWAP. Stop beyond the extreme.
+    No averaging down, one entry, hard stop -- a mean-reversion bot without a stop is how
+    accounts die, and this one is stopped like every other bot here.
+    """
+    strategy_id = "BOT_F_nas100_vwap_reversion"
+    strategy_version = "1.0.0"
+    symbol = "US100.cash"
+    stage = "DEMO_CANDIDATE"
+    prior_expectancy_R, prior_n = 0.00, 10
+    risk_override = 0.0005
+
+    SESSION_H, SESSION_M = 14, 30        # VWAP anchored to the US cash open
+    ENTRY_FROM_H, EXIT_H, EXIT_M = 15, 20, 0
+    K_SIGMA = 2.0
+    STOP_MULT, TARGET_FRAC = 1.0, 0.6    # stop 1 sigma beyond; take 60% of the way back
+
+    def generate_signal(self, ctx) -> Signal | None:
+        import numpy as np, pandas as pd
+        now, bars = ctx["now_london"], ctx["m1"]
+        if bars is None or len(bars) < 60:
+            return self._no(f"only {0 if bars is None else len(bars)} M1 bars, need 60")
+        day = now.normalize()
+        t0 = day + pd.Timedelta(hours=self.SESSION_H, minutes=self.SESSION_M)
+        start = day + pd.Timedelta(hours=self.ENTRY_FROM_H)
+        cut = day + pd.Timedelta(hours=self.EXIT_H, minutes=self.EXIT_M)
+        if not (start <= now < cut):
+            return self._no(f"outside window: {now:%H:%M} London, opens "
+                            f"{self.ENTRY_FROM_H:02d}:00 closes {self.EXIT_H:02d}:00")
+        if ctx.get("traded_today", {}).get(self.strategy_id):
+            return self._no("already traded today")
+        s = bars[bars.index >= t0]
+        if len(s) < 30:
+            return self._no(f"session has {len(s)} bars since {t0:%H:%M}, need 30")
+        tp_ = (s["high"] + s["low"] + s["close"]) / 3
+        vol = s["tick_volume"].replace(0, 1)
+        vwap = float((tp_ * vol).cumsum().iloc[-1] / vol.cumsum().iloc[-1])
+        sigma = float((s["close"] - vwap).std())
+        if not (sigma > 0):
+            return self._no("session sigma is zero -- no dispersion yet")
+        bid, ask = ctx["bid"], ctx["ask"]
+        mid = (bid + ask) / 2
+        dev = (mid - vwap) / sigma
+        if abs(dev) < self.K_SIGMA:
+            return self._no(f"{dev:+.2f} sigma from VWAP {vwap:.2f}, "
+                            f"need +-{self.K_SIGMA}")
+        side = -1 if dev > 0 else 1               # fade the extension
+        entry = ask if side > 0 else bid
+        stop = entry - side * self.STOP_MULT * sigma
+        target = entry + side * abs(mid - vwap) * self.TARGET_FRAC
+        if abs(entry - stop) < 4 * (ask - bid):
+            return self._no("stop distance inside the spread")
+        return Signal(self.strategy_id, self.strategy_version, now.isoformat(), self.symbol,
+                      side, "market", entry, stop, target,
+                      int((cut - now).total_seconds() // 60),
+                      ["vwap_reversion", f"dev={dev:+.2f}sig"],
+                      {"vwap": vwap, "sigma": sigma, "dev_sigma": dev,
+                       "sl_dist": abs(entry - stop), "pre_range": sigma * 2,
+                       "spread": ask - bid,
+                       "minutes_since_entry": int((now - start).total_seconds() // 60)})
+
+
+BOTS = [GoldBreakout0630(), IndexBreakoutUSOpen(), SP500LondonBreakout(),
+        GoldNYBreakout(), EURUSDLondonBreakout(), VWAPReversion()]
 
 
 # ==================================================================== execution
@@ -442,6 +659,11 @@ def main():
     if a.dry_run:
         print("DRY RUN: intents will be printed, nothing sent.\n")
 
+    if not a.dry_run:
+        nc = reconcile(mt5)
+        if nc:
+            print(f"RECONCILED {nc} closed position(s)")
+
     try:                                   # the Brain ingests before the desk decides
         from trading_brain import learn
         n = learn()
@@ -477,7 +699,8 @@ def main():
                "traded_today": traded_today}
         sig = bot.generate_signal(ctx)
         if sig is None:
-            print(f"  {bot.strategy_id}: NO SIGNAL"); continue
+            print(f"  {bot.strategy_id}: no trade -- "
+                  f"{getattr(bot, 'no_signal_reason', 'unspecified')}"); continue
 
         risk = risk_for(bot, st)
         veto = st.veto(risk)
@@ -518,6 +741,11 @@ def main():
         pre["fill"] = getattr(res, "price", None)
         pre["actual_slippage"] = (abs(pre["fill"] - sig.entry_price)
                                   if pre.get("fill") else None)
+        pre["ticket"] = getattr(res, "order", None) or getattr(res, "deal", None)
+        if rc == mt5.TRADE_RETCODE_DONE and not pre["ticket"]:
+            match = [p for p in (mt5.positions_get(symbol=bot.symbol) or [])
+                     if p.magic == 990001 and p.comment == iid[:16]]
+            pre["ticket"] = match[0].ticket if match else None
         append_trade(pre)
         print(f"     order_send -> {rc} fill={pre['fill']}")
         if rc == mt5.TRADE_RETCODE_DONE:

@@ -7,7 +7,7 @@ SID="BOT_A_gold_0630_breakout"
 def w(rs):
     with B.TRADES.open("w") as f:
         for i,r in enumerate(rs):
-            f.write(json.dumps({"intent_id":f"i{i}","strategy_id":SID,"R":r,
+            f.write(json.dumps({"kind":"close","intent_id":f"i{i}","strategy_id":SID,"R":r,
                 "actual_slippage":0.05,"spread":0.4,"outcome":"stop" if r<0 else "target",
                 "feature_snapshot":{"pre_range":8.0,"minutes_since_0630":10}})+"\n")
 

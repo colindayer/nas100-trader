@@ -5,7 +5,7 @@ d=pathlib.Path(tempfile.mkdtemp()); B.BRAIN=d/"b"; B.EVENTS=B.BRAIN/"e.jsonl"; B
 def mk(sid,rs,rng,spr,sl,slip,tag=""):
     with B.TRADES.open("a") as f:
         for i,r in enumerate(rs):
-            f.write(json.dumps({"intent_id":f"{sid}{tag}{i}","strategy_id":sid,"R":r,"spread":spr,
+            f.write(json.dumps({"kind":"close","intent_id":f"{sid}{tag}{i}","strategy_id":sid,"R":r,"spread":spr,
               "actual_slippage":slip,"outcome":"x",
               "feature_snapshot":{"pre_range":rng*(1+0.5*(i%2)),"sl_dist":sl,"minutes_since_entry":5*(i%12)}})+"\n")
 A="BOT_A_gold_0630_breakout"; Bb="BOT_B_nas100_usopen_breakout"

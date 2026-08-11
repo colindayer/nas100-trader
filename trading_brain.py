@@ -60,10 +60,21 @@ def events(kind: str | None = None) -> list:
 
 
 def closed_trades() -> list:
+    """Merge each pre-trade row with its close record. The ledger is append-only, so a
+    completed trade is TWO rows sharing an intent_id -- the intent as it was decided, and
+    the outcome as the broker reported it. Neither ever overwrites the other."""
     if not TRADES.exists():
         return []
-    ts = [json.loads(l) for l in TRADES.read_text().splitlines() if l.strip()]
-    return [t for t in ts if t.get("R") is not None]
+    rows = [json.loads(l) for l in TRADES.read_text().splitlines() if l.strip()]
+    opens = {r["intent_id"]: r for r in rows if r.get("kind") != "close"}
+    out = []
+    for r in rows:
+        if r.get("kind") != "close" or r.get("R") is None:
+            continue
+        merged = dict(opens.get(r["intent_id"], {}))
+        merged.update(r)
+        out.append(merged)
+    return out
 
 
 # ==================================================================== regime
@@ -245,6 +256,70 @@ def recall(strategy_id: str, prior_exp: float, prior_n: int) -> dict:
             "n_events": len(events()), "why": f"{be['source']}, mult {mult}"}
 
 
+# ==================================================================== scoreboard
+def execution_quality(strategy_id: str) -> dict:
+    """Can this bot actually be traded? Separate from whether it is profitable."""
+    ts = [t for t in closed_trades() if t.get("strategy_id") == strategy_id]
+    if not ts:
+        return {"n": 0, "slip_R": None, "fill_rate": None}
+    def slip_R(t):
+        sl = (t.get("feature_snapshot") or {}).get("sl_dist") or abs(
+            (t.get("entry") or 0) - (t.get("stop") or 0)) or None
+        s = abs(t.get("actual_slippage") or 0)
+        return s / sl if sl else None
+    v = [x for x in (slip_R(t) for t in ts) if x is not None]
+    return {"n": len(ts), "slip_R": statistics.fmean(v) if v else None,
+            "avg_mfe_R": statistics.fmean([t["mfe_R"] for t in ts if t.get("mfe_R") is not None])
+            if any(t.get("mfe_R") is not None for t in ts) else None,
+            "avg_mae_R": statistics.fmean([t["mae_R"] for t in ts if t.get("mae_R") is not None])
+            if any(t.get("mae_R") is not None for t in ts) else None,
+            "swap_paid": sum(t.get("swap") or 0 for t in ts)}
+
+
+def pass_contribution(be: dict, risk: float = 0.0010) -> float:
+    """Crude expected contribution to the +10% target per 20 trades, in account %.
+    Deliberately crude -- a precise number here would be false precision on n<40."""
+    return be["exp"] * risk * 20 * 100
+
+
+def scoreboard(bots: list) -> list:
+    rows = []
+    for b in bots:
+        be = belief(b["strategy_id"], b["prior_exp"], b["prior_n"])
+        eq = execution_quality(b["strategy_id"])
+        # confidence: how much of this belief is live evidence rather than assumption
+        rows.append({**be, "stage": b.get("stage"), "symbol": b.get("symbol"),
+                     "confidence": be["weight_live"], "exec": eq,
+                     "contrib_pct": pass_contribution(be)})
+    rows.sort(key=lambda r: (-(r["confidence"] > 0), -r["exp"]))
+    return rows
+
+
+def cmd_scoreboard(bots):
+    rows = scoreboard(bots)
+    alloc = allocation(rows)
+    print("=" * 94)
+    print(f" BOT SCOREBOARD — {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC")
+    print("=" * 94)
+    print(f" {'bot':<32}{'n':>4}{'expR':>8}{'t':>7}{'conf':>7}{'slipR':>8}"
+          f"{'contrib':>9}{'alloc':>8}")
+    for r in rows:
+        t = r.get("t")
+        sl = r["exec"].get("slip_R")
+        print(f" {r['strategy_id']:<32}{r['n']:>4}{r['exp']:>+8.3f}"
+              f"{(f'{t:+.2f}' if t is not None else '--'):>7}{r['confidence']:>7.0%}"
+              f"{(f'{sl:.3f}' if sl is not None else '--'):>8}"
+              f"{r['contrib_pct']:>+8.2f}%{alloc.get(r['strategy_id'], 0):>8.0%}")
+    live = sum(1 for r in rows if r["n"] > 0)
+    tot = sum(r["contrib_pct"] for r in rows)
+    print(f"\n {live}/{len(rows)} bots have live evidence.  "
+          f"combined expected contribution {tot:+.2f}% per 20 trades each")
+    if live == 0:
+        print(" NO LIVE EVIDENCE YET -- every number above is prior, i.e. assumption.")
+    emit("scoreboard", rows=[{k: v for k, v in r.items() if k != "exec"} for r in rows],
+         allocation=alloc)
+
+
 # ==================================================================== cli
 def _bots():
     """Read bot identity from the controller so the two can never disagree."""
@@ -252,7 +327,7 @@ def _bots():
     try:
         from challenge_controller import BOTS
         return [{"strategy_id": b.strategy_id, "prior_exp": b.prior_expectancy_R,
-                 "prior_n": b.prior_n, "stage": b.stage} for b in BOTS]
+                 "prior_n": b.prior_n, "stage": b.stage, "symbol": b.symbol} for b in BOTS]
     except Exception as e:
         print(f"  (could not import controller bots: {e})")
         return []
@@ -263,8 +338,12 @@ def main():
     ap.add_argument("--recall", action="store_true")
     ap.add_argument("--learn", action="store_true")
     ap.add_argument("--weekly", action="store_true")
+    ap.add_argument("--scoreboard", action="store_true")
     a = ap.parse_args()
     bots = _bots()
+
+    if a.scoreboard:
+        cmd_scoreboard(bots); return
 
     if a.learn:
         n = learn()
