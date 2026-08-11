@@ -16,6 +16,7 @@ MANIFEST = os.path.join(ROOT, "MANIFEST.json")
 REPO = "colindayer/nas100-trader"
 
 TRACKED = [
+    "challenge_controller.py",
     "scripts/frozen_symbol_specs.py",
     "broker/FTMO_HISTORY_DEPTH.json",
     "scripts/broker_probe_meta.py",
