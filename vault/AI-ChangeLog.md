@@ -446,3 +446,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-11 | Obsidian Bridge / automated | Phase 1: exact broker specs for the frozen legs, no assumed conventions | git post-commit hook | 6bd4b3e |
 | 2026-08-11 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 7863939 |
 | 2026-08-12 | Obsidian Bridge / automated | FTMO challenge learning controller: demo-only, live trades are the evidence | git post-commit hook | a354e8d |
+| 2026-08-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 0e27574 |
+| 2026-08-12 | Obsidian Bridge / automated | Trading Brain: experience layer above the controller | git post-commit hook | a559ddd |
