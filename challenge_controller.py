@@ -50,6 +50,16 @@ MAX_ORDER_ATTEMPTS_PER_DAY = 3  # a rejected order may be retried, but not indef
 MAX_NOTIONAL_MULT = 3.0         # position notional vs equity -- a tight stop must not
                                 # turn a 0.05% risk into a 3x-leveraged position
 MIN_STOP_SPREAD_MULT = 8.0      # stop must clear the spread by this much to be tradable
+MIN_STOP_ATR_FRAC = 0.15        # ...AND clear this fraction of the D1 ATR20. Spread alone is
+                                # not a volatility floor: BOT_D passed the spread gate with a
+                                # 6.1pt gold stop and was gapped 31pt through it for -6.07R.
+
+# Recurring high-impact release times, London clock. NOT a calendar -- a calendar feed needs
+# purchase approval and the MT5 Python API exposes none. These are the fixed clock slots the
+# major US releases land in (CPI/NFP/PPI/retail 13:30, ISM/UoM 15:00, FOMC 19:00). Static,
+# free, and it blocks NEW ENTRIES ONLY -- open positions keep their stops and targets.
+EVENT_BLACKOUT_LONDON = [(13, 30), (15, 0), (19, 0)]
+BLACKOUT_BEFORE_MIN, BLACKOUT_AFTER_MIN = 10, 20
 
 # ---- promotion ladder
 STAGES = ("IDEA", "BACKTESTED", "VALIDATED", "DEMO_CANDIDATE", "DEMO_PROVEN",
@@ -190,6 +200,18 @@ class ChallengeState:
         if self.profit_remaining <= 0 and self.trading_days >= MIN_TRADING_DAYS:
             return "target already reached -- stop trading"
         return None
+
+
+def in_event_blackout(now_london) -> str | None:
+    """Refuse NEW entries around scheduled US releases. Never touches an open position:
+    yanking a stop or closing early during a spike is how a bad trade becomes a disaster."""
+    for h, m in EVENT_BLACKOUT_LONDON:
+        slot = now_london.normalize() + __import__("pandas").Timedelta(hours=h, minutes=m)
+        delta = (now_london - slot).total_seconds() / 60
+        if -BLACKOUT_BEFORE_MIN <= delta <= BLACKOUT_AFTER_MIN:
+            return (f"event blackout {h:02d}:{m:02d} London "
+                    f"({delta:+.0f}m) -- scheduled release window")
+    return None
 
 
 def brain_multiplier(bot: Bot) -> tuple[float, str]:
@@ -760,15 +782,26 @@ def main():
             print(f"  {bot.strategy_id}: no M1 data"); continue
         m1 = pd.DataFrame(r)
         m1.index = pd.to_datetime(m1["time"], unit="s", utc=True).dt.tz_convert("Europe/London")
+        d1 = trend_context(mt5, bot.symbol, tick.ask)
         ctx = {"now_london": m1.index[-1], "m1": m1, "bid": tick.bid, "ask": tick.ask,
-               "traded_today": traded_today}
+               "traded_today": traded_today, "d1": d1}
+
+        blackout = in_event_blackout(ctx["now_london"])
+        if blackout:
+            print(f"  {bot.strategy_id}: no trade -- {blackout}"); continue
+
         sig = bot.generate_signal(ctx)
         if sig is None:
             print(f"  {bot.strategy_id}: no trade -- "
                   f"{getattr(bot, 'no_signal_reason', 'unspecified')}"); continue
 
-        sig.feature_snapshot.update(
-            {f"d1_{k}": v for k, v in trend_context(mt5, bot.symbol, sig.entry_price).items()})
+        sig.feature_snapshot.update({f"d1_{k}": v for k, v in d1.items()})
+
+        atr = d1.get("atr20_d1")
+        if atr and sig.risk_distance() < MIN_STOP_ATR_FRAC * atr:
+            print(f"  {bot.strategy_id}: SIGNAL but stop {sig.risk_distance():.2f} is only "
+                  f"{sig.risk_distance()/atr:.1%} of D1 ATR {atr:.2f} "
+                  f"(need {MIN_STOP_ATR_FRAC:.0%}) -- inside the noise, skipped"); continue
 
         risk = risk_for(bot, st)
         veto = st.veto(risk)
