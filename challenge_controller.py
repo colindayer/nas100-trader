@@ -221,6 +221,39 @@ def risk_for(bot: Bot, st: ChallengeState) -> float:
     return round(base * taper, 6)
 
 
+def trend_context(mt5, symbol, price) -> dict:
+    """Daily-timeframe context attached to EVERY signal.
+
+    Recorded, not acted on. Filtering entries on trend before measuring whether trend
+    predicts anything is how a backtest gets fitted -- the desk needs the labels on real
+    trades first, then the Brain can measure whether aligned trades actually pay more.
+    Until that measurement exists this changes no decision.
+    """
+    try:
+        import numpy as np, pandas as pd
+        r = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_D1, 0, 220)
+        if r is None or len(r) < 60:
+            return {"trend": "unknown", "bars": 0 if r is None else len(r)}
+        d = pd.DataFrame(r)
+        c = d["close"]
+        sma20, sma50 = float(c.tail(20).mean()), float(c.tail(50).mean())
+        sma200 = float(c.tail(200).mean()) if len(c) >= 200 else None
+        tr = (d["high"] - d["low"]).tail(20).mean()
+        prev_h, prev_l = float(d["high"].iloc[-2]), float(d["low"].iloc[-2])
+        up = price > sma20 > sma50
+        dn = price < sma20 < sma50
+        return {"trend": "up" if up else "down" if dn else "mixed",
+                "above_sma200": (price > sma200) if sma200 else None,
+                "sma20": sma20, "sma50": sma50, "sma200": sma200,
+                "atr20_d1": float(tr),
+                "dist_sma20_atr": (price - sma20) / float(tr) if tr else None,
+                "prev_day_range": prev_h - prev_l,
+                "vs_prev_day": ("above" if price > prev_h else
+                                "below" if price < prev_l else "inside")}
+    except Exception as e:
+        return {"trend": "unknown", "error": str(e)}
+
+
 # ==================================================================== reconciliation
 OPEN_STATE = DATA / "open_positions.json"
 
@@ -395,6 +428,20 @@ class SessionRangeBreakout(Bot):
         else:
             return self._no(f"no break: bid/ask {bid:.2f}/{ask:.2f} inside "
                             f"[{lo:.2f}, {hi:.2f}], needs {hi-ask:+.2f} up or {lo-bid:+.2f} down")
+
+        # FIRST break only. The frozen backtest takes the first crossing and stops looking;
+        # a bot that re-fires on the third poke at the level hours later is trading a
+        # DIFFERENT strategy than the one that produced the prior, and its live record would
+        # not be evidence about that strategy at all.
+        session = bars[(bars.index >= t0) & (bars.index < now)]
+        if len(session):
+            broke = (session["high"].max() >= hi) if side > 0 else (session["low"].min() <= lo)
+            if broke:
+                first = (session[session["high"] >= hi] if side > 0
+                         else session[session["low"] <= lo]).index[0]
+                return self._no(f"first break already happened at {first:%H:%M} "
+                                f"({int((now-first).total_seconds()//60)}m ago) -- "
+                                f"not chasing a re-test")
         sl = self.SL if self.SL is not None else rng * self.SL_MULT
         tp = self.TP if self.TP is not None else rng * self.TP_MULT
         if sl < MIN_STOP_SPREAD_MULT * spread:
@@ -719,6 +766,9 @@ def main():
         if sig is None:
             print(f"  {bot.strategy_id}: no trade -- "
                   f"{getattr(bot, 'no_signal_reason', 'unspecified')}"); continue
+
+        sig.feature_snapshot.update(
+            {f"d1_{k}": v for k, v in trend_context(mt5, bot.symbol, sig.entry_price).items()})
 
         risk = risk_for(bot, st)
         veto = st.veto(risk)
