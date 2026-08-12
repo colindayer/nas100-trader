@@ -456,3 +456,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-12 | Obsidian Bridge / automated | Fix: a rejected order no longer costs the bot its whole trading day | git post-commit hook | 183cfc3 |
 | 2026-08-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 479b64e |
 | 2026-08-12 | Obsidian Bridge / automated | Head trader: first-break-only, D1 trend context, daily review pipeline | git post-commit hook | 782a34e |
+| 2026-08-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 32e0539 |
+| 2026-08-12 | Obsidian Bridge / automated | Risk gates after BOT_D's -6.07R: volatility floor + event blackout | git post-commit hook | efce4f4 |
