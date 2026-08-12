@@ -452,3 +452,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-12 | Obsidian Bridge / automated | BOT_B: NAS100 US-open breakout, shared breakout base, instrument-relative lea... | git post-commit hook | a6bd3c9 |
 | 2026-08-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | e474dca |
 | 2026-08-12 | Obsidian Bridge / automated | Head trader: reconciliation, no-signal diagnosis, BOT_C-F, scoreboard | git post-commit hook | e249daf |
+| 2026-08-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | a0673d5 |
+| 2026-08-12 | Obsidian Bridge / automated | Fix: a rejected order no longer costs the bot its whole trading day | git post-commit hook | 183cfc3 |
