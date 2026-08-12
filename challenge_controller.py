@@ -46,6 +46,10 @@ RISK_EXPERIMENTAL = 0.0010      # 0.10% while a bot is gathering its first evide
 RISK_ESTABLISHED = 0.0025       # 0.25% ceiling on demo, only after DEMO_PROVEN
 MAX_CONCURRENT_RISK = 0.0075    # total open risk across all bots
 EPOCH_TRADES = 20               # review cadence. NEVER review after a single loss.
+MAX_ORDER_ATTEMPTS_PER_DAY = 3  # a rejected order may be retried, but not indefinitely
+MAX_NOTIONAL_MULT = 3.0         # position notional vs equity -- a tight stop must not
+                                # turn a 0.05% risk into a 3x-leveraged position
+MIN_STOP_SPREAD_MULT = 8.0      # stop must clear the spread by this much to be tradable
 
 # ---- promotion ladder
 STAGES = ("IDEA", "BACKTESTED", "VALIDATED", "DEMO_CANDIDATE", "DEMO_PROVEN",
@@ -393,6 +397,9 @@ class SessionRangeBreakout(Bot):
                             f"[{lo:.2f}, {hi:.2f}], needs {hi-ask:+.2f} up or {lo-bid:+.2f} down")
         sl = self.SL if self.SL is not None else rng * self.SL_MULT
         tp = self.TP if self.TP is not None else rng * self.TP_MULT
+        if sl < MIN_STOP_SPREAD_MULT * spread:
+            return self._no(f"stop {sl:.2f} too tight vs spread {spread:.2f} "
+                            f"(need {MIN_STOP_SPREAD_MULT}x) -- costs would dominate")
         entry = ask if side > 0 else bid
         return Signal(self.strategy_id, self.strategy_version, now.isoformat(), self.symbol,
                       side, "market", entry, entry - side * sl, entry + side * tp,
@@ -569,8 +576,8 @@ class VWAPReversion(Bot):
         entry = ask if side > 0 else bid
         stop = entry - side * self.STOP_MULT * sigma
         target = entry + side * abs(mid - vwap) * self.TARGET_FRAC
-        if abs(entry - stop) < 4 * (ask - bid):
-            return self._no("stop distance inside the spread")
+        if abs(entry - stop) < MIN_STOP_SPREAD_MULT * (ask - bid):
+            return self._no(f"stop {abs(entry-stop):.2f} too tight vs spread {ask-bid:.2f}")
         return Signal(self.strategy_id, self.strategy_version, now.isoformat(), self.symbol,
                       side, "market", entry, stop, target,
                       int((cut - now).total_seconds() // 60),
@@ -673,11 +680,22 @@ def main():
         print(f"BRAIN: unavailable ({e}) -- trading continues on priors")
 
     trades = load_trades()
-    traded_today = {}
-    today = datetime.now(timezone.utc).date().isoformat()
+    # A FILLED trade closes the session for that bot. A REJECTED order does not -- it is a
+    # broker problem, not a trade, and letting it lock the bot out silently loses the whole
+    # day's evidence. Rejections are capped instead, so a persistent error cannot spam orders.
+    london_today = pd.Timestamp.now(tz="Europe/London").date().isoformat()
+    traded_today, attempts_today = {}, {}
     for t in trades:
-        if t.get("timestamp", "").startswith(today):
-            traded_today[t["strategy_id"]] = True
+        if t.get("kind") == "close" or not t.get("timestamp", "").startswith(london_today):
+            continue
+        sid = t["strategy_id"]
+        attempts_today[sid] = attempts_today.get(sid, 0) + 1
+        if t.get("ticket"):
+            traded_today[sid] = True
+    for sid, n in attempts_today.items():
+        if n >= MAX_ORDER_ATTEMPTS_PER_DAY and sid not in traded_today:
+            traded_today[sid] = True
+            print(f"  {sid}: BLOCKED -- {n} rejected orders today, not retrying")
 
     st = ChallengeState(equity=acct.equity, balance=acct.balance,
                         starting_balance=float(acct.balance), day_start_equity=float(acct.equity),
@@ -712,6 +730,17 @@ def main():
         per_lot = sig.risk_distance() * (info.trade_tick_value / info.trade_tick_size)
         vol = max(info.volume_min,
                   round(money / per_lot / info.volume_step) * info.volume_step)
+        contract = info.trade_contract_size or 1
+        notional = vol * contract * sig.entry_price
+        if notional > MAX_NOTIONAL_MULT * st.equity:
+            capped = (MAX_NOTIONAL_MULT * st.equity) / (contract * sig.entry_price)
+            capped = int(capped / info.volume_step) * info.volume_step
+            print(f"  {bot.strategy_id}: notional {notional:,.0f} > "
+                  f"{MAX_NOTIONAL_MULT}x equity -- volume {vol} -> {capped}")
+            vol = capped
+        if vol < info.volume_min:
+            print(f"  {bot.strategy_id}: SIGNAL but volume {vol} below min "
+                  f"{info.volume_min} after caps -- skipped"); continue
         iid = intent_id(acct.login, bot.strategy_id, bot.symbol, sig.side, vol, sig.timestamp)
         print(f"  {bot.strategy_id}: SIGNAL side={sig.side:+d} entry={sig.entry_price:.2f} "
               f"sl={sig.stop_price:.2f} tp={sig.target_price:.2f} risk={risk:.3%} "
