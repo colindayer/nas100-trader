@@ -202,6 +202,39 @@ class ChallengeState:
         return None
 
 
+def stop_geometry(sig, state: dict, info, spread: float) -> dict:
+    """Approve, widen, or reject a stop BEFORE sizing.
+
+    Risk is expressed in dollars first: if the stop must widen, the VOLUME falls to keep the
+    dollar risk identical. Widening without resizing would silently increase monetary risk,
+    which is the opposite of what this gate is for.
+    """
+    dist = sig.risk_distance()
+    atr = state.get("atr20_d1")
+    exc = state.get("m1_excursion_p90_60")
+    need = []
+    if spread:
+        need.append(("spread", MIN_STOP_SPREAD_MULT * spread))
+    if atr:
+        need.append(("D1 ATR", MIN_STOP_ATR_FRAC * atr))
+    if exc:
+        need.append(("recent M1 excursion", 2.0 * exc))
+    if not need:
+        return {"ok": True, "reason": "no volatility reference available", "checks": {}}
+
+    label, floor = max(need, key=lambda x: x[1])
+    checks = {k: round(v, 4) for k, v in need}
+    if dist >= floor:
+        return {"ok": True, "reason": f"stop {dist:.2f} clears {label} floor {floor:.2f}",
+                "checks": checks}
+    if floor > 3 * dist:
+        return {"ok": False, "checks": checks,
+                "reason": f"stop {dist:.2f} is under a third of the {label} floor "
+                          f"{floor:.2f} -- the setup is inside the noise, not mis-sized"}
+    return {"ok": True, "widened_to": floor, "checks": checks,
+            "reason": f"stop {dist:.2f} below {label} floor {floor:.2f}"}
+
+
 def in_event_blackout(now_london) -> str | None:
     """Refuse NEW entries around scheduled US releases. Never touches an open position:
     yanking a stop or closing early during a spike is how a bad trade becomes a disaster."""
@@ -795,13 +828,30 @@ def main():
             print(f"  {bot.strategy_id}: no trade -- "
                   f"{getattr(bot, 'no_signal_reason', 'unspecified')}"); continue
 
+        import market_state as MS, macro_context as MC, shadows as SH
+        sess = ctx["now_london"].normalize() + pd.Timedelta(
+            hours=getattr(bot, "ENTRY_H", getattr(bot, "SESSION_H", 8)),
+            minutes=getattr(bot, "ENTRY_M", getattr(bot, "SESSION_M", 0)))
+        lvl = next((float(r.split("=")[1]) for r in (sig.reason_codes or [])
+                    if r.startswith("level=")), None)
+        state = MS.compute(mt5, bot.symbol, ctx["now_london"], sig.entry_price,
+                           ctx["ask"] - ctx["bid"], session_start=sess,
+                           level=lvl, side=sig.side,
+                           vwap=sig.feature_snapshot.get("vwap"),
+                           sigma=sig.feature_snapshot.get("sigma"))
+        state.update(MC.compute(mt5, bot.symbol, ctx["now_london"]))
         sig.feature_snapshot.update({f"d1_{k}": v for k, v in d1.items()})
 
-        atr = d1.get("atr20_d1")
-        if atr and sig.risk_distance() < MIN_STOP_ATR_FRAC * atr:
-            print(f"  {bot.strategy_id}: SIGNAL but stop {sig.risk_distance():.2f} is only "
-                  f"{sig.risk_distance()/atr:.1%} of D1 ATR {atr:.2f} "
-                  f"(need {MIN_STOP_ATR_FRAC:.0%}) -- inside the noise, skipped"); continue
+        geo = stop_geometry(sig, state, info=None, spread=ctx["ask"] - ctx["bid"])
+        sig.feature_snapshot["stop_geometry"] = geo
+        if not geo["ok"]:
+            print(f"  {bot.strategy_id}: SIGNAL but stop rejected -- {geo['reason']}")
+            continue
+        if geo.get("widened_to"):
+            print(f"  {bot.strategy_id}: stop widened {sig.risk_distance():.2f} -> "
+                  f"{geo['widened_to']:.2f} ({geo['reason']}); volume reduced to hold "
+                  f"dollar risk constant")
+            sig.stop_price = sig.entry_price - sig.side * geo["widened_to"]
 
         risk = risk_for(bot, st)
         veto = st.veto(risk)
@@ -829,7 +879,10 @@ def main():
               f"sl={sig.stop_price:.2f} tp={sig.target_price:.2f} risk={risk:.3%} "
               f"vol={vol} intent={iid}")
 
+        shadow_verdicts = SH.evaluate(bot.strategy_id, state, sig.side, sig.risk_distance())
+
         pre = {"intent_id": iid, "strategy_id": bot.strategy_id,
+               "market_state": state, "shadows": shadow_verdicts,
                "strategy_version": bot.strategy_version, "timestamp": sig.timestamp,
                "symbol": bot.symbol, "side": sig.side, "entry": sig.entry_price,
                "stop": sig.stop_price, "target": sig.target_price, "risk_pct": risk,

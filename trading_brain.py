@@ -256,6 +256,53 @@ def recall(strategy_id: str, prior_exp: float, prior_n: int) -> dict:
             "n_events": len(events()), "why": f"{be['source']}, mult {mult}"}
 
 
+# ==================================================================== realised risk
+RISK_OVERRUN_R = -1.5             # planned risk was not what actually happened
+RISK_OBSERVATION_R = -2.0         # bad enough to stop risking money until understood
+
+
+def risk_audit(strategy_id: str | None = None) -> list:
+    """planned vs REALISED loss. BOT_D planned $24 and lost $148; nothing in the posterior
+    would ever have flagged that, because -6R is just a very bad trade to an expectancy
+    calculation. Risk realisation is a separate question from edge and needs its own alarm."""
+    out = []
+    for t in closed_trades():
+        if strategy_id and t.get("strategy_id") != strategy_id:
+            continue
+        R = t.get("R")
+        if R is None or R >= RISK_OVERRUN_R:
+            continue
+        planned = (t.get("risk_pct") or 0) * (t.get("account_equity") or 0)
+        out.append({
+            "intent_id": t.get("intent_id"), "strategy_id": t.get("strategy_id"),
+            "planned_risk_money": planned, "realized_loss_money": t.get("net"),
+            "realized_R": R,
+            "overrun_x": abs(R),
+            "flag": "OBSERVATION" if R <= RISK_OBSERVATION_R else "RISK_OVERRUN",
+            "stop": t.get("stop"), "exit": t.get("exit"),
+            "slip_past_stop": (abs((t.get("exit") or 0) - (t.get("stop") or 0))
+                               if t.get("exit") and t.get("stop") else None),
+            "holding_minutes": t.get("holding_minutes"),
+        })
+    return out
+
+
+def forced_states(bots: list) -> dict:
+    """A bot with a realised loss worse than -2R goes to OBSERVATION until the cause is
+    understood. This is a RISK response, not a verdict on the edge -- the entry hypothesis
+    stays alive and keeps being recorded."""
+    st = {}
+    for b in bots:
+        sid = b["strategy_id"]
+        bad = [a for a in risk_audit(sid) if a["flag"] == "OBSERVATION"]
+        if bad:
+            st[sid] = {"state": "OBSERVATION", "n_overruns": len(bad),
+                       "worst_R": min(a["realized_R"] for a in bad),
+                       "why": f"realised {min(a['realized_R'] for a in bad):+.2f}R vs planned "
+                              f"-1R -- risk geometry unproven, entry hypothesis untouched"}
+    return st
+
+
 # ==================================================================== scoreboard
 def execution_quality(strategy_id: str) -> dict:
     """Can this bot actually be traded? Separate from whether it is profitable."""

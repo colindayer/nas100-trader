@@ -1517,3 +1517,12 @@
 {"ts": 1786303577.930631, "utc": "2026-08-09T19:26:17.930631+00:00", "event": "account_changed", "from": 61552095, "to": 1514166963, "discarded_day_start": null, "discarded_hwm": null, "halt_preserved": true}
 {"ts": 1786303577.9316218, "utc": "2026-08-09T19:26:17.931622+00:00", "event": "startup_reconciliation", "ok": false, "n_findings": 1, "critical": ["RECONCILIATION_FAILED"]}
 {"ts": 1786303577.9328861, "utc": "2026-08-09T19:26:17.932886+00:00", "event": "account_changed", "from": 1514166963, "to": 9999999, "discarded_day_start": null, "discarded_hwm": null, "halt_preserved": true}
+{"ts": 1786566753.146642, "utc": "2026-08-12T20:32:33.146644+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1786566753.147817, "utc": "2026-08-12T20:32:33.147818+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1786566753.149055, "utc": "2026-08-12T20:32:33.149056+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1786566753.1882849, "utc": "2026-08-12T20:32:33.188286+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1786566753.1891541, "utc": "2026-08-12T20:32:33.189154+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1786566753.1901498, "utc": "2026-08-12T20:32:33.190150+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1786566753.191021, "utc": "2026-08-12T20:32:33.191022+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1786566753.28092, "utc": "2026-08-12T20:32:33.280922+00:00", "event": "account_changed", "from": 9999999, "to": 1514166963, "discarded_day_start": null, "discarded_hwm": null, "halt_preserved": true}
+{"ts": 1786566753.282806, "utc": "2026-08-12T20:32:33.282807+00:00", "event": "day_rollover", "from": "2026-08-09", "to": "2026-08-12", "trades_prev_day": 0, "halt_preserved": true}
