@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+782a34e  Head trader: first-break-only, D1 trend context, daily review pipeline
+479b64e  Obsidian bridge auto-sync [bridge-auto]
 183cfc3  Fix: a rejected order no longer costs the bot its whole trading day
 a0673d5  Obsidian bridge auto-sync [bridge-auto]
 e249daf  Head trader: reconciliation, no-signal diagnosis, BOT_C-F, scoreboard
 e474dca  Obsidian bridge auto-sync [bridge-auto]
 a6bd3c9  BOT_B: NAS100 US-open breakout, shared breakout base, instrument-relative learning
 137d0fc  Obsidian bridge auto-sync [bridge-auto]
-a559ddd  Trading Brain: experience layer above the controller
-0e27574  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
