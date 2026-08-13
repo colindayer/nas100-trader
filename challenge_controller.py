@@ -96,6 +96,12 @@ class Bot:
     prior_expectancy_R = 0.0        # from backtest -- a PRIOR, not a promise
     prior_n = 0
     risk_override = None            # new bots start smaller than experimental
+    # ---- specialist declaration. What this bot was DESIGNED for. A priori, not fitted:
+    # a fade bot avoids strong trends by construction, not because it lost money in one.
+    playbook = ""                   # BREAKOUT | REVERSION | CONTINUATION
+    primary: set = set()
+    secondary: set = set()
+    avoids: set = set()
 
     def _no(self, reason: str) -> None:
         """Record WHY there was no trade. 'NO SIGNAL' is not a diagnosis: a bot that is
@@ -659,8 +665,12 @@ class GoldBreakout0630(SessionRangeBreakout):
     so the honest prior shrinks it. prior_n is deliberately small: this prior is weak and live
     evidence should dominate quickly.
     """
+    playbook = "BREAKOUT"
+    primary = {"EXPANSION", "WEAK_TREND"}
+    secondary = {"STRONG_TREND"}
+    avoids = {"COMPRESSION", "EXTENDED"}
     strategy_id = "BOT_A_gold_0630_breakout"
-    strategy_version = "1.1.0"       # shared base; parameters unchanged
+    strategy_version = "1.2.0"       # shared base; parameters unchanged
     symbol = "XAUUSD"
     stage = "DEMO_CANDIDATE"
     prior_expectancy_R = 0.15        # shrunk from +0.39 for best-of-14 selection
@@ -689,6 +699,10 @@ class IndexBreakoutUSOpen(SessionRangeBreakout):
     Stops are 0.5x / 1.0x the pre-open range rather than fixed points -- an index needs
     volatility-scaled distances, and a fixed gold-sized stop would be meaningless here.
     """
+    playbook = "BREAKOUT"
+    primary = {"EXPANSION", "WEAK_TREND"}
+    secondary = {"STRONG_TREND"}
+    avoids = {"COMPRESSION", "EXTENDED", "TRANSITION"}
     strategy_id = "BOT_B_nas100_usopen_breakout"
     strategy_version = "1.0.0"
     symbol = "US100.cash"
@@ -708,6 +722,10 @@ class SP500LondonBreakout(SessionRangeBreakout):
     so a US-open S&P bot would mostly re-observe BOT_B at double the risk. On the London
     session the driver is European flow, which BOT_B never sees.
     """
+    playbook = "BREAKOUT"
+    primary = {"EXPANSION", "WEAK_TREND"}
+    secondary = {"STRONG_TREND"}
+    avoids = {"COMPRESSION", "EXTENDED"}
     strategy_id = "BOT_C_sp500_london_breakout"
     strategy_version = "1.0.0"
     symbol = "US500.cash"
@@ -726,6 +744,10 @@ class GoldNYBreakout(SessionRangeBreakout):
     correlated evidence and it is worth having anyway, because it directly answers a question
     the desk cannot otherwise settle: is BOT_A's edge about GOLD, or about 06:30?
     """
+    playbook = "BREAKOUT"
+    primary = {"EXPANSION", "WEAK_TREND"}
+    secondary = {"STRONG_TREND"}
+    avoids = {"COMPRESSION", "EXTENDED"}
     strategy_id = "BOT_D_gold_ny_breakout"
     strategy_version = "1.0.0"
     symbol = "XAUUSD"
@@ -746,6 +768,10 @@ class EURUSDLondonBreakout(SessionRangeBreakout):
     honest thing already available: different market structure, different participants,
     different liquidity cycle. Say the word and I will spec the calendar acquisition.
     """
+    playbook = "BREAKOUT"
+    primary = {"EXPANSION", "WEAK_TREND"}
+    secondary = {"STRONG_TREND"}
+    avoids = {"COMPRESSION", "EXTENDED"}
     strategy_id = "BOT_E_eurusd_london_breakout"
     strategy_version = "1.0.0"
     symbol = "EURUSD"
@@ -769,8 +795,14 @@ class VWAPReversion(Bot):
     No averaging down, one entry, hard stop -- a mean-reversion bot without a stop is how
     accounts die, and this one is stopped like every other bot here.
     """
+    playbook = "REVERSION"
+    primary = {"RANGE"}
+    secondary = {"COMPRESSION"}
+    # THE FIX FOR 2026-08-13: this bot shorted 2.02 ATR above its mean in a TRANSITION.
+    # Declared, not filtered -- a fade has no meaning without a mean that holds.
+    avoids = {"STRONG_TREND", "WEAK_TREND", "TRANSITION", "EXPANSION", "EXTENDED"}
     strategy_id = "BOT_F_nas100_vwap_reversion"
-    strategy_version = "1.0.0"
+    strategy_version = "1.1.0"
     symbol = "US100.cash"
     stage = "DEMO_CANDIDATE"
     prior_expectancy_R, prior_n = 0.00, 10
@@ -826,8 +858,79 @@ class VWAPReversion(Bot):
                        "minutes_since_entry": int((now - start).total_seconds() // 60)})
 
 
+# ==================================================================== BOT_G
+class H4PullbackContinuation(Bot):
+    """BOT_G. The desk's first CONTINUATION specialist -- it fills a measured coverage gap.
+
+    Every other bot needs a level to break or a mean that holds. In a confirmed trend the
+    desk owned NOTHING: on 2026-08-13 h4_regime was 'up' and every specialist either avoided
+    the state or had no signal. An opportunity class with no specialist is a gap you can see
+    on day one without any evidence at all -- it is an inventory fact, not a forecast.
+
+    Buys a pullback toward the H4 mean while H4 trend is confirmed, stopping beyond the
+    swing that would end the trend. Deliberately NOT a breakout: it wants the move to
+    already exist, which is the exposure the desk lacks.
+    """
+    playbook = "CONTINUATION"
+    primary = {"STRONG_TREND"}
+    secondary = {"WEAK_TREND", "EXPANSION"}
+    avoids = {"RANGE", "COMPRESSION", "TRANSITION"}
+    strategy_id = "BOT_G_nas100_h4_pullback"
+    strategy_version = "1.0.0"
+    symbol = "US100.cash"
+    stage = "DEMO_CANDIDATE"
+    prior_expectancy_R, prior_n = 0.00, 10
+    risk_override = 0.0005
+
+    ENTRY_H, EXIT_H, EXIT_M = 8, 20, 0
+    PULLBACK_ATR = 0.5               # how close to the H4 mean counts as a pullback
+    STOP_ATR, TARGET_ATR = 1.0, 2.0  # of H4 ATR
+
+    def generate_signal(self, ctx) -> Signal | None:
+        import pandas as pd
+        now, st = ctx["now_london"], ctx.get("state") or {}
+        day = now.normalize()
+        if not (day + pd.Timedelta(hours=self.ENTRY_H) <= now
+                < day + pd.Timedelta(hours=self.EXIT_H, minutes=self.EXIT_M)):
+            return self._no(f"outside window: {now:%H:%M} London")
+        if ctx.get("traded_today", {}).get(self.strategy_id):
+            return self._no("already traded today")
+        reg, atr = st.get("h4_regime"), st.get("h4_atr20")
+        if reg not in ("up", "down"):
+            return self._no(f"h4 regime is {reg}, needs a confirmed trend")
+        if not atr:
+            return self._no("no h4 ATR available")
+        dev = st.get("h4_price_vs_sma20")
+        if dev is None:
+            return self._no("no h4 mean available")
+        bid, ask = ctx["bid"], ctx["ask"]
+        price = (bid + ask) / 2
+        sma = price / (1 + dev) if dev != -1 else None
+        if not sma:
+            return self._no("h4 mean unresolvable")
+        dist_atr = (price - sma) / atr
+        side = 1 if reg == "up" else -1
+        # a pullback: price has come BACK toward the mean, not extended away from it
+        if side > 0 and not (0 <= dist_atr <= self.PULLBACK_ATR):
+            return self._no(f"not a pullback: {dist_atr:+.2f} ATR from h4 mean, "
+                            f"need 0..{self.PULLBACK_ATR}")
+        if side < 0 and not (-self.PULLBACK_ATR <= dist_atr <= 0):
+            return self._no(f"not a pullback: {dist_atr:+.2f} ATR from h4 mean")
+        entry = ask if side > 0 else bid
+        stop = entry - side * self.STOP_ATR * atr
+        target = entry + side * self.TARGET_ATR * atr
+        return Signal(self.strategy_id, self.strategy_version, now.isoformat(), self.symbol,
+                      side, "market", entry, stop, target,
+                      int((day + pd.Timedelta(hours=self.EXIT_H) - now).total_seconds() // 60),
+                      ["h4_pullback_continuation", f"h4_{reg}", f"dist={dist_atr:+.2f}atr"],
+                      {"h4_regime": reg, "h4_atr": atr, "dist_atr": dist_atr,
+                       "sl_dist": abs(entry - stop), "pre_range": atr,
+                       "spread": ask - bid, "minutes_since_entry": 0})
+
+
 BOTS = [GoldBreakout0630(), IndexBreakoutUSOpen(), SP500LondonBreakout(),
-        GoldNYBreakout(), EURUSDLondonBreakout(), VWAPReversion()]
+        GoldNYBreakout(), EURUSDLondonBreakout(), VWAPReversion(),
+        H4PullbackContinuation()]
 
 
 # ==================================================================== execution
@@ -967,6 +1070,17 @@ def main():
         blackout = in_event_blackout(ctx["now_london"])
         if blackout:
             print(f"  {bot.strategy_id}: no trade -- {blackout}"); continue
+
+        import market_state as MS, macro_context as MC, desk as DESK
+        pre_state = MS.compute(mt5, bot.symbol, ctx["now_london"], tick.ask,
+                               tick.ask - tick.bid)
+        pre_state.update(MC.compute(mt5, bot.symbol, ctx["now_london"]))
+        opp = DESK.classify_opportunity(pre_state)
+        ctx["state"] = pre_state
+        ok, why = DESK.eligibility(bot, opp["opportunities"])
+        if not ok:
+            print(f"  {bot.strategy_id}: NOT ALLOCATED -- {why} "
+                  f"[market: {','.join(opp['opportunities'])}]"); continue
 
         sig = bot.generate_signal(ctx)
         if sig is None:
