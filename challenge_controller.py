@@ -77,54 +77,7 @@ DEMO_PROVEN_MIN_TRADES = 40
 
 
 # ==================================================================== bot interface
-@dataclass
-class Signal:
-    strategy_id: str
-    strategy_version: str
-    timestamp: str
-    symbol: str
-    side: int                      # +1 long, -1 short
-    entry_type: str                # "stop" | "market" | "limit"
-    entry_price: float
-    stop_price: float
-    target_price: float
-    expected_holding_minutes: int
-    reason_codes: list = field(default_factory=list)
-    feature_snapshot: dict = field(default_factory=dict)
-
-    def risk_distance(self) -> float:
-        return abs(self.entry_price - self.stop_price)
-
-
-class Bot:
-    """Every candidate implements this. A bot NEVER sends an order."""
-    strategy_id = "base"
-    strategy_version = "0"
-    symbol = ""
-    stage = "IDEA"
-    prior_expectancy_R = 0.0        # from backtest -- a PRIOR, not a promise
-    prior_n = 0
-    risk_override = None            # new bots start smaller than experimental
-    # ---- specialist declaration. What this bot was DESIGNED for. A priori, not fitted:
-    # a fade bot avoids strong trends by construction, not because it lost money in one.
-    playbook = ""                   # BREAKOUT | REVERSION | CONTINUATION
-    primary: set = set()
-    secondary: set = set()
-    avoids: set = set()
-
-    def _no(self, reason: str) -> None:
-        """Record WHY there was no trade. 'NO SIGNAL' is not a diagnosis: a bot that is
-        silent because its window is shut and one that is silent because its data is
-        missing look identical, and only one of them is working correctly."""
-        self.no_signal_reason = reason
-        return None
-
-    def generate_signal(self, ctx) -> Signal | None:
-        raise NotImplementedError
-
-    def manage_position(self, position, ctx) -> str:
-        """Return "hold" or "close". Default: broker stop/target does the work."""
-        return "hold"
+from bot_base import Bot, Signal  # noqa: F401  (re-exported)
 
 
 # ==================================================================== bayesian scoring
@@ -1119,6 +1072,13 @@ BOTS = [GoldBreakout0630(), IndexBreakoutUSOpen(), SP500LondonBreakout(),
         GoldNYBreakout(), EURUSDLondonBreakout(), VWAPReversion(),
         H4PullbackContinuation(), LiquiditySweepReclaim()]
 
+# BOT_I lives in its own module (seven-condition state machine) and joins as a SHADOW.
+try:
+    from bot_i import AsianSweepLondonReversal
+    BOTS.append(AsianSweepLondonReversal())
+except Exception as _e:                      # never let a candidate break the live desk
+    print(f"  (BOT_I unavailable: {_e})")
+
 
 # ==================================================================== execution
 def demo_gate(acct) -> str | None:
@@ -1375,6 +1335,15 @@ def main():
                "daily_loss_headroom": st.daily_headroom, "total_loss_headroom": st.total_headroom,
                "spread": ctx["ask"] - ctx["bid"], "reason_codes": sig.reason_codes,
                "feature_snapshot": sig.feature_snapshot, "R": None, "outcome": None}
+
+        if bot.shadow:
+            pre["shadow_only"] = True
+            pre["retcode"] = None
+            pre["ticket"] = None
+            append_trade(pre)
+            print(f"     SHADOW ONLY -- recorded, no order sent "
+                  f"(promote the bot to trade it)")
+            continue
 
         if a.dry_run:
             print(f"     DRY RUN -- not sent"); continue

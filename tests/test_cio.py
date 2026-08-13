@@ -15,13 +15,25 @@ p = D.allocate(BOTS, real, lambda b: b.risk_override or 0.0010, CS())
 assert p["total_risk"] > 0, "CIO froze on the real market again"
 print(f"  2026-08-13 real state -> {p['total_risk']:.3%} allocated (was 0.000%)")
 
-# ---- nothing fits ANY specialist: still probe the best one
-nofit = {b.symbol: {"opportunities":["TRANSITION","EXTENDED","COMPRESSION"]} for b in BOTS}
-p2 = D.allocate(BOTS, nofit, lambda b: b.risk_override or 0.0010, CS())
+# ---- nothing fits ANY specialist (UNKNOWN is the real gap): still probe exactly one
+live = [b for b in BOTS if not getattr(b, "shadow", False)]
+nofit = {b.symbol: {"opportunities":["UNKNOWN","EXTENDED","COMPRESSION"]} for b in BOTS}
+p2 = D.allocate(live, nofit, lambda b: b.risk_override or 0.0010, CS())
 funded = [s for s,d in p2["decisions"].items() if d["allow"]]
 assert len(funded) == 1, f"expected one probe, got {funded}"
 assert p2["total_risk"] == D.MIN_EXPERIMENTAL_RISK, p2["total_risk"]
 print(f"  no specialist fits -> probes {funded[0]} at {p2['total_risk']:.3%}")
+
+# a SHADOW must never consume the risk budget it does not use
+sh = [b for b in BOTS if getattr(b, "shadow", False)]
+assert sh, "no shadow bot registered"
+allfit = {b.symbol: {"opportunities":["TRANSITION","AT_HTF_LEVEL"]} for b in BOTS}
+p2b = D.allocate(BOTS, allfit, lambda b: b.risk_override or 0.0010, CS())
+p2c = D.allocate(live, allfit, lambda b: b.risk_override or 0.0010, CS())
+assert p2b["total_risk"] == p2c["total_risk"], "shadow consumed the risk budget"
+assert p2b["decisions"][sh[0].strategy_id]["shadow"] is True
+print(f"  shadow {sh[0].strategy_id.split('_')[1]} ranked and recorded, "
+      f"budget unchanged at {p2b['total_risk']:.3%}")
 
 # ---- modifiers must NEVER hard-block; only regimes do
 a = next(b for b in BOTS if b.strategy_id=="BOT_A_gold_0630_breakout")

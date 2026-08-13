@@ -215,6 +215,15 @@ def allocate(bots, opportunities_by_symbol: dict, risk_of, challenge_state,
 
     for rank, (score, bot, u) in enumerate(scored):
         want = risk_of(bot)
+        # A SHADOW risks nothing, so it must not consume the correlated-group or total cap --
+        # otherwise an unproven candidate crowds a live specialist out of the budget while
+        # having no capital at stake. It is still ranked and still records everything.
+        if getattr(bot, "shadow", False):
+            decisions[bot.strategy_id] = {
+                "allow": True, "risk": want, "utility": score, "shadow": True,
+                "reason": f"SHADOW -- {u['why']}; records only, no capital, no cap consumed",
+                "group": correlation_group(bot)}
+            continue
         # nothing is a perfect match today -> still fund the best one, minimally
         if rank == 0 and u["fit"] < 0.6:
             want = min(want, MIN_EXPERIMENTAL_RISK)
