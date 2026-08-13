@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+8fc0bf4  Anchor: MT5 needs naive datetimes, and the fallback must not be silent
+ce17bf8  Obsidian bridge auto-sync [bridge-auto]
 addf922  AutoTrading-off must not cost a bot its trading day; anchor on the real deposit
 5fc763f  Obsidian bridge auto-sync [bridge-auto]
 d33b8a6  CRITICAL: FTMO drawdown limits were inert
 1ae9ede  Obsidian bridge auto-sync [bridge-auto]
 214c3fc  CRITICAL: time exits were never implemented
 385262f  Obsidian bridge auto-sync [bridge-auto]
-b3c7108  Market state engine, macro context, shadow variants, risk-overrun audit
-9870254  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
