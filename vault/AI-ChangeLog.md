@@ -462,3 +462,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-12 | Obsidian Bridge / automated | Market state engine, macro context, shadow variants, risk-overrun audit | git post-commit hook | b3c7108 |
 | 2026-08-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 385262f |
 | 2026-08-13 | Obsidian Bridge / automated | CRITICAL: time exits were never implemented | git post-commit hook | 214c3fc |
+| 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 1ae9ede |
+| 2026-08-13 | Obsidian Bridge / automated | CRITICAL: FTMO drawdown limits were inert | git post-commit hook | d33b8a6 |
