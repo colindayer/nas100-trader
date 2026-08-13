@@ -129,7 +129,7 @@ def evaluate(strategy_id: str, state: dict, side: int, sl_dist: float) -> dict:
 
 def log(record: dict):
     LOG.parent.mkdir(parents=True, exist_ok=True)
-    with LOG.open("a") as f:
+    with LOG.open("a", encoding="utf-8") as f:
         f.write(json.dumps(record) + "\n")
 
 

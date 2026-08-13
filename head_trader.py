@@ -22,6 +22,15 @@ from collections import Counter
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+# Windows consoles default to cp1252, which cannot encode arrows or box characters. A report
+# that dies on an encoding error after a full day of trading loses the day's analysis, so both
+# the console and every file write are pinned to UTF-8.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data" / "challenge"
 TELEM = ROOT / "data" / "telemetry"
@@ -45,8 +54,8 @@ def collect(mt5=None) -> dict:
                        ("controller_state", DATA / "controller_state.json"),
                        ("open_positions_track", DATA / "open_positions.json")):
         try:
-            snap[name] = (path.read_text().splitlines() if path.suffix == ".jsonl"
-                          else json.loads(path.read_text())) if path.exists() else None
+            snap[name] = (path.read_text(encoding="utf-8").splitlines() if path.suffix == ".jsonl"
+                          else json.loads(path.read_text(encoding="utf-8"))) if path.exists() else None
         except Exception as e:
             snap[name] = f"UNREADABLE: {e}"
 
@@ -90,7 +99,7 @@ def collect(mt5=None) -> dict:
         snap["mt5_error"] = str(e)
 
     day = datetime.now(timezone.utc).date().isoformat()
-    (TELEM / f"{day}.json").write_text(json.dumps(snap, indent=1, default=str))
+    (TELEM / f"{day}.json").write_text(json.dumps(snap, indent=1, default=str), encoding="utf-8")
     return snap
 
 
@@ -99,7 +108,7 @@ def merged_trades() -> list:
     p = DATA / "trades.jsonl"
     if not p.exists():
         return []
-    rows = [json.loads(l) for l in p.read_text().splitlines() if l.strip()]
+    rows = [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
     opens = {r["intent_id"]: r for r in rows if r.get("kind") != "close"}
     out = []
     for r in rows:
@@ -378,7 +387,7 @@ def main():
         P.append("- **Confidence:** CERTAIN")
     if npatch == 0:
         P.append("\n_No execution defects detected today._")
-    PATCHES.write_text("\n".join(P) + "\n")
+    PATCHES.write_text("\n".join(P) + "\n", encoding="utf-8")
     L.append(f"\n## Patches\n\nSee `PATCHES.md` — **{npatch}** proposed, none applied.")
 
     # ---- self critique
@@ -396,7 +405,7 @@ def main():
     L.append(f"- What the desk needs: **valid trades, not more code.** The next 20 clean "
              f"observations decide more than any module I could add.")
 
-    REPORT.write_text("\n".join(L) + "\n")
+    REPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
     print(f"wrote {REPORT.name} ({len(todays)} trades today, {len(Rs)} lifetime) "
           f"and {PATCHES.name} ({npatch} patches)")
     if mt5:

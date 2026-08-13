@@ -22,6 +22,15 @@ WHAT IS STRUCTURAL VS WHAT NEEDS DATA
 """
 from __future__ import annotations
 
+import sys
+
+# Windows consoles default to cp1252 and cannot encode arrows. Pin stdout so a report never
+# dies on an encoding error after a full day of trading.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 # ==================================================================== opportunity classes
 STRONG_TREND = "STRONG_TREND"
 WEAK_TREND = "WEAK_TREND"

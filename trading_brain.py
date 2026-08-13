@@ -29,6 +29,15 @@ import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
+# Windows consoles default to cp1252, which cannot encode arrows or box characters. A report
+# that dies on an encoding error after a full day of trading loses the day's analysis, so both
+# the console and every file write are pinned to UTF-8.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 ROOT = Path(__file__).resolve().parent
 BRAIN = ROOT / "data" / "brain"
 EVENTS = BRAIN / "events.jsonl"                 # append-only, the only source of truth
@@ -48,14 +57,14 @@ def now() -> str:
 def emit(kind: str, **payload):
     """Append one immutable event. Nothing in this file ever rewrites events.jsonl."""
     BRAIN.mkdir(parents=True, exist_ok=True)
-    with EVENTS.open("a") as f:
+    with EVENTS.open("a", encoding="utf-8") as f:
         f.write(json.dumps({"ts": now(), "kind": kind, **payload}) + "\n")
 
 
 def events(kind: str | None = None) -> list:
     if not EVENTS.exists():
         return []
-    out = [json.loads(l) for l in EVENTS.read_text().splitlines() if l.strip()]
+    out = [json.loads(l) for l in EVENTS.read_text(encoding="utf-8").splitlines() if l.strip()]
     return [e for e in out if kind is None or e["kind"] == kind]
 
 
@@ -65,7 +74,7 @@ def closed_trades() -> list:
     the outcome as the broker reported it. Neither ever overwrites the other."""
     if not TRADES.exists():
         return []
-    rows = [json.loads(l) for l in TRADES.read_text().splitlines() if l.strip()]
+    rows = [json.loads(l) for l in TRADES.read_text(encoding="utf-8").splitlines() if l.strip()]
     opens = {r["intent_id"]: r for r in rows if r.get("kind") != "close"}
     out = []
     for r in rows:

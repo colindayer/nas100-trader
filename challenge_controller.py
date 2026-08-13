@@ -30,6 +30,15 @@ from dataclasses import dataclass, asdict, field
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Windows consoles default to cp1252, which cannot encode arrows or box characters. A report
+# that dies on an encoding error after a full day of trading loses the day's analysis, so both
+# the console and every file write are pinned to UTF-8.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data" / "challenge"
 TRADES = DATA / "trades.jsonl"
@@ -338,7 +347,7 @@ def reconcile(mt5, magic=990001) -> int:
         return 0
 
     live = {p.ticket: p for p in (mt5.positions_get() or []) if p.magic == magic}
-    track = json.loads(OPEN_STATE.read_text()) if OPEN_STATE.exists() else {}
+    track = json.loads(OPEN_STATE.read_text(encoding="utf-8")) if OPEN_STATE.exists() else {}
     n_closed = 0
 
     for iid, r in pending.items():
@@ -386,7 +395,7 @@ def reconcile(mt5, magic=990001) -> int:
               f"(swap {sum(x.swap for x in d):+.2f})  MFE {st['mfe']:+.2f} MAE {st['mae']:+.2f}")
 
     DATA.mkdir(parents=True, exist_ok=True)
-    OPEN_STATE.write_text(json.dumps(track, indent=1))
+    OPEN_STATE.write_text(json.dumps(track, indent=1), encoding="utf-8")
     return n_closed
 
 
@@ -470,7 +479,7 @@ def challenge_anchors(acct, trades) -> dict:
     """
     import pandas as pd
     STATE.parent.mkdir(parents=True, exist_ok=True)
-    st = json.loads(STATE.read_text()) if STATE.exists() else {}
+    st = json.loads(STATE.read_text(encoding="utf-8")) if STATE.exists() else {}
     today = pd.Timestamp.now(tz="Europe/London").date().isoformat()
 
     if not st.get("starting_balance"):
@@ -509,7 +518,7 @@ def challenge_anchors(acct, trades) -> dict:
         st["day_start_equity"] = float(acct.equity)
         print(f"  NEW TRADING DAY {today}: day-start equity {acct.equity:.2f}")
 
-    STATE.write_text(json.dumps(st, indent=1))
+    STATE.write_text(json.dumps(st, indent=1), encoding="utf-8")
 
     open_risk = 0.0
     by_ticket = {t["ticket"]: t for t in trades if t.get("ticket") and t.get("kind") != "close"}
@@ -529,14 +538,14 @@ def challenge_anchors(acct, trades) -> dict:
 # ==================================================================== ledger
 def append_trade(rec: dict):
     DATA.mkdir(parents=True, exist_ok=True)
-    with TRADES.open("a") as f:
+    with TRADES.open("a", encoding="utf-8") as f:
         f.write(json.dumps(rec) + "\n")
 
 
 def load_trades() -> list:
     if not TRADES.exists():
         return []
-    return [json.loads(l) for l in TRADES.read_text().splitlines() if l.strip()]
+    return [json.loads(l) for l in TRADES.read_text(encoding="utf-8").splitlines() if l.strip()]
 
 
 def bot_stats(sid: str) -> dict:
@@ -1028,7 +1037,7 @@ BOTS = [GoldBreakout0630(), IndexBreakoutUSOpen(), SP500LondonBreakout(),
 def demo_gate(acct) -> str | None:
     """Hard gate. Returns a reason to HALT, or None to proceed."""
     lg = sv = None
-    for line in (ROOT / "config" / "guardian.env").read_text().splitlines():
+    for line in (ROOT / "config" / "guardian.env").read_text(encoding="utf-8").splitlines():
         s = line.strip()
         if s.startswith("ACCOUNT_LOGIN"):
             lg = int(s.split("=", 1)[1].strip())

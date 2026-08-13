@@ -16,6 +16,15 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+# Windows consoles default to cp1252, which cannot encode arrows or box characters. A report
+# that dies on an encoding error after a full day of trading loses the day's analysis, so both
+# the console and every file write are pinned to UTF-8.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 ROOT = Path(__file__).resolve().parent
 TRADES = ROOT / "data" / "challenge" / "trades.jsonl"
 LOGDIR = ROOT / "data" / "challenge"
@@ -39,7 +48,7 @@ RETCODES = {
 def rows() -> list:
     if not TRADES.exists():
         return []
-    return [json.loads(l) for l in TRADES.read_text().splitlines() if l.strip()]
+    return [json.loads(l) for l in TRADES.read_text(encoding="utf-8").splitlines() if l.strip()]
 
 
 def day_slice(all_rows, date_str):
@@ -267,7 +276,7 @@ def main():
     for p in pri:
         L.append(f"- {p}")
 
-    OUT.write_text("\n".join(L) + "\n")
+    OUT.write_text("\n".join(L) + "\n", encoding="utf-8")
 
     P = [f"# PATCHES — proposed {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC\n",
          "Proposals only. Nothing here has been applied to production.\n"]
@@ -280,7 +289,7 @@ def main():
         P.append(f"- **Confidence:** {p['confidence']}")
     if not pl:
         P.append("\n_No execution defects detected today._")
-    PATCHES.write_text("\n".join(P) + "\n")
+    PATCHES.write_text("\n".join(P) + "\n", encoding="utf-8")
 
     print(f"wrote {OUT.name} ({len(day)} signals, {len(filled)} filled) "
           f"and {PATCHES.name} ({len(pl)} patches)")
