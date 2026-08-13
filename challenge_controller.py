@@ -58,7 +58,16 @@ EPOCH_TRADES = 20               # review cadence. NEVER review after a single lo
 MAX_ORDER_ATTEMPTS_PER_DAY = 3  # a rejected order may be retried, but not indefinitely
 MAX_NOTIONAL_MULT = 3.0         # position notional vs equity -- a tight stop must not
                                 # turn a 0.05% risk into a 3x-leveraged position
-MIN_STOP_SPREAD_MULT = 8.0      # stop must clear the spread by this much to be tradable
+MIN_STOP_SPREAD_MULT = 30.0     # stop must clear the spread by this much to be tradable.
+                                # 8x allowed spread alone to be 12.5% of R. First-passage
+                                # simulation of a ZERO-EDGE system at 1% risk, 40k paths:
+                                #   cost  2%R -> P(pass) 31.6%
+                                #   cost  5%R -> P(pass) 20.8%
+                                #   cost 10%R -> P(pass)  9.2%
+                                # 30x caps spread at ~3% of R. Cost control is worth more
+                                # than any entry rule the desk owns, and it needs no edge to
+                                # collect. The ATR floor usually binds first; this is the net
+                                # for instruments where ATR is small relative to spread.
 MIN_STOP_ATR_FRAC = 0.15        # ...AND clear this fraction of the D1 ATR20. Spread alone is
                                 # not a volatility floor: BOT_D passed the spread gate with a
                                 # 6.1pt gold stop and was gapped 31pt through it for -6.07R.

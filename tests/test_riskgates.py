@@ -28,3 +28,31 @@ src = inspect.getsource(C.main)
 i_black = src.index("in_event_blackout")
 assert "positions_get" not in src[i_black:i_black+400], "blackout reaches an open position"
 print("RISK GATE CHECKS PASS")
+
+# --- cost/R is the lever a zero-edge system actually controls ---
+# First-passage sim, 1% risk, 40k paths: cost 2%R -> P(pass) 31.6%; 5%R -> 20.8%; 10%R -> 9.2%
+from bot_base import Signal as _Sig
+def geo(stop, spread, atr):
+    s = _Sig("x","1","t","S",1,"market",100.0,100.0-stop,100.0+stop,60)
+    return C.stop_geometry(s, {"atr20_d1":atr,"m1_excursion_p90_60":None}, None, spread)
+
+# every ACCEPTED stop must keep spread under ~4% of R
+for stop, spread, atr in ((30.0,0.50,88.0), (95.1,1.45,633.7), (13.4,0.60,89.0),
+                          (0.0027,0.00012,0.0050)):
+    g = geo(stop, spread, atr)
+    assert g["ok"], g
+    final = g.get("widened_to") or stop
+    assert spread/final <= 0.04, f"accepted a {spread/final:.1%} cost trade"
+
+# the old 8x floor would have permitted 12.5% cost -- now impossible
+assert C.MIN_STOP_SPREAD_MULT >= 30.0
+g = geo(8*0.6, 0.6, 89.0)                     # exactly the old floor
+final = g.get("widened_to") or 8*0.6
+assert 0.6/final <= 0.04, f"old 8x floor still reachable: {0.6/final:.1%}"
+
+# a true scalp stop is REJECTED, not silently widened into a different strategy
+g = geo(1.85, 0.60, 89.0)
+assert not g["ok"] and "inside the noise" in g["reason"]
+print(f"  cost/R capped: every accepted stop <= 4% spread cost; 8x-floor case now widened")
+print(f"  a 32% cost scalp is rejected, not reshaped into a trade nobody tested")
+print("COST CONTROL CHECKS PASS")
