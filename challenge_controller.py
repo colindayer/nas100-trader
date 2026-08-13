@@ -468,13 +468,26 @@ def challenge_anchors(acct, trades) -> dict:
     today = pd.Timestamp.now(tz="Europe/London").date().isoformat()
 
     if not st.get("starting_balance"):
-        # first run: today's balance is the only anchor available, but recover the true
-        # starting balance from the ledger if this desk has already traded.
-        realised = sum(t.get("net") or 0 for t in trades if t.get("kind") == "close")
-        st["starting_balance"] = float(acct.balance) - realised
+        # FTMO measures drawdown against the INITIAL DEPOSIT, not against whatever the
+        # balance happened to be when this desk started. Read the balance deal from broker
+        # history; only fall back to reconstruction if the broker cannot tell us.
+        st["starting_balance"] = st["source"] = None
+        try:
+            import MetaTrader5 as _m
+            deals = _m.history_deals_get(datetime(2000, 1, 1), datetime.now(timezone.utc))
+            bal = [d for d in (deals or []) if d.type == _m.DEAL_TYPE_BALANCE and d.profit > 0]
+            if bal:
+                st["starting_balance"] = float(min(bal, key=lambda d: d.time).profit)
+                st["source"] = "broker initial deposit"
+        except Exception:
+            pass
+        if not st["starting_balance"]:
+            realised = sum(t.get("net") or 0 for t in trades if t.get("kind") == "close")
+            st["starting_balance"] = float(acct.balance) - realised
+            st["source"] = "reconstructed from ledger (deposit unreadable)"
         st["anchored_on"] = today
         print(f"  ANCHOR SET: starting balance {st['starting_balance']:.2f} "
-              f"(balance {acct.balance:.2f} less {realised:+.2f} realised)")
+              f"({st['source']})")
 
     if st.get("day") != today:
         st["day"] = today
@@ -879,6 +892,13 @@ def main():
     if why:
         mt5.shutdown(); sys.exit(f"HALT: {why}")
     print(f"DEMO GATE OK -> {acct.login} {acct.server} equity {acct.equity:.2f}")
+
+    term = mt5.terminal_info()
+    if term is not None and not term.trade_allowed and not a.dry_run:
+        sys.exit("HALT: AlgoTrading is DISABLED in the MT5 terminal (retcode 10027 for every "
+                 "order). This is a terminal toggle, not a bot fault -- enable it via the "
+                 "AlgoTrading button and Tools > Options > Expert Advisors > 'Allow "
+                 "algorithmic trading'. Halting so no bot burns its daily attempts.")
     if a.dry_run:
         print("DRY RUN: intents will be printed, nothing sent.\n")
 
@@ -906,7 +926,11 @@ def main():
         if t.get("kind") == "close" or not t.get("timestamp", "").startswith(london_today):
             continue
         sid = t["strategy_id"]
-        attempts_today[sid] = attempts_today.get(sid, 0) + 1
+        # 10027 = AutoTrading disabled: a TERMINAL condition affecting every bot equally.
+        # Counting it against one bot's 3 attempts loses that bot the day for something it
+        # did not do, and something no bot could have avoided.
+        if t.get("retcode") != 10027:
+            attempts_today[sid] = attempts_today.get(sid, 0) + 1
         if t.get("ticket"):
             traded_today[sid] = True
     for sid, n in attempts_today.items():
