@@ -494,3 +494,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-13 | Obsidian Bridge / automated | Fix test assertion: an 8x-spread stop is rejected, not widened | git post-commit hook | 9c1888c |
 | 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | f91f9e4 |
 | 2026-08-13 | Obsidian Bridge / automated | One clock for the desk: the broker's. Host drift no longer reaches a window | git post-commit hook | 7b57f4a |
+| 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 7ecfc92 |
+| 2026-08-14 | Obsidian Bridge / automated | One desk clock: freshest tick across liquid symbols, not per-symbol | git post-commit hook | 6a20890 |
