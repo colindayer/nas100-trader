@@ -490,3 +490,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-13 | Obsidian Bridge / automated | BOT_I: Asian sweep -> London reversal, as a SHADOW specialist | git post-commit hook | 5ffb344 |
 | 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | ae3a8ec |
 | 2026-08-13 | Obsidian Bridge / automated | Raise spread floor 8x -> 30x: cost control is the lever a zero-edge system owns | git post-commit hook | b387f29 |
+| 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 2645536 |
+| 2026-08-13 | Obsidian Bridge / automated | Fix test assertion: an 8x-spread stop is rejected, not widened | git post-commit hook | 9c1888c |

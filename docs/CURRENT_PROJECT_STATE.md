@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+9c1888c  Fix test assertion: an 8x-spread stop is rejected, not widened
+2645536  Obsidian bridge auto-sync [bridge-auto]
 b387f29  Raise spread floor 8x -> 30x: cost control is the lever a zero-edge system owns
 ae3a8ec  Obsidian bridge auto-sync [bridge-auto]
 5ffb344  BOT_I: Asian sweep -> London reversal, as a SHADOW specialist
 d30bc67  Obsidian bridge auto-sync [bridge-auto]
 c457cd0  Preflight caught it: 15-minute rounding manufactured 6 minutes of clock drift
 6ea5603  Obsidian bridge auto-sync [bridge-auto]
-b22d519  Overnight mission: preflight, data-integrity gate, validity flag, evidence report
-29f9607  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
