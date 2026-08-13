@@ -478,3 +478,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-13 | Obsidian Bridge / automated | CIO ranks by expected utility instead of freezing | git post-commit hook | ff5c99f |
 | 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | e3b7e7e |
 | 2026-08-13 | Obsidian Bridge / automated | BOT_H liquidity sweep: closes the TRANSITION coverage gap | git post-commit hook | 1f43f61 |
+| 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 5e944ed |
+| 2026-08-13 | Obsidian Bridge / automated | head_trader.py: the desk reviews itself, on the machine that trades | git post-commit hook | cf10c77 |
