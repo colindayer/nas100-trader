@@ -276,7 +276,7 @@ def main():
     for p in pri:
         L.append(f"- {p}")
 
-    OUT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    OUT.write_text("\n".join(L) + "\n", encoding="utf-8-sig")
 
     P = [f"# PATCHES — proposed {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC\n",
          "Proposals only. Nothing here has been applied to production.\n"]
@@ -289,7 +289,7 @@ def main():
         P.append(f"- **Confidence:** {p['confidence']}")
     if not pl:
         P.append("\n_No execution defects detected today._")
-    PATCHES.write_text("\n".join(P) + "\n", encoding="utf-8")
+    PATCHES.write_text("\n".join(P) + "\n", encoding="utf-8-sig")
 
     print(f"wrote {OUT.name} ({len(day)} signals, {len(filled)} filled) "
           f"and {PATCHES.name} ({len(pl)} patches)")

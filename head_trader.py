@@ -387,7 +387,7 @@ def main():
         P.append("- **Confidence:** CERTAIN")
     if npatch == 0:
         P.append("\n_No execution defects detected today._")
-    PATCHES.write_text("\n".join(P) + "\n", encoding="utf-8")
+    PATCHES.write_text("\n".join(P) + "\n", encoding="utf-8-sig")
     L.append(f"\n## Patches\n\nSee `PATCHES.md` — **{npatch}** proposed, none applied.")
 
     # ---- self critique
@@ -405,7 +405,7 @@ def main():
     L.append(f"- What the desk needs: **valid trades, not more code.** The next 20 clean "
              f"observations decide more than any module I could add.")
 
-    REPORT.write_text("\n".join(L) + "\n", encoding="utf-8")
+    REPORT.write_text("\n".join(L) + "\n", encoding="utf-8-sig")
     print(f"wrote {REPORT.name} ({len(todays)} trades today, {len(Rs)} lifetime) "
           f"and {PATCHES.name} ({npatch} patches)")
     if mt5:
