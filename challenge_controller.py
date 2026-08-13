@@ -452,6 +452,52 @@ def time_exits(mt5, acct, bots, dry_run=False, magic=990001) -> int:
     return n
 
 
+def challenge_anchors(acct, trades) -> dict:
+    """The two numbers FTMO actually measures against, PERSISTED.
+
+    They were being re-read from the live account every cycle, which set
+    starting_balance = current balance and day_start_equity = current equity. Both headrooms
+    therefore computed as full, always: the desk reported 5.00%/10.00% while $520 down, and
+    would have reported the same at -9%. Every drawdown veto was dead code.
+
+    An anchor is written ONCE and never recomputed from a number it is supposed to bound.
+    """
+    import pandas as pd
+    STATE.parent.mkdir(parents=True, exist_ok=True)
+    st = json.loads(STATE.read_text()) if STATE.exists() else {}
+    today = pd.Timestamp.now(tz="Europe/London").date().isoformat()
+
+    if not st.get("starting_balance"):
+        # first run: today's balance is the only anchor available, but recover the true
+        # starting balance from the ledger if this desk has already traded.
+        realised = sum(t.get("net") or 0 for t in trades if t.get("kind") == "close")
+        st["starting_balance"] = float(acct.balance) - realised
+        st["anchored_on"] = today
+        print(f"  ANCHOR SET: starting balance {st['starting_balance']:.2f} "
+              f"(balance {acct.balance:.2f} less {realised:+.2f} realised)")
+
+    if st.get("day") != today:
+        st["day"] = today
+        st["day_start_equity"] = float(acct.equity)
+        print(f"  NEW TRADING DAY {today}: day-start equity {acct.equity:.2f}")
+
+    STATE.write_text(json.dumps(st, indent=1))
+
+    open_risk = 0.0
+    by_ticket = {t["ticket"]: t for t in trades if t.get("ticket") and t.get("kind") != "close"}
+    closed = {t["intent_id"] for t in trades if t.get("kind") == "close"}
+    for t in by_ticket.values():
+        if t["intent_id"] not in closed:
+            open_risk += t.get("risk_pct") or 0.0
+
+    return {"equity": float(acct.equity), "balance": float(acct.balance),
+            "starting_balance": float(st["starting_balance"]),
+            "day_start_equity": float(st["day_start_equity"]),
+            "trading_days": len({t.get("timestamp", "")[:10] for t in trades
+                                 if t.get("kind") != "close"}),
+            "open_risk_pct": open_risk}
+
+
 # ==================================================================== ledger
 def append_trade(rec: dict):
     DATA.mkdir(parents=True, exist_ok=True)
@@ -868,10 +914,7 @@ def main():
             traded_today[sid] = True
             print(f"  {sid}: BLOCKED -- {n} rejected orders today, not retrying")
 
-    st = ChallengeState(equity=acct.equity, balance=acct.balance,
-                        starting_balance=float(acct.balance), day_start_equity=float(acct.equity),
-                        trading_days=len({t.get("timestamp","")[:10] for t in trades}),
-                        open_risk_pct=0.0)
+    st = ChallengeState(**challenge_anchors(acct, trades))
     print(f"profit {st.profit_pct:+.2%}  daily headroom {st.daily_headroom:.2%}  "
           f"total headroom {st.total_headroom:.2%}  trading days {st.trading_days}\n")
 
