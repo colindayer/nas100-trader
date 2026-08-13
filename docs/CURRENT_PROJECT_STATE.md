@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+05f9b26  CRITICAL: MT5 times are SERVER time -- every session window fired 3 hours early
+1a58a93  Obsidian bridge auto-sync [bridge-auto]
 c6f4b9c  Reports written with a BOM so Windows tools read them correctly
 8bab06a  Obsidian bridge auto-sync [bridge-auto]
 d7a9dca  UTF-8 everywhere: the nightly review died on a Windows encoding error
 d582e0a  Obsidian bridge auto-sync [bridge-auto]
 cf10c77  head_trader.py: the desk reviews itself, on the machine that trades
 5e944ed  Obsidian bridge auto-sync [bridge-auto]
-1f43f61  BOT_H liquidity sweep: closes the TRANSITION coverage gap
-e3b7e7e  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
