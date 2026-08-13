@@ -454,3 +454,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-12 | Obsidian Bridge / automated | Risk gates after BOT_D's -6.07R: volatility floor + event blackout | git post-commit hook | efce4f4 |
 | 2026-08-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 9870254 |
 | 2026-08-12 | Obsidian Bridge / automated | Market state engine, macro context, shadow variants, risk-overrun audit | git post-commit hook | b3c7108 |
+| 2026-08-12 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 385262f |
+| 2026-08-13 | Obsidian Bridge / automated | CRITICAL: time exits were never implemented | git post-commit hook | 214c3fc |

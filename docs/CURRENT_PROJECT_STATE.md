@@ -1,4 +1,4 @@
-# CURRENT PROJECT STATE — 2026-08-12
+# CURRENT PROJECT STATE — 2026-08-13
 
 _Onboarding snapshot for any agent/human joining. Sources: LIVE_TRADING_PARITY,
 PRODUCTION_READINESS_REVIEW, NEXT_30_DAY_MONITORING_PLAN, LIVE_TRADE_REVIEW,
@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+214c3fc  CRITICAL: time exits were never implemented
+385262f  Obsidian bridge auto-sync [bridge-auto]
 b3c7108  Market state engine, macro context, shadow variants, risk-overrun audit
 9870254  Obsidian bridge auto-sync [bridge-auto]
 efce4f4  Risk gates after BOT_D's -6.07R: volatility floor + event blackout
 32e0539  Obsidian bridge auto-sync [bridge-auto]
 782a34e  Head trader: first-break-only, D1 trend context, daily review pipeline
 479b64e  Obsidian bridge auto-sync [bridge-auto]
-183cfc3  Fix: a rejected order no longer costs the bot its whole trading day
-a0673d5  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
