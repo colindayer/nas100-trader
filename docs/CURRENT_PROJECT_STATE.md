@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+1f43f61  BOT_H liquidity sweep: closes the TRANSITION coverage gap
+e3b7e7e  Obsidian bridge auto-sync [bridge-auto]
 ff5c99f  CIO ranks by expected utility instead of freezing
 139822f  Obsidian bridge auto-sync [bridge-auto]
 4a2dbee  Desk as allocator: opportunity engine, specialists, playbooks, CIO, BOT_G
 b747942  Obsidian bridge auto-sync [bridge-auto]
 382673a  Regime must be positively identified -- 'mixed' meant 'detected nothing'
 b7773e5  Obsidian bridge auto-sync [bridge-auto]
-f3cd185  Market state: 60/120/250-day levels -- a 20-day window cannot see a 3-month peak
-7c29b87  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
