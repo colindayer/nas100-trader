@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+d7a9dca  UTF-8 everywhere: the nightly review died on a Windows encoding error
+d582e0a  Obsidian bridge auto-sync [bridge-auto]
 cf10c77  head_trader.py: the desk reviews itself, on the machine that trades
 5e944ed  Obsidian bridge auto-sync [bridge-auto]
 1f43f61  BOT_H liquidity sweep: closes the TRANSITION coverage gap
 e3b7e7e  Obsidian bridge auto-sync [bridge-auto]
 ff5c99f  CIO ranks by expected utility instead of freezing
 139822f  Obsidian bridge auto-sync [bridge-auto]
-4a2dbee  Desk as allocator: opportunity engine, specialists, playbooks, CIO, BOT_G
-b747942  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
