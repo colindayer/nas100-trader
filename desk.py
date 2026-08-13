@@ -37,6 +37,16 @@ USD_STRONG = "USD_STRONG"
 USD_WEAK = "USD_WEAK"
 UNKNOWN = "UNKNOWN"
 
+# A REGIME is what the market IS -- exactly one holds at a time, and a specialist designed
+# for the wrong one is structurally wrong. A MODIFIER is a qualifier that colours it.
+# Conflating them froze the desk: EXTENDED and COMPRESSION fire on most days, so putting
+# them in `avoids` made ordinary conditions into universal vetoes.
+REGIMES = {STRONG_TREND, WEAK_TREND, RANGE, TRANSITION, UNKNOWN}
+MODIFIERS = {COMPRESSION, EXPANSION, EXTENDED, AT_HTF_LEVEL,
+             RISK_ON, RISK_OFF, USD_STRONG, USD_WEAK}
+
+MIN_EXPERIMENTAL_RISK = 0.0005      # the desk always has a way to learn something
+
 
 def classify_opportunity(state: dict) -> dict:
     """READ the market. This predicts nothing -- every branch is a description of state
@@ -104,22 +114,55 @@ PLAYBOOKS = {
 
 
 def eligibility(bot, opportunities: list) -> tuple[bool, str]:
-    """A specialist trades only what it was designed for. This is a priori knowledge --
-    a fade bot avoids strong trends BY CONSTRUCTION, not because it lost money in one."""
+    """HARD block only. A specialist is refused when the REGIME is one it cannot trade --
+    a fade bot in a strong trend is structurally wrong, not merely unlucky. Modifiers never
+    block; they price the opportunity down in utility()."""
     pb = PLAYBOOKS.get(getattr(bot, "playbook", ""), {})
-    avoid = set(getattr(bot, "avoids", set())) | set(pb.get("avoids", set()))
-    wants = set(getattr(bot, "primary", set())) | set(pb.get("wants", set()))
-    secondary = set(getattr(bot, "secondary", set()))
+    avoid = (set(getattr(bot, "avoids", set())) | set(pb.get("avoids", set()))) & REGIMES
     opp = set(opportunities)
-
     blocked = opp & avoid
     if blocked:
-        return False, f"avoids {', '.join(sorted(blocked))}"
-    if opp & wants:
-        return True, f"primary: {', '.join(sorted(opp & wants))}"
-    if opp & secondary:
-        return True, f"secondary: {', '.join(sorted(opp & secondary))}"
-    return False, f"not designed for {', '.join(sorted(opp)) or 'this state'}"
+        return False, f"regime {', '.join(sorted(blocked))} is structurally wrong for this bot"
+    return True, "eligible"
+
+
+def utility(bot, opportunities: list, belief: dict | None = None) -> dict:
+    """Expected utility, always a number -- never a refusal. The CIO ranks; it does not wait.
+
+    Modifiers apply penalties rather than vetoes, so an imperfect match still competes and
+    the desk keeps learning. Only the Risk Manager stops a trade outright.
+    """
+    pb = PLAYBOOKS.get(getattr(bot, "playbook", ""), {})
+    wants = set(getattr(bot, "primary", set())) | set(pb.get("wants", set()))
+    secondary = set(getattr(bot, "secondary", set()))
+    dislikes = (set(getattr(bot, "avoids", set())) | set(pb.get("avoids", set()))) & MODIFIERS
+    opp = set(opportunities)
+
+    regime = next((o for o in opp if o in REGIMES), UNKNOWN)
+    if regime in wants:
+        fit, why = 1.0, f"primary regime {regime}"
+    elif regime in secondary:
+        fit, why = 0.6, f"secondary regime {regime}"
+    elif regime == UNKNOWN:
+        fit, why = 0.25, "regime unknown"
+    else:
+        fit, why = 0.35, f"neutral in {regime}"
+
+    penalties = sorted(opp & dislikes)
+    score = fit * (0.65 ** len(penalties))
+    liked = sorted((opp & MODIFIERS) & wants)
+    score *= 1.15 ** len(liked)
+
+    # posterior expectancy nudges the ranking but cannot dominate it at small n --
+    # a 5-trade sample must not out-vote a structural mismatch in either direction.
+    exp_factor = 1.0
+    if belief and belief.get("n", 0) > 0:
+        exp_factor = max(0.5, min(1.5, 1.0 + (belief.get("exp") or 0.0)))
+        why += f", posterior {belief['exp']:+.2f}R on n={belief['n']}"
+    score *= exp_factor
+
+    return {"score": round(score, 4), "fit": fit, "regime": regime,
+            "penalties": penalties, "boosts": liked, "why": why}
 
 
 # ==================================================================== CIO allocation
@@ -131,23 +174,41 @@ def correlation_group(bot) -> str:
 
 
 def allocate(bots, opportunities_by_symbol: dict, risk_of, challenge_state,
-             group_cap=0.0015, total_cap=0.0075) -> dict:
-    """Bots propose, the CIO allocates. Returns a decision per bot with a stated reason.
+             group_cap=0.0015, total_cap=0.0075, beliefs=None) -> dict:
+    """Bots propose, the CIO allocates. Ranks by expected utility and ALWAYS funds the best
+    eligible specialist at minimum experimental risk.
 
-    Group cap exists because correlated risk is not diversified risk. It binds regardless
-    of any bot's expectancy -- it is portfolio construction, not a forecast.
+    The desk is paid to decide under uncertainty. Freezing because no specialist is a perfect
+    match returns zero information and zero P&L; a 0.05% probe returns one observation. Only
+    HARD safety reasons stop a trade: wrong regime for the specialist, correlated-group cap,
+    total risk cap, or a challenge-drawdown veto.
     """
     decisions, group_used, total = {}, {}, 0.0
-    ranked = sorted(bots, key=lambda b: (getattr(b, "stage", ""), b.strategy_id))
-
-    for bot in ranked:
+    beliefs = beliefs or {}
+    scored = []
+    for bot in bots:
         opp = opportunities_by_symbol.get(bot.symbol, {}).get("opportunities", [])
         ok, why = eligibility(bot, opp)
+        u = utility(bot, opp, beliefs.get(bot.strategy_id))
         if not ok:
-            decisions[bot.strategy_id] = {"allow": False, "risk": 0.0, "reason": why}
+            decisions[bot.strategy_id] = {"allow": False, "risk": 0.0, "reason": why,
+                                          "utility": 0.0}
             continue
+        scored.append((u["score"], bot, u))
+    scored.sort(key=lambda x: -x[0])
 
+    for rank, (score, bot, u) in enumerate(scored):
         want = risk_of(bot)
+        # nothing is a perfect match today -> still fund the best one, minimally
+        if rank == 0 and u["fit"] < 0.6:
+            want = min(want, MIN_EXPERIMENTAL_RISK)
+            u["why"] += " -- imperfect match, minimum probe to keep learning"
+        elif u["fit"] < 0.6:
+            decisions[bot.strategy_id] = {
+                "allow": False, "risk": 0.0, "utility": score,
+                "reason": f"outranked ({u['why']}); desk probes only its best candidate "
+                          f"when no specialist fits"}
+            continue
         g = correlation_group(bot)
         used = group_used.get(g, 0.0)
         if used + want > group_cap:
@@ -164,15 +225,17 @@ def allocate(bots, opportunities_by_symbol: dict, risk_of, challenge_state,
 
         veto = challenge_state.veto(want) if challenge_state else None
         if veto:
-            decisions[bot.strategy_id] = {"allow": False, "risk": 0.0,
-                                          "reason": f"challenge veto: {veto}"}
+            decisions[bot.strategy_id] = {"allow": False, "risk": 0.0, "utility": score,
+                                          "reason": f"RISK MANAGER veto: {veto}"}
             continue
 
         group_used[g] = used + want
         total += want
-        decisions[bot.strategy_id] = {"allow": True, "risk": want, "reason": why,
-                                      "group": g}
-    return {"decisions": decisions, "group_used": group_used, "total_risk": total}
+        decisions[bot.strategy_id] = {"allow": True, "risk": want, "utility": score,
+                                      "reason": u["why"], "group": g,
+                                      "penalties": u["penalties"]}
+    return {"decisions": decisions, "group_used": group_used, "total_risk": total,
+            "ranking": [(b.strategy_id, s) for s, b, _ in scored]}
 
 
 # ==================================================================== desk knowledge
@@ -180,12 +243,16 @@ def coverage(bots, opportunities: list) -> dict:
     """Which opportunity classes has this desk no specialist for? A gap is visible on day
     one -- it needs no evidence, only an inventory."""
     covered, gaps = {}, []
-    for o in opportunities:
-        who = [b.strategy_id for b in bots if eligibility(b, [o])[0]]
+    # Only REGIMES can be gaps. A modifier is not a market to specialise in, and reporting
+    # "no specialist for RISK_ON" is noise that makes a healthy desk look broken.
+    for o in [x for x in opportunities if x in REGIMES]:
+        who = [b.strategy_id for b in bots
+               if eligibility(b, [o])[0] and utility(b, [o])["fit"] >= 0.6]
         covered[o] = who
         if not who:
             gaps.append(o)
-    return {"covered": covered, "gaps": gaps}
+    return {"covered": covered, "gaps": gaps,
+            "note": "gaps are work orders for the Bot Factory, not reasons to stop trading"}
 
 
 MIN_STATES_FOR_CONDITIONAL = 30
@@ -257,12 +324,20 @@ def main():
     print("\n" + "=" * 88)
     print(" CIO ALLOCATION")
     print("=" * 88)
-    a = allocate(BOTS, by_symbol, lambda b: risk_for(b, None) if False else
-                 (b.risk_override or 0.0010), None)
-    for sid, d in a["decisions"].items():
-        mark = "ALLOW" if d["allow"] else "  -  "
-        print(f"  [{mark}] {sid:<32}{d['risk']:.3%}  {d['reason']}")
-    print(f"\n  groups: {a['group_used']}   total {a['total_risk']:.3%}")
+    try:
+        from trading_brain import belief
+        beliefs = {b.strategy_id: belief(b.strategy_id, b.prior_expectancy_R, b.prior_n)
+                   for b in BOTS}
+    except Exception:
+        beliefs = {}
+    a = allocate(BOTS, by_symbol, lambda b: b.risk_override or 0.0010, None, beliefs=beliefs)
+    print(f"  {'bot':<32}{'utility':>8}  decision")
+    for sid, d in sorted(a["decisions"].items(), key=lambda kv: -kv[1].get("utility", 0)):
+        mark = f"FUND {d['risk']:.3%}" if d["allow"] else "     --    "
+        print(f"  {sid:<32}{d.get('utility', 0):>8.3f}  {mark}  {d['reason']}")
+    print(f"\n  groups: {a['group_used']}   total risk {a['total_risk']:.3%}")
+    if a["total_risk"] == 0:
+        print("  DESK IDLE -- every candidate hard-blocked or vetoed. Check the reasons above.")
     mt5.shutdown()
 
 

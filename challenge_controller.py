@@ -1050,11 +1050,41 @@ def main():
             traded_today[sid] = True
             print(f"  {sid}: BLOCKED -- {n} rejected orders today, not retrying")
 
-    st = ChallengeState(**challenge_anchors(acct, trades))
+    st_ = ChallengeState(**challenge_anchors(acct, trades))
+    st = st_
     print(f"profit {st.profit_pct:+.2%}  daily headroom {st.daily_headroom:.2%}  "
           f"total headroom {st.total_headroom:.2%}  trading days {st.trading_days}\n")
 
+    import market_state as MS, macro_context as MC, desk as DESK
+    opp_by_symbol, states = {}, {}
+    for sym in sorted({b.symbol for b in BOTS}):
+        if not mt5.symbol_select(sym, True):
+            continue
+        tk = mt5.symbol_info_tick(sym)
+        if tk is None:
+            continue
+        st = MS.compute(mt5, sym, pd.Timestamp.now(tz="Europe/London"), tk.ask, tk.ask - tk.bid)
+        st.update(MC.compute(mt5, sym, pd.Timestamp.now(tz="Europe/London")))
+        states[sym] = st
+        opp_by_symbol[sym] = DESK.classify_opportunity(st)
+        print(f"  MARKET {sym:<12}{','.join(opp_by_symbol[sym]['opportunities'])}")
+
+    try:
+        from trading_brain import belief as _bel
+        beliefs = {b.strategy_id: _bel(b.strategy_id, b.prior_expectancy_R, b.prior_n)
+                   for b in BOTS}
+    except Exception:
+        beliefs = {}
+    plan = DESK.allocate(BOTS, opp_by_symbol, lambda b: risk_for(b, st_), st_,
+                         beliefs=beliefs)
+    print(f"\n  CIO: {sum(1 for d in plan['decisions'].values() if d['allow'])} "
+          f"of {len(BOTS)} funded, {plan['total_risk']:.3%} total risk")
+
     for bot in BOTS:
+        d = plan["decisions"].get(bot.strategy_id, {})
+        if not d.get("allow"):
+            print(f"  {bot.strategy_id}: NOT FUNDED -- {d.get('reason','no decision')}")
+            continue
         if not mt5.symbol_select(bot.symbol, True):
             print(f"  {bot.strategy_id}: symbol_select failed"); continue
         tick = mt5.symbol_info_tick(bot.symbol)
@@ -1071,17 +1101,7 @@ def main():
         if blackout:
             print(f"  {bot.strategy_id}: no trade -- {blackout}"); continue
 
-        import market_state as MS, macro_context as MC, desk as DESK
-        pre_state = MS.compute(mt5, bot.symbol, ctx["now_london"], tick.ask,
-                               tick.ask - tick.bid)
-        pre_state.update(MC.compute(mt5, bot.symbol, ctx["now_london"]))
-        opp = DESK.classify_opportunity(pre_state)
-        ctx["state"] = pre_state
-        ok, why = DESK.eligibility(bot, opp["opportunities"])
-        if not ok:
-            print(f"  {bot.strategy_id}: NOT ALLOCATED -- {why} "
-                  f"[market: {','.join(opp['opportunities'])}]"); continue
-
+        ctx["state"] = states.get(bot.symbol, {})
         sig = bot.generate_signal(ctx)
         if sig is None:
             print(f"  {bot.strategy_id}: no trade -- "
@@ -1112,7 +1132,7 @@ def main():
                   f"dollar risk constant")
             sig.stop_price = sig.entry_price - sig.side * geo["widened_to"]
 
-        risk = risk_for(bot, st)
+        risk = plan["decisions"][bot.strategy_id]["risk"]
         veto = st.veto(risk)
         if veto:
             print(f"  {bot.strategy_id}: SIGNAL but VETOED -- {veto}"); continue
