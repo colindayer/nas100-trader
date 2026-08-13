@@ -499,8 +499,14 @@ def preflight(mt5, acct, trades) -> list:
     check("mt5_connected", term is not None and term.connected, "terminal not connected")
 
     off = MS.broker_utc_offset(mt5, "XAUUSD")
-    check("broker_offset_sane", pd.Timedelta(hours=-12) <= off <= pd.Timedelta(hours=12),
+    check("broker_offset_sane", pd.Timedelta(hours=-14) <= off <= pd.Timedelta(hours=14),
           f"offset {off} is implausible")
+    skew = MS.clock_skew(off)
+    if abs(skew.total_seconds()) > 120:
+        # a WARNING, not a fault: the conversion is self-consistent either way, but a host
+        # clock minutes off true time shifts every session window by that much.
+        print(f"  ! CLOCK SKEW {skew.total_seconds():+.0f}s from a quarter-hour boundary "
+              f"-- run 'w32tm /resync' on this host; session windows are shifted by this much")
 
     r = mt5.copy_rates_from_pos("XAUUSD", mt5.TIMEFRAME_M1, 0, 5)
     check("xauusd_available", r is not None and len(r) > 0, "no XAUUSD M1 data")

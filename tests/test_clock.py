@@ -51,3 +51,21 @@ for label, ts in (("desk believed", pd.Timestamp("2026-08-13 06:30", tz="Europe/
                   ("actually was", pd.Timestamp("2026-08-13 03:30", tz="Europe/London"))):
     print(f"  BOT_A 06:30 window {label}: {ts:%H:%M} London")
 print("CLOCK CHECKS PASS")
+
+# --- the rounding manufactured drift; raw offset must not ---
+import market_state as MS2
+skewed = pd.Timedelta(hours=3, minutes=6)          # broker/host 6 min apart
+rounded = pd.Timedelta(seconds=round(skewed.total_seconds()/900)*900)
+assert rounded == pd.Timedelta(hours=3)
+bar_epoch = int((TRUE_UTC + skewed).timestamp())
+with_round = MS.to_london(pd.Series([bar_epoch]), rounded).iloc[0]
+with_raw   = MS.to_london(pd.Series([bar_epoch]), skewed).iloc[0]
+true_london = TRUE_UTC.tz_convert("Europe/London")
+assert (with_round - true_london) == pd.Timedelta(minutes=6), with_round
+assert (with_raw - true_london) == pd.Timedelta(0), with_raw
+print(f"  rounded offset -> {with_round:%H:%M} (6 min into the future, the preflight failure)")
+print(f"  raw offset     -> {with_raw:%H:%M} (matches real London exactly)")
+assert MS2.clock_skew(skewed) == pd.Timedelta(minutes=6)
+assert MS2.clock_skew(pd.Timedelta(hours=3)) == pd.Timedelta(0)
+print(f"  skew reported separately: {MS2.clock_skew(skewed)} -- a host clock fact, not absorbed")
+print("ROUNDING-DRIFT CHECKS PASS")

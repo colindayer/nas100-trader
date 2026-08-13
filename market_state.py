@@ -41,8 +41,14 @@ def broker_utc_offset(mt5, symbol="XAUUSD"):
     desk 3 hours ahead: a bot whose window says 06:30 London was trading 03:30 London.
 
     Measured, not hardcoded -- brokers change offset with DST and this must not need a code
-    change twice a year. Rounded to 15 minutes because the tick is seconds old, and some
-    brokers use half-hour offsets.
+    change twice a year.
+
+    NOT ROUNDED. Rounding to 15 minutes was meant to tolerate half-hour brokers, but it
+    MANUFACTURES drift whenever either clock is skewed: a broker sitting at +3h06 rounds to
+    +3h00 and every bar then reads 6 minutes into the future. The raw difference is
+    self-consistent by construction -- whatever the skew, subtracting it aligns bar time with
+    this host's clock. The skew itself is reported separately, because it is a real fact about
+    the machine and not something to silently absorb.
     """
     import pandas as pd
     from datetime import datetime, timezone
@@ -53,11 +59,20 @@ def broker_utc_offset(mt5, symbol="XAUUSD"):
         tick = mt5.symbol_info_tick(symbol)
         if tick and tick.time:
             delta = tick.time - datetime.now(timezone.utc).timestamp()
-            off = pd.Timedelta(seconds=round(delta / 900) * 900)
+            off = pd.Timedelta(seconds=round(delta))
     except Exception:
         pass
     _OFFSET_CACHE["off"] = off
     return off
+
+
+def clock_skew(offset):
+    """How far the measured offset sits from a whole quarter-hour. Brokers run on 15-minute
+    boundaries, so anything else is a clock that needs syncing -- on the broker or, far more
+    often, on this host."""
+    import pandas as pd
+    nearest = pd.Timedelta(seconds=round(offset.total_seconds() / 900) * 900)
+    return offset - nearest
 
 
 def to_london(series_or_epoch, offset):
