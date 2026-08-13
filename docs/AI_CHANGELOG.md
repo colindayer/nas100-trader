@@ -492,3 +492,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-13 | Obsidian Bridge / automated | Raise spread floor 8x -> 30x: cost control is the lever a zero-edge system owns | git post-commit hook | b387f29 |
 | 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 2645536 |
 | 2026-08-13 | Obsidian Bridge / automated | Fix test assertion: an 8x-spread stop is rejected, not widened | git post-commit hook | 9c1888c |
+| 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | f91f9e4 |
+| 2026-08-13 | Obsidian Bridge / automated | One clock for the desk: the broker's. Host drift no longer reaches a window | git post-commit hook | 7b57f4a |
