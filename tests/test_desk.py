@@ -51,10 +51,12 @@ print(f"  breakout group capped: {len(brk)} of 5 allocated, group at "
 assert a["total_risk"] <= 0.0075
 
 # ---- coverage gap is visible with zero evidence
-cov = D.coverage(BOTS, ["STRONG_TREND","RANGE","COMPRESSION","TRANSITION"])
-assert cov["covered"]["STRONG_TREND"], "no trend specialist"
-assert "TRANSITION" in cov["gaps"], cov["gaps"]
-print(f"  coverage gaps: {cov['gaps']}  (nothing trades an unconfirmed market -- correct)")
+cov = D.coverage(BOTS, sorted(D.REGIMES))
+for r in ("STRONG_TREND", "WEAK_TREND", "RANGE", "TRANSITION"):
+    assert cov["covered"][r], f"no specialist for {r}"
+# UNKNOWN stays an honest gap: nothing should claim to specialise in an unreadable market
+assert cov["gaps"] == ["UNKNOWN"], cov["gaps"]
+print(f"  every readable regime covered; remaining gap: {cov['gaps']}")
 
 # ---- the CIO refuses to rank on five trades
 r = D.state_conditional_edge([{"strategy_id":"BOT_A","R":-1.0,"market_state":today}]*5,

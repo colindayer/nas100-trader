@@ -928,9 +928,100 @@ class H4PullbackContinuation(Bot):
                        "spread": ask - bid, "minutes_since_entry": 0})
 
 
+# ==================================================================== BOT_H
+class LiquiditySweepReclaim(Bot):
+    """BOT_H. The desk's TRANSITION specialist -- built to a measured coverage gap.
+
+    On 2026-08-13 gold and US100 were both TRANSITION + EXTENDED + AT_HTF_LEVEL and the desk
+    owned nothing that could act. Every existing specialist needs a level to BREAK (breakout),
+    a mean that HOLDS (reversion), or a trend already CONFIRMED (continuation). None of those
+    describe an unconfirmed market pushing through a reference and getting rejected.
+
+    Mechanism: price trades beyond a higher-timeframe level, then closes back inside within
+    RECLAIM_BARS. Fade in the reclaim direction, stop beyond the sweep extreme, target the
+    session mean. The only bot here that requires a level to FAIL.
+
+    Uses the shared market_state levels -- no new level logic, so a fix to those levels fixes
+    this bot too.
+    """
+    playbook = "SWEEP"
+    primary = {"TRANSITION", "AT_HTF_LEVEL"}
+    secondary = {"RANGE", "EXTENDED"}
+    avoids = {"STRONG_TREND"}
+    strategy_id = "BOT_H_gold_sweep_reclaim"
+    strategy_version = "1.0.0"
+    symbol = "XAUUSD"
+    stage = "DEMO_CANDIDATE"
+    prior_expectancy_R, prior_n = 0.00, 10
+    risk_override = 0.0005
+
+    ENTRY_H, EXIT_H, EXIT_M = 7, 20, 0
+    RECLAIM_BARS = 15            # a sweep must be rejected promptly to count as a sweep
+    MIN_PIERCE_ATR = 0.05        # it must actually pierce, not just touch
+    STOP_BUFFER_ATR, TARGET_ATR = 0.15, 1.0
+    LEVELS = ("lvl_prev_day_high", "lvl_prev_day_low", "lvl_asia_high", "lvl_asia_low",
+              "lvl_high_20d", "lvl_low_20d", "lvl_weekly_open")
+
+    def generate_signal(self, ctx) -> Signal | None:
+        import pandas as pd
+        now, st, bars = ctx["now_london"], ctx.get("state") or {}, ctx["m1"]
+        day = now.normalize()
+        if not (day + pd.Timedelta(hours=self.ENTRY_H) <= now
+                < day + pd.Timedelta(hours=self.EXIT_H, minutes=self.EXIT_M)):
+            return self._no(f"outside window: {now:%H:%M} London")
+        if ctx.get("traded_today", {}).get(self.strategy_id):
+            return self._no("already traded today")
+        atr = st.get("atr20_d1")
+        if not atr:
+            return self._no("no D1 ATR -- cannot size a pierce")
+        if bars is None or len(bars) < self.RECLAIM_BARS + 5:
+            return self._no("insufficient M1 history")
+        w = bars[bars.index < now].tail(self.RECLAIM_BARS)
+        if len(w) < self.RECLAIM_BARS:
+            return self._no("insufficient closed bars in the reclaim window")
+
+        bid, ask = ctx["bid"], ctx["ask"]
+        first, close = float(w["close"].iloc[0]), float(w["close"].iloc[-1])
+        hi, lo = float(w["high"].max()), float(w["low"].min())
+        best = None
+        for key in self.LEVELS:
+            lvl = st.get(key)
+            if not lvl:
+                continue
+            # A SWEEP IS A ROUND TRIP: price starts one side of the level, pierces through,
+            # and comes back. Without the "started on this side" condition, price simply
+            # closing above a level counts as a sweep of every level beneath it -- which is
+            # a breakout, the exact opposite trade.
+            if first < lvl and close < lvl and (hi - lvl) / atr >= self.MIN_PIERCE_ATR:
+                cand = (-1, lvl, hi, (hi - lvl) / atr, key)
+            elif first > lvl and close > lvl and (lvl - lo) / atr >= self.MIN_PIERCE_ATR:
+                cand = (1, lvl, lo, (lvl - lo) / atr, key)
+            else:
+                continue
+            if best is None or cand[3] > best[3]:
+                best = cand
+        if best is None:
+            return self._no("no level swept and reclaimed in the last "
+                            f"{self.RECLAIM_BARS} minutes")
+
+        side, lvl, extreme, pierce, key = best
+        entry = ask if side > 0 else bid
+        stop = extreme - side * self.STOP_BUFFER_ATR * atr
+        target = entry + side * self.TARGET_ATR * atr
+        if abs(entry - stop) < 1e-9:
+            return self._no("degenerate stop")
+        return Signal(self.strategy_id, self.strategy_version, now.isoformat(), self.symbol,
+                      side, "market", entry, stop, target,
+                      int((day + pd.Timedelta(hours=self.EXIT_H) - now).total_seconds() // 60),
+                      ["liquidity_sweep_reclaim", f"level={key}", f"pierce={pierce:.2f}atr"],
+                      {"swept_level": lvl, "level_name": key, "sweep_extreme": extreme,
+                       "pierce_atr": pierce, "sl_dist": abs(entry - stop),
+                       "pre_range": atr, "spread": ask - bid, "minutes_since_entry": 0})
+
+
 BOTS = [GoldBreakout0630(), IndexBreakoutUSOpen(), SP500LondonBreakout(),
         GoldNYBreakout(), EURUSDLondonBreakout(), VWAPReversion(),
-        H4PullbackContinuation()]
+        H4PullbackContinuation(), LiquiditySweepReclaim()]
 
 
 # ==================================================================== execution

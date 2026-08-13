@@ -105,6 +105,13 @@ PLAYBOOKS = {
         "avoids": {STRONG_TREND, EXPANSION, TRANSITION},
         "rationale": "fading requires a mean that holds; in a trend the mean moves to price",
     },
+    "SWEEP": {
+        "wants": {TRANSITION, AT_HTF_LEVEL, EXTENDED, RANGE},
+        "avoids": {STRONG_TREND},
+        "rationale": "trades a level that FAILS -- needs an unconfirmed market where a push "
+                     "beyond a reference gets rejected, which is exactly what breakout and "
+                     "continuation specialists cannot use",
+    },
     "CONTINUATION": {
         "wants": {STRONG_TREND, EXPANSION},
         "avoids": {RANGE, COMPRESSION, TRANSITION},
