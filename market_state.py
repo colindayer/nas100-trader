@@ -83,18 +83,36 @@ def clock_skew(mt5, symbol="XAUUSD"):
         return pd.Timedelta(0)
 
 
-def broker_now_london(mt5, symbol="XAUUSD"):
-    """CURRENT time, from the BROKER's clock. Not the host's, and not the last bar's.
+CLOCK_SYMBOLS = ("XAUUSD", "EURUSD", "USDJPY", "GBPUSD", "US100.cash")
 
-    Session windows were being evaluated against `m1.index[-1]` -- the newest bar for THAT
-    symbol. A symbol whose market had closed reported an hour-old "now" while another read
-    the current minute: EURUSD said 23:59 in the same cycle US500 said 22:54. One desk, two
-    clocks, and a bot could evaluate its window against a stale one.
+
+def broker_now_london(mt5, symbol=None):
+    """CURRENT time, from the BROKER, using the FRESHEST tick on the whole desk.
+
+    Fixed twice now, so the failure mode is worth stating. Session time first came from
+    `m1.index[-1]` -- the newest BAR for one symbol. Replacing that with that symbol's last
+    TICK moved the bug without removing it: both go stale the moment that market closes, and
+    the desk again showed two clocks in one cycle (EURUSD 23:58, US500 22:49).
+
+    A per-symbol clock is wrong by construction. The desk has ONE time, so take the newest
+    tick across several liquid instruments -- at least one is always trading during any
+    window a bot owns.
     """
     import pandas as pd
-    tick = mt5.symbol_info_tick(symbol)
-    off = broker_utc_offset(mt5, symbol)
-    return (pd.Timestamp(tick.time, unit="s", tz="UTC") - off).tz_convert(LONDON)
+    newest = None
+    for s in CLOCK_SYMBOLS:
+        try:
+            if not mt5.symbol_select(s, True):
+                continue
+            t = mt5.symbol_info_tick(s)
+            if t and t.time and (newest is None or t.time > newest):
+                newest = t.time
+        except Exception:
+            continue
+    if newest is None:
+        raise RuntimeError("no broker tick available on any clock symbol")
+    return (pd.Timestamp(newest, unit="s", tz="UTC")
+            - broker_utc_offset(mt5)).tz_convert(LONDON)
 
 
 def to_london(series_or_epoch, offset):

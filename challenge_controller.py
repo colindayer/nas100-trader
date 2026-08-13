@@ -1226,6 +1226,8 @@ def main():
           f"total headroom {st.total_headroom:.2%}  trading days {st.trading_days}\n")
 
     import market_state as MS, macro_context as MC, desk as DESK
+    desk_now = MS.broker_now_london(mt5)          # ONE clock, read once per cycle
+    print(f"  DESK CLOCK {desk_now:%Y-%m-%d %H:%M} London (broker)")
     opp_by_symbol, states = {}, {}
     for sym in sorted({b.symbol for b in BOTS}):
         if not mt5.symbol_select(sym, True):
@@ -1233,8 +1235,8 @@ def main():
         tk = mt5.symbol_info_tick(sym)
         if tk is None:
             continue
-        st = MS.compute(mt5, sym, pd.Timestamp.now(tz="Europe/London"), tk.ask, tk.ask - tk.bid)
-        st.update(MC.compute(mt5, sym, pd.Timestamp.now(tz="Europe/London")))
+        st = MS.compute(mt5, sym, desk_now, tk.ask, tk.ask - tk.bid)
+        st.update(MC.compute(mt5, sym, desk_now))
         states[sym] = st
         opp_by_symbol[sym] = DESK.classify_opportunity(st)
         print(f"  MARKET {sym:<12}{','.join(opp_by_symbol[sym]['opportunities'])}")
@@ -1267,7 +1269,7 @@ def main():
         d1 = trend_context(mt5, bot.symbol, tick.ask)
         # ONE clock for the whole desk: the broker's. Using m1.index[-1] gave each symbol its
         # own "now", so a closed market evaluated its window against an hour-old timestamp.
-        ctx = {"now_london": _MS.broker_now_london(mt5, bot.symbol), "m1": m1,
+        ctx = {"now_london": desk_now, "m1": m1,
                "bid": tick.bid, "ask": tick.ask, "traded_today": traded_today, "d1": d1}
 
         blackout = in_event_blackout(ctx["now_london"])
