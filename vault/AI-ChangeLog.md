@@ -486,3 +486,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-13 | Obsidian Bridge / automated | Reports written with a BOM so Windows tools read them correctly | git post-commit hook | c6f4b9c |
 | 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 1a58a93 |
 | 2026-08-13 | Obsidian Bridge / automated | CRITICAL: MT5 times are SERVER time -- every session window fired 3 hours early | git post-commit hook | 05f9b26 |
+| 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 7d80635 |
+| 2026-08-13 | Obsidian Bridge / automated | Void the pre-clock-fix evidence without deleting any of it | git post-commit hook | b46f2ec |
