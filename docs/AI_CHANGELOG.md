@@ -462,3 +462,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-13 | Obsidian Bridge / automated | AutoTrading-off must not cost a bot its trading day; anchor on the real deposit | git post-commit hook | addf922 |
 | 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | ce17bf8 |
 | 2026-08-13 | Obsidian Bridge / automated | Anchor: MT5 needs naive datetimes, and the fallback must not be silent | git post-commit hook | 8fc0bf4 |
+| 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 7c29b87 |
+| 2026-08-13 | Obsidian Bridge / automated | Market state: 60/120/250-day levels -- a 20-day window cannot see a 3-month peak | git post-commit hook | f3cd185 |
