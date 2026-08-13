@@ -68,7 +68,23 @@ def events(kind: str | None = None) -> list:
     return [e for e in out if kind is None or e["kind"] == kind]
 
 
-def closed_trades() -> list:
+def voided_intents() -> dict:
+    """Trades whose EVIDENCE is void, with the reason. Nothing is deleted -- the ledger keeps
+    every row forever. This only stops the Brain LEARNING from a trade that measured something
+    other than what it claims to.
+
+    Voiding is for provable instrumentation faults, never for losses. 'It lost' is evidence;
+    'the clock was 3 hours off so this bot traded the Asian session while calling itself
+    London' is not evidence about the London strategy.
+    """
+    out = {}
+    for e in events("evidence_voided"):
+        for iid in e.get("intent_ids", []):
+            out[iid] = e.get("reason", "unspecified")
+    return out
+
+
+def closed_trades(include_voided=False) -> list:
     """Merge each pre-trade row with its close record. The ledger is append-only, so a
     completed trade is TWO rows sharing an intent_id -- the intent as it was decided, and
     the outcome as the broker reported it. Neither ever overwrites the other."""
@@ -76,9 +92,12 @@ def closed_trades() -> list:
         return []
     rows = [json.loads(l) for l in TRADES.read_text(encoding="utf-8").splitlines() if l.strip()]
     opens = {r["intent_id"]: r for r in rows if r.get("kind") != "close"}
+    void = {} if include_voided else voided_intents()
     out = []
     for r in rows:
         if r.get("kind") != "close" or r.get("R") is None:
+            continue
+        if r["intent_id"] in void:
             continue
         merged = dict(opens.get(r["intent_id"], {}))
         merged.update(r)
@@ -395,8 +414,21 @@ def main():
     ap.add_argument("--learn", action="store_true")
     ap.add_argument("--weekly", action="store_true")
     ap.add_argument("--scoreboard", action="store_true")
+    ap.add_argument("--void-existing", metavar="REASON",
+                    help="mark every currently-closed trade's EVIDENCE void (ledger untouched)")
     a = ap.parse_args()
     bots = _bots()
+
+    if a.void_existing:
+        ids = [t["intent_id"] for t in closed_trades(include_voided=True)]
+        if not ids:
+            print("nothing to void"); return
+        emit("evidence_voided", intent_ids=ids, reason=a.void_existing, n=len(ids))
+        print(f"VOIDED the evidence of {len(ids)} closed trade(s).")
+        print(f"  reason: {a.void_existing}")
+        print(f"  the ledger is UNCHANGED -- every row is still there and still auditable.")
+        print(f"  posteriors now revert to priors until new trades arrive.")
+        return
 
     if a.scoreboard:
         cmd_scoreboard(bots); return
