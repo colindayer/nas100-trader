@@ -474,17 +474,26 @@ def challenge_anchors(acct, trades) -> dict:
         st["starting_balance"] = st["source"] = None
         try:
             import MetaTrader5 as _m
-            deals = _m.history_deals_get(datetime(2000, 1, 1), datetime.now(timezone.utc))
+            # MT5 wants NAIVE datetimes. Passing a tz-aware one makes history_deals_get
+            # fail, which the fallback then hid -- a silent fallback on the number every
+            # drawdown limit is measured against is not an acceptable failure mode.
+            deals = _m.history_deals_get(datetime(2000, 1, 1), datetime.now())
+            if deals is None:
+                print(f"  anchor: history_deals_get returned None {_m.last_error()}")
             bal = [d for d in (deals or []) if d.type == _m.DEAL_TYPE_BALANCE and d.profit > 0]
             if bal:
                 st["starting_balance"] = float(min(bal, key=lambda d: d.time).profit)
                 st["source"] = "broker initial deposit"
-        except Exception:
-            pass
+            else:
+                print(f"  anchor: no positive balance deal in {len(deals or [])} deals")
+        except Exception as e:
+            print(f"  anchor: broker deposit unreadable ({e})")
         if not st["starting_balance"]:
             realised = sum(t.get("net") or 0 for t in trades if t.get("kind") == "close")
             st["starting_balance"] = float(acct.balance) - realised
-            st["source"] = "reconstructed from ledger (deposit unreadable)"
+            st["source"] = "RECONSTRUCTED from ledger -- deposit unreadable, see above"
+            print(f"  !! ANCHOR FALLBACK: drawdown will be measured against "
+                  f"{st['starting_balance']:.2f}, not the deposit")
         st["anchored_on"] = today
         print(f"  ANCHOR SET: starting balance {st['starting_balance']:.2f} "
               f"({st['source']})")
