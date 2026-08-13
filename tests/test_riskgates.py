@@ -44,11 +44,17 @@ for stop, spread, atr in ((30.0,0.50,88.0), (95.1,1.45,633.7), (13.4,0.60,89.0),
     final = g.get("widened_to") or stop
     assert spread/final <= 0.04, f"accepted a {spread/final:.1%} cost trade"
 
-# the old 8x floor would have permitted 12.5% cost -- now impossible
+# the old 8x floor permitted 12.5% cost. It is now unreachable: a stop that tight sits
+# under a third of the new floor, so it is REJECTED rather than widened -- stricter than
+# merely resizing it, because at that distance the setup is inside the noise.
 assert C.MIN_STOP_SPREAD_MULT >= 30.0
 g = geo(8*0.6, 0.6, 89.0)                     # exactly the old floor
-final = g.get("widened_to") or 8*0.6
-assert 0.6/final <= 0.04, f"old 8x floor still reachable: {0.6/final:.1%}"
+assert not g["ok"], f"old 8x floor still tradable at {0.6/(8*0.6):.1%} cost"
+assert "inside the noise" in g["reason"]
+
+# and the band in between is widened, not rejected -- the desk keeps trading
+g = geo(13.4, 0.6, 89.0)
+assert g["ok"] and g["widened_to"] == 18.0 and 0.6/18.0 <= 0.04
 
 # a true scalp stop is REJECTED, not silently widened into a different strategy
 g = geo(1.85, 0.60, 89.0)
