@@ -157,6 +157,131 @@ def diagnose(t: dict) -> tuple[str, str]:
     return ("EXPECTED_WIN" if R > 0 else "EXPECTED_LOSS"), f"R {R:+.3f}, no anomaly detected"
 
 
+MANDATORY_STATE = ("d1_regime", "h4_regime", "h1_regime", "atr20_d1", "ms_labels")
+
+
+def validity(t: dict, bots_by_id: dict) -> tuple[str, list]:
+    """VALID or VOID, with reasons. VOID requires a PROVABLE instrumentation or execution
+    defect. A losing trade that ran the specified strategy in the intended session with the
+    planned risk is VALID evidence, and voiding it would be data-fitting with extra steps."""
+    reasons = []
+    ms = t.get("market_state") or {}
+    fs = t.get("feature_snapshot") or {}
+
+    missing = [k for k in MANDATORY_STATE if ms.get(k) in (None, "")]
+    if missing:
+        reasons.append(f"missing mandatory state: {', '.join(missing)}")
+
+    bot = bots_by_id.get(t.get("strategy_id"))
+    if bot is not None and t.get("timestamp"):
+        try:
+            import pandas as pd
+            ts = pd.Timestamp(t["timestamp"])
+            oh = getattr(bot, "ENTRY_H", getattr(bot, "ENTRY_FROM_H",
+                         getattr(bot, "SESSION_H", None)))
+            om = getattr(bot, "ENTRY_M", 0)
+            ch, cm = getattr(bot, "EXIT_H", None), getattr(bot, "EXIT_M", 0)
+            if oh is not None and ch is not None:
+                # minutes matter: BOT_A opens at 06:30, and an hour-only check would have
+                # passed a 06:15 entry as in-session.
+                mins = ts.hour * 60 + ts.minute
+                if not (oh * 60 + om <= mins < ch * 60 + cm):
+                    reasons.append(f"entered {ts:%H:%M} London, outside its declared "
+                                   f"{oh:02d}:{om:02d}-{ch:02d}:{cm:02d} window")
+        except Exception:
+            pass
+        if bot.symbol != t.get("symbol"):
+            reasons.append(f"symbol {t.get('symbol')} != specialist's {bot.symbol}")
+
+    planned = (t.get("risk_pct") or 0) * (t.get("account_equity") or 0)
+    realized = abs(t.get("net") or 0)
+    if planned and t.get("R") is not None and t["R"] < 0 and realized > 2.0 * planned:
+        reasons.append(f"realised risk ${realized:.2f} was {realized/planned:.1f}x the "
+                       f"planned ${planned:.2f}")
+    if t.get("retcode") not in (10009, None) or not t.get("ticket"):
+        reasons.append(f"not a completed fill (retcode {t.get('retcode')}, "
+                       f"ticket {t.get('ticket')})")
+    if t.get("outcome") not in ("stop", "target", "time_or_manual", None):
+        reasons.append(f"unrecognised exit reason {t.get('outcome')}")
+    return ("VOID" if reasons else "VALID"), reasons
+
+
+def evidence_report(trades, todays, market, snap, bots, beliefs) -> str:
+    """FIRST_VALID_EVIDENCE_REPORT.md -- did the desk's sentence about itself hold?"""
+    byid = {b.strategy_id: b for b in bots}
+    term = snap.get("terminal") or {}
+    L = [f"# FIRST VALID EVIDENCE REPORT — "
+         f"{datetime.now(timezone.utc):%Y-%m-%d}\n",
+         "_Was every part of 'I observed this market, allocated to this specialist, entered "
+         "at this time, risked this amount, and earned this R' actually true?_\n"]
+
+    L.append("\n## Was the desk operational?\n")
+    L.append(f"- account: **{(snap.get('account') or {}).get('login')}** "
+             f"{(snap.get('account') or {}).get('server')}")
+    L.append(f"- AlgoTrading: **{term.get('trade_allowed')}**, connected {term.get('connected')}")
+    L.append(f"- market engine returned state for **{len(market)}** symbols")
+
+    L.append("\n## Attempts\n")
+    attempts = [t for t in todays]
+    filled = [t for t in attempts if t.get("ticket") and t.get("retcode") == 10009]
+    rejected = [t for t in attempts if t.get("retcode") not in (10009, None)]
+    L.append(f"- signals recorded **{len(attempts)}**, filled **{len(filled)}**, "
+             f"rejected **{len(rejected)}**")
+    for t in rejected:
+        L.append(f"  - REJECTED {t.get('strategy_id')} retcode {t.get('retcode')} "
+                 f"({RETCODES.get(t.get('retcode'), '?')}) — never counted as a trade")
+
+    L.append("\n## Validity\n")
+    closed = [t for t in trades if t.get("R") is not None]
+    if not closed:
+        L.append("_no completed observations yet_")
+    valid_n = 0
+    for t in closed:
+        v, why = validity(t, byid)
+        if v == "VALID":
+            valid_n += 1
+        L.append(f"\n**{t.get('strategy_id')}** — {t.get('timestamp')} → **{v}**")
+        L.append(f"  - R {t.get('R'):+.3f}, planned risk "
+                 f"${(t.get('risk_pct') or 0)*(t.get('account_equity') or 0):.2f}, "
+                 f"realised ${abs(t.get('net') or 0):.2f}")
+        L.append(f"  - exit **{t.get('outcome')}**, holding {t.get('holding_minutes')} min")
+        ms = t.get("market_state") or {}
+        L.append(f"  - state carried: d1 {ms.get('d1_regime')}, h4 {ms.get('h4_regime')}, "
+                 f"h1 {ms.get('h1_regime')}, labels {ms.get('ms_labels')}")
+        for r in why:
+            L.append(f"  - VOID because: {r}")
+
+    L.append(f"\n## Verdict\n")
+    L.append(f"- **{valid_n}** valid observation(s) today, {len(closed)-valid_n} void.")
+    if valid_n == 0:
+        L.append("- The desk has still not produced a trustworthy observation.")
+    L.append("\n### What the desk learned about EXECUTION")
+    if filled:
+        slips = [abs(t.get("actual_slippage") or 0) for t in filled]
+        L.append(f"- {len(filled)} fill(s), mean slippage {statistics.fmean(slips):.3f}")
+    else:
+        L.append("- nothing: no fills.")
+    L.append("\n### What the desk learned about MARKET BEHAVIOUR")
+    L.append(f"- {'nothing that generalises — ' if valid_n < 5 else ''}"
+             f"n={valid_n} is not a sample. Recorded, not interpreted.")
+    L.append("\n### What remains unknown")
+    L.append("- whether any specialist has an edge. No bot has the observations to say.")
+
+    L.append("\n## Recommendation\n")
+    defects = []
+    if term.get("trade_allowed") is False:
+        defects.append("AlgoTrading disabled")
+    for t in closed:
+        v, why = validity(t, byid)
+        if v == "VOID":
+            defects.extend(why)
+    if defects:
+        L.append(f"**FIX A PROVEN DEFECT** — {defects[0]}")
+    else:
+        L.append("**KEEP DESK UNCHANGED**")
+    return "\n".join(L) + "\n"
+
+
 # ==================================================================== 3. report
 def main():
     ap = argparse.ArgumentParser()
@@ -407,6 +532,8 @@ def main():
              f"observations decide more than any module I could add.")
 
     REPORT.write_text("\n".join(L) + "\n", encoding="utf-8-sig")
+    (ROOT / "FIRST_VALID_EVIDENCE_REPORT.md").write_text(
+        evidence_report(trades, todays, market, snap, BOTS, beliefs), encoding="utf-8-sig")
     print(f"wrote {REPORT.name} ({len(todays)} trades today, {len(Rs)} lifetime) "
           f"and {PATCHES.name} ({npatch} patches)")
     if mt5:

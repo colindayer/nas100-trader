@@ -467,6 +467,87 @@ def time_exits(mt5, acct, bots, dry_run=False, magic=990001) -> int:
     return n
 
 
+# mandatory context. A trade whose state is missing cannot teach the desk anything, so it is
+# not worth 0.05% -- and a NULL regime must never be silently read as "neutral".
+MANDATORY_STATE = ("d1_regime", "h4_regime", "h1_regime", "atr20_d1", "ms_labels")
+
+
+def preflight(mt5, acct, trades) -> list:
+    """Instrumentation checks BEFORE any window opens. A failure here is a DESK FAULT, not a
+    market veto: the desk is broken, so it must not trade and must say exactly why.
+
+    Four separate faults have already reported healthy numbers while being wrong (inert
+    headroom, missing time exits, a silent anchor fallback, a 3-hour clock). Every one was
+    found by comparing output to ground truth. This does that comparison automatically.
+    """
+    import pandas as pd
+    from datetime import datetime, timezone
+    import market_state as MS
+    fails = []
+
+    def check(name, ok, detail=""):
+        if not ok:
+            fails.append(f"{name}: {detail}")
+
+    check("account_identity", acct is not None and acct.login == 1514166963,
+          f"login {getattr(acct, 'login', None)} != 1514166963")
+    check("account_is_demo", acct is not None and acct.trade_mode == 0,
+          f"trade_mode {getattr(acct, 'trade_mode', None)} is not demo")
+    term = mt5.terminal_info()
+    check("algotrading_enabled", term is not None and term.trade_allowed,
+          "AlgoTrading is OFF in the terminal -- every order will retcode 10027")
+    check("mt5_connected", term is not None and term.connected, "terminal not connected")
+
+    off = MS.broker_utc_offset(mt5, "XAUUSD")
+    check("broker_offset_sane", pd.Timedelta(hours=-12) <= off <= pd.Timedelta(hours=12),
+          f"offset {off} is implausible")
+
+    r = mt5.copy_rates_from_pos("XAUUSD", mt5.TIMEFRAME_M1, 0, 5)
+    check("xauusd_available", r is not None and len(r) > 0, "no XAUUSD M1 data")
+    if r is not None and len(r):
+        bar = MS.to_london(pd.DataFrame(r)["time"], off).iloc[-1]
+        real = pd.Timestamp.now(tz="Europe/London")
+        drift = abs((real - bar).total_seconds())
+        check("london_clock_correct", drift < 300,
+              f"bar clock {bar:%H:%M} vs real London {real:%H:%M} -- {drift/60:.0f} min apart")
+        check("fresh_m1_data", drift < 900, f"newest M1 bar is {drift/60:.0f} minutes old")
+
+    st = MS.compute(mt5, "XAUUSD", pd.Timestamp.now(tz="Europe/London"),
+                    (mt5.symbol_info_tick("XAUUSD").ask if mt5.symbol_info_tick("XAUUSD")
+                     else 0), 0.5)
+    missing = [k for k in MANDATORY_STATE if st.get(k) in (None, "")]
+    check("market_state_complete", not missing,
+          f"DATA_INTEGRITY -- missing {', '.join(missing)} (d1_bars={st.get('d1_bars')})")
+
+    stale = [p for p in (mt5.positions_get() or []) if p.magic == 990001]
+    yday = (pd.Timestamp.now(tz="Europe/London") - pd.Timedelta(hours=24))
+    old = [p for p in stale
+           if pd.Timestamp(p.time, unit="s", tz="UTC") - off < yday]
+    check("no_stale_position", not old,
+          f"{len(old)} position(s) older than 24h still open: "
+          f"{[p.ticket for p in old]}")
+
+    try:
+        anchors = challenge_anchors(acct, trades)
+        cs = ChallengeState(**anchors)
+        check("headroom_sane", -0.11 < cs.profit_pct < 0.20 and cs.total_headroom > 0,
+              f"profit {cs.profit_pct:.2%}, total headroom {cs.total_headroom:.2%}")
+        check("anchor_present", anchors["starting_balance"] > 0, "no starting balance anchor")
+    except Exception as e:
+        check("challenge_state", False, f"unreadable: {e}")
+
+    for name, path in (("trade_ledger_writable", TRADES),
+                       ("brain_ledger_writable", ROOT / "data" / "brain" / "events.jsonl")):
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("a", encoding="utf-8"):
+                pass
+            check(name, True)
+        except Exception as e:
+            check(name, False, str(e))
+    return fails
+
+
 def challenge_anchors(acct, trades) -> dict:
     """The two numbers FTMO actually measures against, PERSISTED.
 
@@ -1114,6 +1195,16 @@ def main():
     if a.dry_run:
         print("DRY RUN: intents will be printed, nothing sent.\n")
 
+    trades_pf = load_trades()
+    problems = preflight(mt5, acct, trades_pf)
+    if problems:
+        print("\nPREFLIGHT FAILED -- DESK FAULT, NOT TRADING:")
+        for p in problems:
+            print(f"  x {p}")
+        print("  A failed instrumentation check is not a market veto. Fix the desk.")
+        mt5.shutdown(); sys.exit(1)
+    print("PREFLIGHT OK -- account, clock, data, state, ledgers all verified")
+
     if not a.dry_run:
         time_exits(mt5, acct, BOTS, dry_run=False)
         nc = reconcile(mt5)
@@ -1258,6 +1349,14 @@ def main():
         print(f"  {bot.strategy_id}: SIGNAL side={sig.side:+d} entry={sig.entry_price:.2f} "
               f"sl={sig.stop_price:.2f} tp={sig.target_price:.2f} risk={risk:.3%} "
               f"vol={vol} intent={iid}")
+
+        missing = [k for k in MANDATORY_STATE if state.get(k) in (None, "")]
+        if missing:
+            print(f"  {bot.strategy_id}: DATA_INTEGRITY -- not sending. Missing "
+                  f"{', '.join(missing)} (d1_bars={state.get('d1_bars')}, "
+                  f"ms_error={state.get('ms_error')}). A NULL regime is not 'neutral', and a "
+                  f"trade the desk cannot learn from is not worth the risk.")
+            continue
 
         shadow_verdicts = SH.evaluate(bot.strategy_id, state, sig.side, sig.risk_distance())
 
