@@ -1,6 +1,6 @@
-# PATCHES — proposed 2026-08-12 07:20 UTC
+# PATCHES — 2026-08-13 15:02 UTC
 
-Proposals only. Nothing here has been applied to production.
+Recommendations only. Nothing here has been applied.
 
 
 _No execution defects detected today._
