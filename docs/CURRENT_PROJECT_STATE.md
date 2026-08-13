@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+4a2dbee  Desk as allocator: opportunity engine, specialists, playbooks, CIO, BOT_G
+b747942  Obsidian bridge auto-sync [bridge-auto]
 382673a  Regime must be positively identified -- 'mixed' meant 'detected nothing'
 b7773e5  Obsidian bridge auto-sync [bridge-auto]
 f3cd185  Market state: 60/120/250-day levels -- a 20-day window cannot see a 3-month peak
 7c29b87  Obsidian bridge auto-sync [bridge-auto]
 8fc0bf4  Anchor: MT5 needs naive datetimes, and the fallback must not be silent
 ce17bf8  Obsidian bridge auto-sync [bridge-auto]
-addf922  AutoTrading-off must not cost a bot its trading day; anchor on the real deposit
-5fc763f  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)

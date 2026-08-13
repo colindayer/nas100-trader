@@ -466,3 +466,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-13 | Obsidian Bridge / automated | Market state: 60/120/250-day levels -- a 20-day window cannot see a 3-month peak | git post-commit hook | f3cd185 |
 | 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | b7773e5 |
 | 2026-08-13 | Obsidian Bridge / automated | Regime must be positively identified -- 'mixed' meant 'detected nothing' | git post-commit hook | 382673a |
+| 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | b747942 |
+| 2026-08-13 | Obsidian Bridge / automated | Desk as allocator: opportunity engine, specialists, playbooks, CIO, BOT_G | git post-commit hook | 4a2dbee |
