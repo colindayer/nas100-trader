@@ -384,6 +384,74 @@ def reconcile(mt5, magic=990001) -> int:
     return n_closed
 
 
+def time_exits(mt5, acct, bots, dry_run=False, magic=990001) -> int:
+    """Close positions whose session has ended. THE MISSING HALF OF EVERY STRATEGY.
+
+    BOT_A held gold for 23 hours against a spec that says flat by 16:00 London. A broker
+    stop/target is only two of the three exits every one of these bots was measured with;
+    without the time exit the desk trades a strategy nobody backtested, and pays overnight
+    financing that the whole intraday premise exists to avoid.
+
+    PROOF BEFORE CLOSING -- required before any automatic close:
+      account : the position's login must equal the connected demo account
+      symbol  : must match the ledger row that opened it
+      ticket  : must exist in the live book right now
+      action  : the ledger row must name a bot whose session has demonstrably ended
+    Anything unproven is skipped and reported, never closed on assumption.
+    """
+    import pandas as pd
+    now = pd.Timestamp.now(tz="Europe/London")
+    rows = {r["intent_id"]: r for r in load_trades() if r.get("kind") != "close"}
+    by_ticket = {r["ticket"]: r for r in rows.values() if r.get("ticket")}
+    by_id = {b.strategy_id: b for b in bots}
+    n = 0
+
+    for p in (mt5.positions_get() or []):
+        if p.magic != magic:
+            continue                                  # not ours -- never touch it
+        row = by_ticket.get(p.ticket)
+        if not row:
+            print(f"  !! position {p.ticket} {p.symbol} has magic {magic} but NO ledger row "
+                  f"-- NOT closing, manual review"); continue
+        if row["symbol"] != p.symbol:
+            print(f"  !! ticket {p.ticket} symbol {p.symbol} != ledger {row['symbol']} "
+                  f"-- NOT closing"); continue
+        bot = by_id.get(row["strategy_id"])
+        if bot is None:
+            print(f"  !! ticket {p.ticket} names unknown bot {row['strategy_id']} "
+                  f"-- NOT closing"); continue
+        eh, em = getattr(bot, "EXIT_H", None), getattr(bot, "EXIT_M", 0)
+        if eh is None:
+            continue                                  # bot declares no time exit
+        opened = pd.Timestamp(row["timestamp"])
+        cut = opened.normalize() + pd.Timedelta(hours=eh, minutes=em)
+        if cut <= opened:
+            cut += pd.Timedelta(days=1)
+        if now < cut:
+            continue
+
+        held = int((now - opened).total_seconds() // 60)
+        print(f"  TIME EXIT {row['strategy_id']} ticket {p.ticket} {p.symbol} "
+              f"held {held}m, session ended {cut:%Y-%m-%d %H:%M} London")
+        if dry_run:
+            print("     DRY RUN -- not sent"); continue
+        tick = mt5.symbol_info_tick(p.symbol)
+        req = {"action": mt5.TRADE_ACTION_DEAL, "symbol": p.symbol,
+               "volume": float(p.volume), "position": p.ticket,
+               "type": mt5.ORDER_TYPE_SELL if p.type == 0 else mt5.ORDER_TYPE_BUY,
+               "price": tick.bid if p.type == 0 else tick.ask,
+               "deviation": 20, "magic": magic, "comment": "time_exit",
+               "type_time": mt5.ORDER_TIME_GTC, "type_filling": mt5.ORDER_FILLING_IOC}
+        res = mt5.order_send(req)
+        rc = getattr(res, "retcode", None)
+        print(f"     close -> {rc} @ {getattr(res, 'price', None)}")
+        if rc == mt5.TRADE_RETCODE_DONE:
+            n += 1
+        else:
+            print(f"     !! TIME EXIT FAILED -- position still open, will retry next cycle")
+    return n
+
+
 # ==================================================================== ledger
 def append_trade(rec: dict):
     DATA.mkdir(parents=True, exist_ok=True)
@@ -769,6 +837,7 @@ def main():
         print("DRY RUN: intents will be printed, nothing sent.\n")
 
     if not a.dry_run:
+        time_exits(mt5, acct, BOTS, dry_run=False)
         nc = reconcile(mt5)
         if nc:
             print(f"RECONCILED {nc} closed position(s)")
