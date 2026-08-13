@@ -496,3 +496,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-13 | Obsidian Bridge / automated | One clock for the desk: the broker's. Host drift no longer reaches a window | git post-commit hook | 7b57f4a |
 | 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 7ecfc92 |
 | 2026-08-14 | Obsidian Bridge / automated | One desk clock: freshest tick across liquid symbols, not per-symbol | git post-commit hook | 6a20890 |
+| 2026-08-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 3ae2695 |
+| 2026-08-14 | Obsidian Bridge / automated | BOT_I retired before deployment: 7.3 trades/year is unfalsifiable | git post-commit hook | 94356a3 |

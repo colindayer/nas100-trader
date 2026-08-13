@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+94356a3  BOT_I retired before deployment: 7.3 trades/year is unfalsifiable
+3ae2695  Obsidian bridge auto-sync [bridge-auto]
 6a20890  One desk clock: freshest tick across liquid symbols, not per-symbol
 7ecfc92  Obsidian bridge auto-sync [bridge-auto]
 7b57f4a  One clock for the desk: the broker's. Host drift no longer reaches a window
 f91f9e4  Obsidian bridge auto-sync [bridge-auto]
 9c1888c  Fix test assertion: an 8x-spread stop is rejected, not widened
 2645536  Obsidian bridge auto-sync [bridge-auto]
-b387f29  Raise spread floor 8x -> 30x: cost control is the lever a zero-edge system owns
-ae3a8ec  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
