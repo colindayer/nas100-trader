@@ -43,12 +43,15 @@ def broker_utc_offset(mt5, symbol="XAUUSD"):
     Measured, not hardcoded -- brokers change offset with DST and this must not need a code
     change twice a year.
 
-    NOT ROUNDED. Rounding to 15 minutes was meant to tolerate half-hour brokers, but it
-    MANUFACTURES drift whenever either clock is skewed: a broker sitting at +3h06 rounds to
-    +3h00 and every bar then reads 6 minutes into the future. The raw difference is
-    self-consistent by construction -- whatever the skew, subtracting it aligns bar time with
-    this host's clock. The skew itself is reported separately, because it is a real fact about
-    the machine and not something to silently absorb.
+    ROUNDED TO THE HOUR, and the evidence says that is right. Broker offsets are whole hours
+    (FTMO is UTC+2/+3 by season). The HOST is the unreliable clock: this VPS drifted -133s ->
+    -209s -> -304s across three runs despite NTP, which is normal on a hypervisor guest whose
+    host time provider fights w32time.
+
+    So the host is used only to infer WHICH hour, and its drift is then discarded. That makes
+    every session window immune to host drift up to +-30 minutes. The earlier 15-minute
+    rounding was wrong for the opposite reason -- it kept part of the skew while looking
+    precise. The residual is reported by clock_skew() as a host-health signal.
     """
     import pandas as pd
     from datetime import datetime, timezone
@@ -59,20 +62,39 @@ def broker_utc_offset(mt5, symbol="XAUUSD"):
         tick = mt5.symbol_info_tick(symbol)
         if tick and tick.time:
             delta = tick.time - datetime.now(timezone.utc).timestamp()
-            off = pd.Timedelta(seconds=round(delta))
+            off = pd.Timedelta(hours=round(delta / 3600))
     except Exception:
         pass
     _OFFSET_CACHE["off"] = off
     return off
 
 
-def clock_skew(offset):
-    """How far the measured offset sits from a whole quarter-hour. Brokers run on 15-minute
-    boundaries, so anything else is a clock that needs syncing -- on the broker or, far more
-    often, on this host."""
+def clock_skew(mt5, symbol="XAUUSD"):
+    """How far THIS HOST sits from the broker's whole-hour grid. Purely a host-health signal
+    now: the offset is hour-rounded, so this no longer affects any session window. Report it,
+    do not act on it."""
     import pandas as pd
-    nearest = pd.Timedelta(seconds=round(offset.total_seconds() / 900) * 900)
-    return offset - nearest
+    from datetime import datetime, timezone
+    try:
+        tick = mt5.symbol_info_tick(symbol)
+        raw = tick.time - datetime.now(timezone.utc).timestamp()
+        return pd.Timedelta(seconds=raw - round(raw / 3600) * 3600)
+    except Exception:
+        return pd.Timedelta(0)
+
+
+def broker_now_london(mt5, symbol="XAUUSD"):
+    """CURRENT time, from the BROKER's clock. Not the host's, and not the last bar's.
+
+    Session windows were being evaluated against `m1.index[-1]` -- the newest bar for THAT
+    symbol. A symbol whose market had closed reported an hour-old "now" while another read
+    the current minute: EURUSD said 23:59 in the same cycle US500 said 22:54. One desk, two
+    clocks, and a bot could evaluate its window against a stale one.
+    """
+    import pandas as pd
+    tick = mt5.symbol_info_tick(symbol)
+    off = broker_utc_offset(mt5, symbol)
+    return (pd.Timestamp(tick.time, unit="s", tz="UTC") - off).tz_convert(LONDON)
 
 
 def to_london(series_or_epoch, offset):

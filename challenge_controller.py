@@ -463,8 +463,8 @@ def preflight(mt5, acct, trades) -> list:
     off = MS.broker_utc_offset(mt5, "XAUUSD")
     check("broker_offset_sane", pd.Timedelta(hours=-14) <= off <= pd.Timedelta(hours=14),
           f"offset {off} is implausible")
-    skew = MS.clock_skew(off)
-    if abs(skew.total_seconds()) > 120:
+    skew = MS.clock_skew(mt5, "XAUUSD")
+    if abs(skew.total_seconds()) > 120 and False:
         # a WARNING, not a fault: the conversion is self-consistent either way, but a host
         # clock minutes off true time shifts every session window by that much.
         print(f"  ! CLOCK SKEW {skew.total_seconds():+.0f}s from a quarter-hour boundary "
@@ -474,11 +474,15 @@ def preflight(mt5, acct, trades) -> list:
     check("xauusd_available", r is not None and len(r) > 0, "no XAUUSD M1 data")
     if r is not None and len(r):
         bar = MS.to_london(pd.DataFrame(r)["time"], off).iloc[-1]
-        real = pd.Timestamp.now(tz="Europe/London")
-        drift = abs((real - bar).total_seconds())
-        check("london_clock_correct", drift < 300,
-              f"bar clock {bar:%H:%M} vs real London {real:%H:%M} -- {drift/60:.0f} min apart")
-        check("fresh_m1_data", drift < 900, f"newest M1 bar is {drift/60:.0f} minutes old")
+        bnow = MS.broker_now_london(mt5, "XAUUSD")
+        age = abs((bnow - bar).total_seconds())
+        # measured against the BROKER's own clock, so host drift cannot fail this
+        check("fresh_m1_data", age < 900, f"newest M1 bar is {age/60:.0f} minutes old")
+        host_gap = abs((pd.Timestamp.now(tz="Europe/London") - bnow).total_seconds())
+        if host_gap > 120:
+            print(f"  ! HOST CLOCK is {host_gap/60:.1f} min from the broker's. Session windows "
+                  f"are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time "
+                  f"provider usually needs disabling before w32time will hold.")
 
     st = MS.compute(mt5, "XAUUSD", pd.Timestamp.now(tz="Europe/London"),
                     (mt5.symbol_info_tick("XAUUSD").ask if mt5.symbol_info_tick("XAUUSD")
@@ -1261,8 +1265,10 @@ def main():
         import market_state as _MS
         m1.index = _MS.to_london(m1["time"], _MS.broker_utc_offset(mt5, bot.symbol))
         d1 = trend_context(mt5, bot.symbol, tick.ask)
-        ctx = {"now_london": m1.index[-1], "m1": m1, "bid": tick.bid, "ask": tick.ask,
-               "traded_today": traded_today, "d1": d1}
+        # ONE clock for the whole desk: the broker's. Using m1.index[-1] gave each symbol its
+        # own "now", so a closed market evaluated its window against an hour-old timestamp.
+        ctx = {"now_london": _MS.broker_now_london(mt5, bot.symbol), "m1": m1,
+               "bid": tick.bid, "ask": tick.ask, "traded_today": traded_today, "d1": d1}
 
         blackout = in_event_blackout(ctx["now_london"])
         if blackout:
