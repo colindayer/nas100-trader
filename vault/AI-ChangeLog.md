@@ -482,3 +482,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-13 | Obsidian Bridge / automated | head_trader.py: the desk reviews itself, on the machine that trades | git post-commit hook | cf10c77 |
 | 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | d582e0a |
 | 2026-08-13 | Obsidian Bridge / automated | UTF-8 everywhere: the nightly review died on a Windows encoding error | git post-commit hook | d7a9dca |
+| 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 8bab06a |
+| 2026-08-13 | Obsidian Bridge / automated | Reports written with a BOM so Windows tools read them correctly | git post-commit hook | c6f4b9c |
