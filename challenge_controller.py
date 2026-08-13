@@ -1085,12 +1085,14 @@ BOTS = [GoldBreakout0630(), IndexBreakoutUSOpen(), SP500LondonBreakout(),
         GoldNYBreakout(), EURUSDLondonBreakout(), VWAPReversion(),
         H4PullbackContinuation(), LiquiditySweepReclaim()]
 
-# BOT_I lives in its own module (seven-condition state machine) and joins as a SHADOW.
-try:
-    from bot_i import AsianSweepLondonReversal
-    BOTS.append(AsianSweepLondonReversal())
-except Exception as _e:                      # never let a candidate break the live desk
-    print(f"  (BOT_I unavailable: {_e})")
+# BOT_I — RETIRED BEFORE DEPLOYMENT, on evidence. 2 years of XAUUSD, one configuration:
+#   519 sessions -> 221 reached sweep+rejection (42.6%) -> 15 trades = 7.3 per year
+#   expectancy +0.144R, t +0.50; 237 trades needed for t>2 = 32.5 YEARS live
+# The seven-condition conjunction is not wrong, it is unfalsifiable on any horizon that
+# matters. A shadow producing ~7 observations a year reports INSUFFICIENT_EVIDENCE forever,
+# and a desk that carries it is larger without being better.
+# The class is kept in bot_i.py: the finding is about frequency, not about the idea, and the
+# funnel (where 221 becomes 15) is the useful record.
 
 
 # ==================================================================== execution

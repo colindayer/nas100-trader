@@ -24,16 +24,21 @@ assert len(funded) == 1, f"expected one probe, got {funded}"
 assert p2["total_risk"] == D.MIN_EXPERIMENTAL_RISK, p2["total_risk"]
 print(f"  no specialist fits -> probes {funded[0]} at {p2['total_risk']:.3%}")
 
-# a SHADOW must never consume the risk budget it does not use
-sh = [b for b in BOTS if getattr(b, "shadow", False)]
+# a SHADOW must never consume the risk budget it does not use.
+# BOT_I was retired on evidence (7.3 trades/year), so this uses a synthetic shadow: the rule
+# outlives any particular candidate.
+import copy
+_s = copy.copy(BOTS[0]); _s.shadow = True
+_s.strategy_id = "SHADOW_PROBE"
+BOTS_WITH_SHADOW = list(BOTS) + [_s]
+sh = [b for b in BOTS_WITH_SHADOW if getattr(b, "shadow", False)]
 assert sh, "no shadow bot registered"
 allfit = {b.symbol: {"opportunities":["TRANSITION","AT_HTF_LEVEL"]} for b in BOTS}
-p2b = D.allocate(BOTS, allfit, lambda b: b.risk_override or 0.0010, CS())
+p2b = D.allocate(BOTS_WITH_SHADOW, allfit, lambda b: b.risk_override or 0.0010, CS())
 p2c = D.allocate(live, allfit, lambda b: b.risk_override or 0.0010, CS())
 assert p2b["total_risk"] == p2c["total_risk"], "shadow consumed the risk budget"
 assert p2b["decisions"][sh[0].strategy_id]["shadow"] is True
-print(f"  shadow {sh[0].strategy_id.split('_')[1]} ranked and recorded, "
-      f"budget unchanged at {p2b['total_risk']:.3%}")
+print(f"  shadow ranked and recorded, budget unchanged at {p2b['total_risk']:.3%}")
 
 # ---- modifiers must NEVER hard-block; only regimes do
 a = next(b for b in BOTS if b.strategy_id=="BOT_A_gold_0630_breakout")
