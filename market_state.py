@@ -68,6 +68,26 @@ def _swing(d, lookback=40, kind="high"):
     return None
 
 
+def _regime(price, sma20, sma50, atr, slope20) -> str:
+    """up / down / range / transition. Distinct from 'undetermined': a range must be
+    POSITIVELY identified -- price near its own mean and that mean going nowhere."""
+    if not (sma20 and atr):
+        return "unknown"
+    FLAT = 0.0005
+    dist = abs(price - sma20) / atr
+    flat = slope20 is not None and abs(slope20) < FLAT
+    if dist <= 0.5 and flat:
+        return "range"
+    # A trend needs its MEAN to be moving. Price far above a flat average is a spike or a
+    # young recovery, not an established uptrend -- and calling it one would license
+    # trend-following into a mean that has not confirmed anything yet.
+    if sma50 and price > sma20 > sma50 and (slope20 or 0) > FLAT:
+        return "up"
+    if sma50 and price < sma20 < sma50 and (slope20 or 0) < -FLAT:
+        return "down"
+    return "transition"
+
+
 def _tf_block(d, price, tag) -> dict:
     """Trend components for one timeframe. Stored separately, never collapsed."""
     out = {f"{tag}_bars": 0 if d is None else len(d)}
@@ -97,8 +117,14 @@ def _tf_block(d, price, tag) -> dict:
         f"{tag}_sma20_slope": _slope(c.rolling(20).mean().dropna()),
         f"{tag}_sma50_slope": _slope(c.rolling(50).mean().dropna()) if len(c) >= 55 else None,
         f"{tag}_hh": hh, f"{tag}_hl": hl, f"{tag}_lh": lh, f"{tag}_ll": ll,
-        f"{tag}_structure": ("up" if hh and hl else "down" if lh and ll else "mixed"),
+        f"{tag}_swing_structure": ("up" if hh and hl else "down" if lh and ll
+                                  else "undetermined"),
         f"{tag}_atr20": tr,
+        # A REGIME, not a pattern-match fallback. The old field returned "mixed" whenever the
+        # 3-bar detector found nothing, so "ranging" and "no idea" were the same value -- and
+        # a gate built on it would have approved a fade 2 ATR above the mean.
+        f"{tag}_regime": _regime(price, sma20, sma50, tr,
+                                 _slope(c.rolling(20).mean().dropna())),
         # trend strength in ATR units: how far price sits from its own mean, scaled by noise
         f"{tag}_trend_strength_atr": (price - sma20) / tr if (tr and sma20) else None,
     })
@@ -263,13 +289,20 @@ def classify(v: dict) -> list:
     """Descriptive labels. Multiple may hold at once. NOT filters -- the Brain measures
     whether any of them predicts expectancy once live trades carry them."""
     L = []
-    st = v.get("d1_structure")
-    if v.get("d1_above_sma20") and v.get("d1_above_sma50"):
+    # mutually exclusive -- the engine emitted TREND_UP and RANGE together, which is not a
+    # description of anything and would have justified both a breakout and a fade.
+    reg = v.get("d1_regime")
+    if reg == "up":
         L.append("TREND_UP")
-    elif v.get("d1_above_sma20") is False and v.get("d1_above_sma50") is False:
+    elif reg == "down":
         L.append("TREND_DOWN")
-    if st == "mixed":
+    elif reg == "range":
         L.append("RANGE")
+    elif reg == "transition":
+        L.append("TRANSITION")
+    ts = v.get("d1_trend_strength_atr")
+    if ts is not None and abs(ts) >= 2.0:
+        L.append("EXTENDED")
     p = v.get("atr_percentile")
     if p is not None:
         L.append("HIGH_VOL" if p > 0.75 else "LOW_VOL" if p < 0.25 else "MID_VOL")

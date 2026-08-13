@@ -106,9 +106,12 @@ REGISTRY = {
     "BOT_C_sp500_london_breakout": COMMON,
     "BOT_E_eurusd_london_breakout": COMMON,
     "BOT_F_nas100_vwap_reversion": [
-        Shadow("v2_trend_align", "fade only against a mixed/ranging daily structure",
-               lambda st: None if st.get("d1_structure") is None
-               else st.get("d1_structure") == "mixed"),
+        Shadow("v2_range_only", "fade only in a POSITIVELY identified range",
+               lambda st: None if st.get("d1_regime") in (None, "unknown")
+               else st.get("d1_regime") == "range"),
+        Shadow("v5_not_extended", "not already 2+ ATR from the D1 mean",
+               lambda st: None if st.get("d1_trend_strength_atr") is None
+               else abs(st["d1_trend_strength_atr"]) < 2.0),
         Shadow("v3_htf_room", ">=0.5 ATR of room toward the VWAP target", _htf_room),
         Shadow("v4_low_vol", "reversion prefers contracting volatility",
                lambda st: None if st.get("vol_expansion") is None
