@@ -30,6 +30,45 @@ TFS = {"D1": "TIMEFRAME_D1", "H4": "TIMEFRAME_H4", "H1": "TIMEFRAME_H1",
 DUR = {"D1": "1D", "H4": "4h", "H1": "1h", "M15": "15min", "M5": "5min", "M1": "1min"}
 
 
+_OFFSET_CACHE = {}
+
+
+def broker_utc_offset(mt5, symbol="XAUUSD"):
+    """How far the BROKER's clock sits from real UTC.
+
+    MT5 returns bar and tick times in SERVER time, not UTC. Reading them as UTC and then
+    converting to London added the London offset on top of the server offset, putting the
+    desk 3 hours ahead: a bot whose window says 06:30 London was trading 03:30 London.
+
+    Measured, not hardcoded -- brokers change offset with DST and this must not need a code
+    change twice a year. Rounded to 15 minutes because the tick is seconds old, and some
+    brokers use half-hour offsets.
+    """
+    import pandas as pd
+    from datetime import datetime, timezone
+    if "off" in _OFFSET_CACHE:
+        return _OFFSET_CACHE["off"]
+    off = pd.Timedelta(0)
+    try:
+        tick = mt5.symbol_info_tick(symbol)
+        if tick and tick.time:
+            delta = tick.time - datetime.now(timezone.utc).timestamp()
+            off = pd.Timedelta(seconds=round(delta / 900) * 900)
+    except Exception:
+        pass
+    _OFFSET_CACHE["off"] = off
+    return off
+
+
+def to_london(series_or_epoch, offset):
+    """Server epoch -> true UTC -> London. The only correct path for MT5 times."""
+    import pandas as pd
+    u = pd.to_datetime(series_or_epoch, unit="s", utc=True) - offset
+    # NOT hasattr(u,"tz_convert"): a Series HAS that method but it converts the INDEX, so the
+    # hasattr check silently took the wrong branch and raised on real data.
+    return u.dt.tz_convert(LONDON) if isinstance(u, pd.Series) else u.tz_convert(LONDON)
+
+
 def _bars(mt5, symbol, tf_name, n, now):
     """Closed bars only, strictly before `now`."""
     import pandas as pd
@@ -38,7 +77,7 @@ def _bars(mt5, symbol, tf_name, n, now):
     if r is None or not len(r):
         return None
     d = pd.DataFrame(r)
-    d.index = pd.to_datetime(d["time"], unit="s", utc=True).dt.tz_convert(LONDON)
+    d.index = to_london(d["time"], broker_utc_offset(mt5, symbol))
     # A bar is usable only once it has CLOSED. Filtering on the bar's OPEN timestamp keeps
     # the bar the signal fired inside -- whose high/low already contain the breakout being
     # measured. That is lookahead even though no future data is involved.

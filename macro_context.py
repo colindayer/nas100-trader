@@ -30,7 +30,8 @@ def _ret(mt5, symbol, now, bars=1, tf="TIMEFRAME_D1"):
         if r is None or len(r) < bars + 25:
             return None, None
         d = pd.DataFrame(r)
-        d.index = pd.to_datetime(d["time"], unit="s", utc=True).dt.tz_convert("Europe/London")
+        import market_state as _MS
+        d.index = _MS.to_london(d["time"], _MS.broker_utc_offset(mt5, symbol))
         d = d[d.index < now]                      # closed bars only
         if len(d) < bars + 25:
             return None, None

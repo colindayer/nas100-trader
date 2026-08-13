@@ -1192,7 +1192,8 @@ def main():
         if r is None or not len(r):
             print(f"  {bot.strategy_id}: no M1 data"); continue
         m1 = pd.DataFrame(r)
-        m1.index = pd.to_datetime(m1["time"], unit="s", utc=True).dt.tz_convert("Europe/London")
+        import market_state as _MS
+        m1.index = _MS.to_london(m1["time"], _MS.broker_utc_offset(mt5, bot.symbol))
         d1 = trend_context(mt5, bot.symbol, tick.ask)
         ctx = {"now_london": m1.index[-1], "m1": m1, "bid": tick.bid, "ask": tick.ask,
                "traded_today": traded_today, "d1": d1}

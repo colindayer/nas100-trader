@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import statistics
+import sys
 from collections import Counter
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
