@@ -490,3 +490,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-13 | Obsidian Bridge / automated | Void the pre-clock-fix evidence without deleting any of it | git post-commit hook | b46f2ec |
 | 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 29f9607 |
 | 2026-08-13 | Obsidian Bridge / automated | Overnight mission: preflight, data-integrity gate, validity flag, evidence re... | git post-commit hook | b22d519 |
+| 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 6ea5603 |
+| 2026-08-13 | Obsidian Bridge / automated | Preflight caught it: 15-minute rounding manufactured 6 minutes of clock drift | git post-commit hook | c457cd0 |

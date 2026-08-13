@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+c457cd0  Preflight caught it: 15-minute rounding manufactured 6 minutes of clock drift
+6ea5603  Obsidian bridge auto-sync [bridge-auto]
 b22d519  Overnight mission: preflight, data-integrity gate, validity flag, evidence report
 29f9607  Obsidian bridge auto-sync [bridge-auto]
 b46f2ec  Void the pre-clock-fix evidence without deleting any of it
 7d80635  Obsidian bridge auto-sync [bridge-auto]
 05f9b26  CRITICAL: MT5 times are SERVER time -- every session window fired 3 hours early
 1a58a93  Obsidian bridge auto-sync [bridge-auto]
-c6f4b9c  Reports written with a BOM so Windows tools read them correctly
-8bab06a  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
