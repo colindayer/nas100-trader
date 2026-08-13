@@ -488,3 +488,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-13 | Obsidian Bridge / automated | Preflight caught it: 15-minute rounding manufactured 6 minutes of clock drift | git post-commit hook | c457cd0 |
 | 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | d30bc67 |
 | 2026-08-13 | Obsidian Bridge / automated | BOT_I: Asian sweep -> London reversal, as a SHADOW specialist | git post-commit hook | 5ffb344 |
+| 2026-08-13 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | ae3a8ec |
+| 2026-08-13 | Obsidian Bridge / automated | Raise spread floor 8x -> 30x: cost control is the lever a zero-edge system owns | git post-commit hook | b387f29 |
