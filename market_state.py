@@ -161,9 +161,13 @@ def _levels(d1, h1, h4, m1, price, now, atr) -> dict:
         prev = d1.iloc[-1]
         lv.update({"prev_day_high": float(prev["high"]), "prev_day_low": float(prev["low"]),
                    "prev_day_close": float(prev["close"])})
-        if len(d1) >= 20:
-            lv["high_20d"] = float(d1["high"].tail(20).max())
-            lv["low_20d"] = float(d1["low"].tail(20).min())
+        # Multiple horizons. A 20-day window cannot see a 3-month peak: NAS100's June high
+        # sat ~400pt above an August fade and was invisible to every lookback here, so the
+        # desk could not tell "faded into overhead structure" from "faded into open air".
+        for n in (20, 60, 120, 250):
+            if len(d1) >= n:
+                lv[f"high_{n}d"] = float(d1["high"].tail(n).max())
+                lv[f"low_{n}d"] = float(d1["low"].tail(n).min())
     if m1 is not None and len(m1):
         day = now.normalize()
         today = m1[m1.index >= day]
@@ -195,6 +199,10 @@ def _levels(d1, h1, h4, m1, price, now, atr) -> dict:
     below = [(price - v) for v in lv.values() if v < price]
     out["room_above"] = min(above) if above else None
     out["room_below"] = min(below) if below else None
+    # how far price sits inside its own multi-month range: 1.0 = at the 120d high
+    hi120, lo120 = lv.get("high_120d"), lv.get("low_120d")
+    if hi120 and lo120 and hi120 > lo120:
+        out["range_position_120d"] = (price - lo120) / (hi120 - lo120)
     out["room_above_atr"] = (min(above) / atr) if (above and atr) else None
     out["room_below_atr"] = (min(below) / atr) if (below and atr) else None
     return out
