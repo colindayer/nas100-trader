@@ -506,3 +506,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-14 | Obsidian Bridge / automated | BOT_I retired before deployment: 7.3 trades/year is unfalsifiable | git post-commit hook | 94356a3 |
 | 2026-08-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 2b4ad56 |
 | 2026-08-14 | Obsidian Bridge / automated | Controller logs every cycle: a quiet session must still be reconstructable | git post-commit hook | c764e40 |
+| 2026-08-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | c524a09 |
+| 2026-08-14 | Obsidian Bridge / automated | Phase 1-4: architecture docs, structured events, orchestrator, validation | git post-commit hook | 610c092 |
