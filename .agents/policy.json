@@ -1,0 +1,27 @@
+{
+  "_comment": [
+    "Path classification for agentctl. DATA ONLY -- nothing imports this at runtime and no",
+    "trading component is aware of it. Real trading safety is unchanged and lives elsewhere:",
+    "the demo gate, preflight, and the fact that MT5 and credentials exist only on the VPS.",
+    "This file governs what an AGENT may touch in the REPOSITORY, nothing more."
+  ],
+  "version": 1,
+  "classes": {
+    "PRODUCTION_CRITICAL": [
+      "challenge_controller.py", "bot_base.py", "desk.py", "market_state.py",
+      "macro_context.py", "shadows.py", "trading_brain.py",
+      "config/**", "execution_safety/**"
+    ],
+    "EVIDENCE": ["data/**"],
+    "DEVELOPMENT": [
+      "desk_orchestrator.py", "desk_events.py", "head_trader.py", "daily_review.py",
+      "tests/**", "scripts/agentctl.py", ".agents/**", ".clinerules"
+    ],
+    "RESEARCH": ["bot_i.py", "scripts/exp_*.py"],
+    "AGENT_INFRA": [".agents/**", "scripts/agentctl.py", ".clinerules"]
+  },
+  "never_writable_by_any_agent": [
+    "config/**", "data/**", ".agents/policy.json", ".git/**"
+  ],
+  "human_approval_required_to_merge": ["PRODUCTION_CRITICAL", "EVIDENCE"]
+}

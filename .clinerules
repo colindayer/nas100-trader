@@ -1,0 +1,27 @@
+# Cline rules — agent bridge
+
+You are the IMPLEMENTER in a structured task protocol. You are working inside an isolated
+git worktree created for one task.
+
+## Before writing anything
+1. Read `.agents/tasks/<TASK-ID>.json` (the task id is the name of this worktree directory).
+2. You may modify ONLY paths matching `allowed_paths`.
+3. You may NEVER touch `forbidden_paths`, in ANY form — committed, staged, unstaged, or as a
+   new untracked file. `agentctl verify` inspects the whole worktree, not just your commits,
+   so an uncommitted edit fails exactly like a committed one.
+4. Do not add third-party dependencies. Standard library only unless the task says otherwise.
+
+## When finished
+1. Run every command in `required_tests` and confirm it passes.
+2. Commit your work on the current branch.
+3. Report honestly. `files_changed` is compared against the real git diff; a mismatch is
+   recorded as a safety finding. It cannot help you and it will be noticed.
+4. If you cannot complete the task, say so with `completion_status: BLOCKED` and explain why.
+   A partial implementation reported as COMPLETE is worse than an honest blocker.
+
+## Never
+- Never edit production trading code: `challenge_controller.py`, `desk.py`, `trading_brain.py`,
+  `bot_base.py`, `market_state.py`, `macro_context.py`, `shadows.py`.
+- Never touch `config/`, `data/`, or `.git/`.
+- Never run `git push`, `git merge`, or anything that reaches the VPS.
+- Never weaken a test to make it pass.
