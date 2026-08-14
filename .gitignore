@@ -6,6 +6,16 @@ __pycache__/
 config.ini
 logs/
 data/
+# ...but the desk's own EVIDENCE must sync, or the human stays the transport.
+# Small append-only text files: a few MB/year. Market-data caches stay ignored above.
+!data/logs/
+!data/logs/**
+!data/challenge/
+!data/challenge/**
+!data/brain/
+!data/brain/**
+!data/telemetry/
+!data/telemetry/**
 *.bi5
 *.parquet
 logs/btc_state.json
