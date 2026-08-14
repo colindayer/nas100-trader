@@ -512,3 +512,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-14 | Obsidian Bridge / automated | Deployment card for the orchestrator | git post-commit hook | 3318506 |
 | 2026-08-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 0e3fcfe |
 | 2026-08-14 | Obsidian Bridge / automated | Un-ignore the four evidence paths so the VPS can sync its own record | git post-commit hook | 8e9179a |
+| 2026-08-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | d15ff73 |
+| 2026-08-14 | Obsidian Bridge / automated | Fix the un-ignore: 'data/' excluded the directory, so negations inside were dead | git post-commit hook | d262d4f |

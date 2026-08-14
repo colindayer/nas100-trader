@@ -90,14 +90,14 @@ CODE_INVENTORY.md, scheduled for archiving in MIGRATION_PLAN Phase 2 (not yet ru
 ## Recent commits (newest first)
 
 ```
+d262d4f  Fix the un-ignore: 'data/' excluded the directory, so negations inside were dead
+d15ff73  Obsidian bridge auto-sync [bridge-auto]
 8e9179a  Un-ignore the four evidence paths so the VPS can sync its own record
 0e3fcfe  Obsidian bridge auto-sync [bridge-auto]
 3318506  Deployment card for the orchestrator
 a02a21f  Obsidian bridge auto-sync [bridge-auto]
 610c092  Phase 1-4: architecture docs, structured events, orchestrator, validation
 c524a09  Obsidian bridge auto-sync [bridge-auto]
-c764e40  Controller logs every cycle: a quiet session must still be reconstructable
-2b4ad56  Obsidian bridge auto-sync [bridge-auto]
 ```
 
 ## What should NEVER be changed (without explicit human sign-off + clock reset)
