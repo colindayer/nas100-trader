@@ -504,3 +504,5 @@ Format: date | role/model | change | evidence/verification | commits._
 | 2026-08-14 | Obsidian Bridge / automated | Phase 1-4: architecture docs, structured events, orchestrator, validation | git post-commit hook | 610c092 |
 | 2026-08-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | a02a21f |
 | 2026-08-14 | Obsidian Bridge / automated | Deployment card for the orchestrator | git post-commit hook | 3318506 |
+| 2026-08-14 | Obsidian Bridge / automated | Obsidian bridge auto-sync [bridge-auto] | git post-commit hook | 0e3fcfe |
+| 2026-08-14 | Obsidian Bridge / automated | Un-ignore the four evidence paths so the VPS can sync its own record | git post-commit hook | 8e9179a |
