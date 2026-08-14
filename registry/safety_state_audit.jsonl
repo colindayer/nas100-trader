@@ -1703,3 +1703,10 @@
 {"ts": 1786695462.1474292, "utc": "2026-08-14T08:17:42.147429+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
 {"ts": 1786695462.147836, "utc": "2026-08-14T08:17:42.147836+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
 {"ts": 1786695462.148195, "utc": "2026-08-14T08:17:42.148195+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1786697830.454016, "utc": "2026-08-14T08:57:10.454017+00:00", "event": "state_initialised", "equity": 50000.0}
+{"ts": 1786697830.454473, "utc": "2026-08-14T08:57:10.454473+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}
+{"ts": 1786697830.454881, "utc": "2026-08-14T08:57:10.454881+00:00", "event": "HALT", "reason": "test halt"}
+{"ts": 1786697830.479603, "utc": "2026-08-14T08:57:10.479604+00:00", "event": "account_changed", "from": 34536803, "to": 61552095, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": true}
+{"ts": 1786697830.4800582, "utc": "2026-08-14T08:57:10.480058+00:00", "event": "HALT_CLEARED", "actor": "test", "note": "", "prior_reason": "test halt"}
+{"ts": 1786697830.4805171, "utc": "2026-08-14T08:57:10.480517+00:00", "event": "trade_recorded", "trades_today": 1, "intent_id": "i1"}
+{"ts": 1786697830.480912, "utc": "2026-08-14T08:57:10.480912+00:00", "event": "account_changed", "from": 61552095, "to": 34536803, "discarded_day_start": 50000.0, "discarded_hwm": 50000.0, "halt_preserved": false}

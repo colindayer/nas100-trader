@@ -207,6 +207,34 @@ def _run(cmd, cwd=ROOT, timeout=120):
         return -1, str(e)
 
 
+def check_for_updates() -> dict:
+    """Is new code waiting? FETCH and REPORT -- never apply.
+
+    Auto-pulling would let anyone with repo write access change a live trading system with no
+    human in the loop, which the desk charter forbids: humans approve production changes.
+    So this makes the update VISIBLE and leaves the decision where it belongs.
+    """
+    import desk_events as EV
+    code, _ = _run(["git", "fetch", "-q", "origin"], timeout=120)
+    if code != 0:
+        return {"update_check": "fetch failed (offline or no credential)"}
+    code, local = _run(["git", "rev-parse", "HEAD"])
+    code2, remote = _run(["git", "rev-parse", "@{u}"])
+    if code or code2:
+        return {"update_check": "no upstream configured"}
+    local, remote = local.strip(), remote.strip()
+    if local == remote:
+        return {"update_check": "up to date", "head": local[:8]}
+    _, log = _run(["git", "log", "--oneline", f"{local}..{remote}"])
+    pending = [l for l in log.strip().splitlines() if l.strip()]
+    EV.emit("orchestrator", "UPDATE_AVAILABLE", n_commits=len(pending),
+            head=local[:8], remote=remote[:8], commits=pending[:10],
+            action="NOT applied -- production changes require human approval")
+    return {"update_check": f"{len(pending)} commit(s) available -- NOT applied",
+            "pending": pending[:10],
+            "apply_with": "git pull --ff-only origin phase404-live-demo"}
+
+
 def sync() -> dict:
     """Git + Obsidian. AUXILIARY: every failure is recorded and the desk carries on.
     Nothing here can stop or delay a trade."""
@@ -226,11 +254,16 @@ def sync() -> dict:
                 impact="none -- trading and evidence collection continue locally")
         return out
 
+    # Reports AND evidence. Publishing only the summaries left the ledger, the structured
+    # events and the controller logs stranded on this host -- the reader could see the desk's
+    # conclusions but never check them against the record that produced them.
     artifacts = [p for p in ("DAILY_VALIDATION.md", "SYSTEM_HEALTH.md",
                              "DAILY_HEAD_TRADER.md", "PATCHES.md",
                              "FIRST_VALID_EVIDENCE_REPORT.md", "ARCHITECTURE.md",
                              "DATA_FLOW.md", "OPERATIONS.md", "ROADMAP.md")
                  if (ROOT / p).exists()]
+    artifacts += [d for d in ("data/logs", "data/challenge", "data/brain", "data/telemetry")
+                  if (ROOT / d).exists()]
     _run(["git", "add", "--"] + artifacts)
     code, txt = _run(["git", "commit", "-m",
                       f"desk: automated reports {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC"])
@@ -305,6 +338,15 @@ def validation_report(h: dict, m: dict) -> str:
     L.append(f"- lessons stored: {m.get('lessons_stored_pct')}%")
     L.append(f"- voided (instrumentation faults, never losses): {m.get('voided', 0)}")
 
+    L.append("\n## Code updates\n")
+    _u = globals().get("_LAST_UPDATE_CHECK") or {}
+    L.append(f"- {_u.get('update_check', 'not checked')}")
+    for c in _u.get("pending", [])[:10]:
+        L.append(f"  - `{c}`")
+    if _u.get("pending"):
+        L.append(f"\n_Not applied. Production changes require approval:_ "
+                 f"`{_u.get('apply_with')}`")
+
     L.append("\n## Recommendation\n")
     if h["faults"]:
         L.append(f"**FIX PROVEN DEFECT** — {h['faults'][0]}")
@@ -339,6 +381,12 @@ def main():
     if a.review:
         code, txt = _run([sys.executable, "head_trader.py"], timeout=600)
         print(f"  review -> {'ok' if code == 0 else txt.strip()[:200]}")
+
+    upd = check_for_updates()
+    globals()["_LAST_UPDATE_CHECK"] = upd
+    print(f"UPDATES  {upd.get('update_check')}")
+    for c in upd.get("pending", [])[:5]:
+        print(f"  pending: {c}")
 
     m = evidence()
     print(f"EVIDENCE valid {m.get('valid_trades', 0)}/30, signals {m['signals_logged']}, "
