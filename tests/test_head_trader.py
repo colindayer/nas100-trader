@@ -11,7 +11,31 @@ HT.REPORT = d/"R.md"; HT.PATCHES = d/"P.md"
 # directory, but the test must point them at the fixture or the audit silently sees nothing.
 import trading_brain as TB
 TB.TRADES = HT.DATA/"trades.jsonl"; TB.BRAIN = d/"brain"; TB.EVENTS = d/"brain"/"e.jsonl"
-shutil.copy("/tmp/tj.jsonl", HT.DATA/"trades.jsonl")
+FIXTURE = [
+ {"intent_id":"i1","strategy_id":"BOT_D_gold_ny_breakout","playbook":"BREAKOUT",
+  "timestamp":"2026-08-13T16:30:05+01:00","symbol":"XAUUSD","side":1,"entry":4427.42,
+  "stop":4421.31,"target":4454.80,"risk_pct":0.0005,"account_equity":99944.11,"volume":0.04,
+  "spread":0.5,"retcode":10009,"ticket":517571,"actual_slippage":0.02,
+  "feature_snapshot":{"sl_dist":6.11},
+  "market_state":{"atr20_d1":88.0,"d1_regime":"transition","d1_trend_strength_atr":2.7},
+  "shadows":{"v6_wide_stop":False}},
+ {"kind":"close","intent_id":"i1","strategy_id":"BOT_D_gold_ny_breakout","exit":4390.33,
+  "gross":-148.36,"swap":0.0,"commission":0.0,"net":-148.36,"R":-6.07,"outcome":"stop",
+  "mfe_R":0.0,"mae_R":-6.07,"holding_minutes":0,"ticket":517571},
+ {"intent_id":"i2","strategy_id":"BOT_F_nas100_vwap_reversion","playbook":"REVERSION",
+  "timestamp":"2026-08-13T16:07:02+01:00","symbol":"US100.cash","side":-1,"entry":30064.68,
+  "stop":30159.44,"target":29924.39,"risk_pct":0.0005,"account_equity":99479.87,"volume":0.5,
+  "spread":1.45,"retcode":10009,"ticket":518767,"actual_slippage":0.3,
+  "feature_snapshot":{"sl_dist":94.76},
+  "market_state":{"atr20_d1":633.7,"d1_regime":"transition","h4_regime":"up",
+                  "d1_trend_strength_atr":2.06},
+  "shadows":{"v2_range_only":False}},
+ {"kind":"close","intent_id":"i2","strategy_id":"BOT_F_nas100_vwap_reversion","exit":30160.98,
+  "gross":-48.15,"swap":0.0,"commission":0.0,"net":-48.15,"R":-0.97,"outcome":"stop",
+  "mfe_R":0.15,"mae_R":-0.97,"holding_minutes":87,"ticket":518767},
+]
+(HT.DATA/"trades.jsonl").write_text(
+    "\n".join(json.dumps(r) for r in FIXTURE)+"\n", encoding="utf-8")
 
 ts = HT.merged_trades()
 assert len(ts) == 2, len(ts)

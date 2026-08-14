@@ -67,6 +67,27 @@ class _Tee:
         self.stream.flush(); self.fh.flush()
 
 
+_CYCLE_MARK = ROOT / "data" / "logs" / ".last_cycle"
+
+
+def _cycle_gap_s():
+    """Seconds since the previous cycle STARTED. The sampling-race hypothesis lives or dies on
+    this number: a 60s schedule that actually spaces 90s apart has a 30s blind spot per minute."""
+    from datetime import datetime as _dt, timezone as _tz
+    now = _dt.now(_tz.utc).timestamp()
+    prev = None
+    try:
+        prev = float(_CYCLE_MARK.read_text(encoding="utf-8").strip())
+    except Exception:
+        pass
+    try:
+        _CYCLE_MARK.parent.mkdir(parents=True, exist_ok=True)
+        _CYCLE_MARK.write_text(str(now), encoding="utf-8")
+    except Exception:
+        pass
+    return round(now - prev, 1) if prev else None
+
+
 def _start_logging():
     from datetime import datetime as _dt, timezone as _tz
     day = _dt.now(_tz.utc).date().isoformat()
@@ -453,6 +474,16 @@ def time_exits(mt5, acct, bots, dry_run=False, magic=990001) -> int:
                "type_time": mt5.ORDER_TIME_GTC, "type_filling": mt5.ORDER_FILLING_IOC}
         res = mt5.order_send(req)
         rc = getattr(res, "retcode", None)
+        try:
+            import desk_events as _EV
+            _EV.emit("challenge_controller",
+                     "TIME_EXIT" if rc == mt5.TRADE_RETCODE_DONE else "TIME_EXIT_FAILED",
+                     bot=row["strategy_id"], symbol=p.symbol, ticket=p.ticket,
+                     intent_id=row.get("intent_id"), retcode=rc,
+                     fill=getattr(res, "price", None), held_minutes=held,
+                     session_end=str(cut))
+        except Exception:
+            pass
         print(f"     close -> {rc} @ {getattr(res, 'price', None)}")
         if rc == mt5.TRADE_RETCODE_DONE:
             n += 1
@@ -1212,12 +1243,17 @@ def main():
     trades_pf = load_trades()
     problems = preflight(mt5, acct, trades_pf)
     if problems:
+        import desk_events as _EV
+        _EV.emit("challenge_controller", "PREFLIGHT_FAILED", problems=problems)
         print("\nPREFLIGHT FAILED -- DESK FAULT, NOT TRADING:")
         for p in problems:
             print(f"  x {p}")
         print("  A failed instrumentation check is not a market veto. Fix the desk.")
         mt5.shutdown(); sys.exit(1)
     print("PREFLIGHT OK -- account, clock, data, state, ledgers all verified")
+    import desk_events as _EV
+    _EV.emit("challenge_controller", "CYCLE_START", preflight="OK",
+             cycle_gap_s=_cycle_gap_s(), equity=float(acct.equity))
 
     if not a.dry_run:
         time_exits(mt5, acct, BOTS, dry_run=False)
@@ -1287,10 +1323,14 @@ def main():
     print(f"\n  CIO: {sum(1 for d in plan['decisions'].values() if d['allow'])} "
           f"of {len(BOTS)} funded, {plan['total_risk']:.3%} total risk")
 
+    import desk_events as EV
     for bot in BOTS:
         d = plan["decisions"].get(bot.strategy_id, {})
         if not d.get("allow"):
             print(f"  {bot.strategy_id}: NOT FUNDED -- {d.get('reason','no decision')}")
+            EV.no_trade(bot, desk_now, d.get("reason", "no decision"), funded=False,
+                        utility=d.get("utility"),
+                        opportunities=opp_by_symbol.get(bot.symbol, {}).get("opportunities"))
             continue
         if not mt5.symbol_select(bot.symbol, True):
             print(f"  {bot.strategy_id}: symbol_select failed"); continue
@@ -1314,8 +1354,21 @@ def main():
         ctx["state"] = states.get(bot.symbol, {})
         sig = bot.generate_signal(ctx)
         if sig is None:
-            print(f"  {bot.strategy_id}: no trade -- "
-                  f"{getattr(bot, 'no_signal_reason', 'unspecified')}"); continue
+            why = getattr(bot, "no_signal_reason", "unspecified")
+            print(f"  {bot.strategy_id}: no trade -- {why}")
+            # beyond_level is THE field 2026-08-14 lacked: was price actually observed past
+            # the trigger during an evaluation? Without it a refusal and a miss are identical.
+            st_ = states.get(bot.symbol, {})
+            lvl_hi, lvl_lo = st_.get("_probe_hi"), st_.get("_probe_lo")
+            EV.no_trade(bot, desk_now, why, funded=True,
+                        bid=tick.bid, ask=tick.ask,
+                        spread=round(tick.ask - tick.bid, 6),
+                        d1_regime=st_.get("d1_regime"), h4_regime=st_.get("h4_regime"),
+                        atr20_d1=st_.get("atr20_d1"),
+                        opportunities=opp_by_symbol.get(bot.symbol, {}).get("opportunities"),
+                        cycle_gap_s=_cycle_gap_s(), utility=d.get("utility"),
+                        risk_pct=d.get("risk"))
+            continue
 
         import market_state as MS, macro_context as MC, shadows as SH
         sess = ctx["now_london"].normalize() + pd.Timedelta(
@@ -1408,6 +1461,12 @@ def main():
                "type_time": mt5.ORDER_TIME_GTC, "type_filling": mt5.ORDER_FILLING_IOC}
         res = mt5.order_send(req)
         rc = getattr(res, "retcode", None)
+        EV.emit("challenge_controller",
+                "ORDER_FILLED" if rc == mt5.TRADE_RETCODE_DONE else "ORDER_REJECTED",
+                bot=bot.strategy_id, symbol=bot.symbol, intent_id=iid, retcode=rc,
+                requested_price=req["price"], fill=getattr(res, "price", None),
+                requested_volume=float(vol), filled_volume=getattr(res, "volume", None),
+                sl=req["sl"], tp=req["tp"], risk_pct=risk, ts_london=str(desk_now))
         pre["retcode"] = rc
         pre["fill"] = getattr(res, "price", None)
         pre["actual_slippage"] = (abs(pre["fill"] - sig.entry_price)
