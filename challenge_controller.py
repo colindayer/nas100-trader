@@ -41,6 +41,38 @@ except Exception:
 
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data" / "challenge"
+LOGS = ROOT / "data" / "logs"
+
+
+class _Tee:
+    """Every cycle's output to disk AND stdout.
+
+    The controller has been running every minute under Task Scheduler, printing to a stdout
+    nobody captures. When a session passes with no trade there is no artifact to say whether
+    the desk saw no signal or never believed the window was open -- two completely different
+    faults with the same silence. A desk that cannot reconstruct its own quiet days cannot be
+    audited, and the human becomes the log.
+    """
+    def __init__(self, stream, path):
+        self.stream, self.path = stream, path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self.fh = path.open("a", encoding="utf-8")
+
+    def write(self, d):
+        self.stream.write(d)
+        self.fh.write(d)
+        self.fh.flush()
+
+    def flush(self):
+        self.stream.flush(); self.fh.flush()
+
+
+def _start_logging():
+    from datetime import datetime as _dt, timezone as _tz
+    day = _dt.now(_tz.utc).date().isoformat()
+    sys.stdout = _Tee(sys.stdout, LOGS / f"controller-{day}.log")
+    print(f"\n===== cycle {_dt.now(_tz.utc):%Y-%m-%d %H:%M:%S} UTC "
+          f"(host local {_dt.now():%Y-%m-%d %H:%M:%S}) =====")
 TRADES = DATA / "trades.jsonl"
 STATE = DATA / "controller_state.json"
 
@@ -1144,6 +1176,7 @@ def cmd_status():
 
 
 def main():
+    _start_logging()
     ap = argparse.ArgumentParser()
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
