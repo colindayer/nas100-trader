@@ -1,19 +1,19 @@
 ﻿# DAILY VALIDATION — 2026-08-14
 
-## DESK STATUS: **AMBER**
+## DESK STATUS: **RED**
 
 **VALID TRADES: 0 / 30**
 
 
 ## Faults
 
-- AMBER host clock 20 min from broker
+- **RED** WRONG ACCOUNT 61552095
 
 ## Execution
 
-- controller cycles logged today: **861**
+- controller cycles logged today: **866**
 - cycle spacing: median 60s, max 64s (within schedule)
-- last cycle: 59s ago
+- last cycle: 598s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
@@ -30,10 +30,10 @@
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 2583
-- `CORRELATION_CAP` × 1722
-- `OUTSIDE_WINDOW` × 967
-- `OUTRANKED` × 861
+- `REGIME_MISMATCH` × 2598
+- `CORRELATION_CAP` × 1732
+- `OUTSIDE_WINDOW` × 977
+- `OUTRANKED` × 866
 - `FIRST_BREAK_ALREADY_OCCURRED` × 422
 - `NO_BREAKOUT` × 153
 
@@ -48,4 +48,4 @@
 
 ## Recommendation
 
-**FIX PROVEN DEFECT** — market_state_attached_pct at 0.0%. Infrastructure before strategy.
+**FIX PROVEN DEFECT** — WRONG ACCOUNT 61552095

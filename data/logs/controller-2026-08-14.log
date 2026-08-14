@@ -19435,3 +19435,133 @@ profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
   BOT_F_nas100_vwap_reversion: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
   BOT_G_nas100_h4_pullback: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
   BOT_H_gold_sweep_reclaim: NOT FUNDED -- outranked (neutral in WEAK_TREND); desk probes only its best candidate when no specialist fits
+
+===== cycle 2026-08-14 23:16:01 UTC (host local 2026-08-14 16:16:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  ! HOST CLOCK is 21.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-14 23:54 London (broker)
+  MARKET EURUSD      WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US500.cash  STRONG_TREND,COMPRESSION,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+
+  CIO: 2 of 8 funded, 0.142% total risk
+  BOT_A_gold_0630_breakout: no trade -- outside window: 23:54 London, opens 06:30 closes 16:00
+  BOT_B_nas100_usopen_breakout: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: NOT FUNDED -- BREAKOUT group at 0.142% of 0.15% cap -- correlated exposure, not diversification
+  BOT_D_gold_ny_breakout: no trade -- outside window: 23:54 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: NOT FUNDED -- BREAKOUT group at 0.142% of 0.15% cap -- correlated exposure, not diversification
+  BOT_F_nas100_vwap_reversion: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: NOT FUNDED -- outranked (neutral in WEAK_TREND); desk probes only its best candidate when no specialist fits
+
+===== cycle 2026-08-14 23:17:01 UTC (host local 2026-08-14 16:17:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  ! HOST CLOCK is 22.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-14 23:54 London (broker)
+  MARKET EURUSD      WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US500.cash  STRONG_TREND,COMPRESSION,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+
+  CIO: 2 of 8 funded, 0.142% total risk
+  BOT_A_gold_0630_breakout: no trade -- outside window: 23:54 London, opens 06:30 closes 16:00
+  BOT_B_nas100_usopen_breakout: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: NOT FUNDED -- BREAKOUT group at 0.142% of 0.15% cap -- correlated exposure, not diversification
+  BOT_D_gold_ny_breakout: no trade -- outside window: 23:54 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: NOT FUNDED -- BREAKOUT group at 0.142% of 0.15% cap -- correlated exposure, not diversification
+  BOT_F_nas100_vwap_reversion: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: NOT FUNDED -- outranked (neutral in WEAK_TREND); desk probes only its best candidate when no specialist fits
+
+===== cycle 2026-08-14 23:18:01 UTC (host local 2026-08-14 16:18:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  ! HOST CLOCK is 23.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-14 23:54 London (broker)
+  MARKET EURUSD      WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US500.cash  STRONG_TREND,COMPRESSION,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+
+  CIO: 2 of 8 funded, 0.142% total risk
+  BOT_A_gold_0630_breakout: no trade -- outside window: 23:54 London, opens 06:30 closes 16:00
+  BOT_B_nas100_usopen_breakout: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: NOT FUNDED -- BREAKOUT group at 0.142% of 0.15% cap -- correlated exposure, not diversification
+  BOT_D_gold_ny_breakout: no trade -- outside window: 23:54 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: NOT FUNDED -- BREAKOUT group at 0.142% of 0.15% cap -- correlated exposure, not diversification
+  BOT_F_nas100_vwap_reversion: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: NOT FUNDED -- outranked (neutral in WEAK_TREND); desk probes only its best candidate when no specialist fits
+
+===== cycle 2026-08-14 23:19:01 UTC (host local 2026-08-14 16:19:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  ! HOST CLOCK is 24.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-14 23:54 London (broker)
+  MARKET EURUSD      WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US500.cash  STRONG_TREND,COMPRESSION,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+
+  CIO: 2 of 8 funded, 0.142% total risk
+  BOT_A_gold_0630_breakout: no trade -- outside window: 23:54 London, opens 06:30 closes 16:00
+  BOT_B_nas100_usopen_breakout: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: NOT FUNDED -- BREAKOUT group at 0.142% of 0.15% cap -- correlated exposure, not diversification
+  BOT_D_gold_ny_breakout: no trade -- outside window: 23:54 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: NOT FUNDED -- BREAKOUT group at 0.142% of 0.15% cap -- correlated exposure, not diversification
+  BOT_F_nas100_vwap_reversion: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: NOT FUNDED -- outranked (neutral in WEAK_TREND); desk probes only its best candidate when no specialist fits
+
+===== cycle 2026-08-14 23:20:01 UTC (host local 2026-08-14 16:20:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  ! HOST CLOCK is 34.9 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-15 00:54 London (broker)
+  MARKET EURUSD      WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US500.cash  STRONG_TREND,COMPRESSION,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+
+  CIO: 2 of 8 funded, 0.142% total risk
+  BOT_A_gold_0630_breakout: no trade -- outside window: 00:54 London, opens 06:30 closes 16:00
+  BOT_B_nas100_usopen_breakout: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: NOT FUNDED -- BREAKOUT group at 0.142% of 0.15% cap -- correlated exposure, not diversification
+  BOT_D_gold_ny_breakout: no trade -- outside window: 00:54 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: NOT FUNDED -- BREAKOUT group at 0.142% of 0.15% cap -- correlated exposure, not diversification
+  BOT_F_nas100_vwap_reversion: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT FUNDED -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: NOT FUNDED -- outranked (neutral in WEAK_TREND); desk probes only its best candidate when no specialist fits
+
+===== cycle 2026-08-14 23:21:01 UTC (host local 2026-08-14 16:21:01) =====
+
+===== cycle 2026-08-14 23:22:01 UTC (host local 2026-08-14 16:22:01) =====
+
+===== cycle 2026-08-14 23:23:01 UTC (host local 2026-08-14 16:23:01) =====
+
+===== cycle 2026-08-14 23:24:01 UTC (host local 2026-08-14 16:24:01) =====
+
+===== cycle 2026-08-14 23:25:01 UTC (host local 2026-08-14 16:25:01) =====
+
+===== cycle 2026-08-14 23:26:01 UTC (host local 2026-08-14 16:26:01) =====
+
+===== cycle 2026-08-14 23:27:01 UTC (host local 2026-08-14 16:27:01) =====
+
+===== cycle 2026-08-14 23:28:01 UTC (host local 2026-08-14 16:28:01) =====
+
+===== cycle 2026-08-14 23:29:01 UTC (host local 2026-08-14 16:29:01) =====
+
+===== cycle 2026-08-14 23:30:01 UTC (host local 2026-08-14 16:30:01) =====
