@@ -2,6 +2,10 @@
 import json, sys, tempfile, pathlib, types
 sys.path.insert(0, ".")
 import challenge_controller as C
+import desk_events as _EV
+# tests must never append to the PRODUCTION event log -- one already did,
+# and its TIME_EXIT landed in the desk's real evidence and got committed.
+_EV.EVENTS = pathlib.Path(tempfile.mkdtemp())/"events.jsonl"
 
 d = pathlib.Path(tempfile.mkdtemp())
 C.DATA = d; C.TRADES = d/"trades.jsonl"; C.OPEN_STATE = d/"open.json"

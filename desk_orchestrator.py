@@ -262,9 +262,14 @@ def sync() -> dict:
                              "FIRST_VALID_EVIDENCE_REPORT.md", "ARCHITECTURE.md",
                              "DATA_FLOW.md", "OPERATIONS.md", "ROADMAP.md")
                  if (ROOT / p).exists()]
-    artifacts += [d for d in ("data/logs", "data/challenge", "data/brain", "data/telemetry")
-                  if (ROOT / d).exists()]
     _run(["git", "add", "--"] + artifacts)
+    # Evidence is gitignored so no other machine can publish it by accident. THIS host is the
+    # producer, so it adds explicitly with -f. If the orchestrator ever runs somewhere that is
+    # not the trading host, it will publish nothing rather than overwrite the real record.
+    evidence_paths = [d for d in ("data/logs", "data/challenge", "data/brain",
+                                  "data/telemetry") if (ROOT / d).exists()]
+    if evidence_paths:
+        _run(["git", "add", "-f", "--"] + evidence_paths)
     code, txt = _run(["git", "commit", "-m",
                       f"desk: automated reports {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC"])
     out["git_commit"] = "ok" if code == 0 else ("nothing to commit" if "nothing" in txt
