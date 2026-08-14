@@ -1,18 +1,19 @@
-﻿# SYSTEM HEALTH — 2026-08-14 08:18 UTC
+﻿# SYSTEM HEALTH — 2026-08-14 08:55 UTC
 
 ```json
 {
- "last_cycle_age_s": null,
+ "last_cycle_age_s": 0.3,
  "trade_ledger_writable": true,
  "brain_ledger_writable": true,
- "disk_free_gb": 8.4,
- "mt5": "MetaTrader5 not installed (not the trading host)",
- "faults": [
-  "controller has never recorded a cycle"
- ],
- "warnings": [
-  "disk 8.4 GB free"
- ],
- "status": "RED"
+ "disk_free_gb": 24.0,
+ "account": 1514166963,
+ "is_demo": true,
+ "trade_allowed": true,
+ "mt5_connected": true,
+ "desk_clock": "2026-08-14 09:55:29+01:00",
+ "host_broker_gap_s": 0,
+ "faults": [],
+ "warnings": [],
+ "status": "GREEN"
 }
 ```
