@@ -7,8 +7,13 @@ config.ini
 logs/
 data/*
 # Git never descends into an EXCLUDED DIRECTORY, so negations inside 'data/' were dead.
-# 'data/*' excludes the contents while leaving the directory walkable, which is what makes
-# the re-includes below actually work.
+# 'data/*' excludes the contents while leaving the directory walkable, which makes the
+# re-includes below work.
+#
+# DIRECTION MATTERS. Only the VPS may commit these paths -- it is the sole producer of
+# evidence. This machine excludes them again via .git/info/exclude (local, unshared), because
+# a Mac copy in the repo gets written ONTO the trading host by any checkout. That very nearly
+# replaced a live ledger with an empty file.
 !data/logs/
 !data/challenge/
 !data/brain/
