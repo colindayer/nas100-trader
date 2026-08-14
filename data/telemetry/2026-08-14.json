@@ -1,0 +1,243 @@
+{
+ "collected_at": "2026-08-14T20:00:02+00:00",
+ "ledger": [
+  "{\"intent_id\": \"72b45602ad2e895a\", \"strategy_id\": \"BOT_A_gold_0630_breakout\", \"strategy_version\": \"1.1.0\", \"timestamp\": \"2026-08-12T06:43:00+01:00\", \"symbol\": \"XAUUSD\", \"side\": 1, \"entry\": 4407.45, \"stop\": 4377.45, \"target\": 4467.45, \"risk_pct\": 0.001, \"volume\": 0.03, \"account_equity\": 99944.11, \"daily_loss_headroom\": 0.05, \"total_loss_headroom\": 0.1, \"spread\": 0.5, \"reason_codes\": [\"pre_range_break\", \"level=4404.56\"], \"feature_snapshot\": {\"pre_high\": 4404.56, \"pre_low\": 4378.21, \"pre_range\": 26.350000000000364, \"sl_dist\": 30.0, \"tp_dist\": 60.0, \"spread\": 0.5, \"minutes_since_entry\": 13}, \"R\": null, \"outcome\": null, \"retcode\": 10027, \"fill\": 0.0, \"actual_slippage\": null}",
+  "{\"intent_id\": \"14d0017f1667a84d\", \"strategy_id\": \"BOT_C_sp500_london_breakout\", \"strategy_version\": \"1.0.0\", \"timestamp\": \"2026-08-12T10:57:00+01:00\", \"symbol\": \"US500.cash\", \"side\": 1, \"entry\": 7737.85, \"stop\": 7736.0, \"target\": 7741.55, \"risk_pct\": 0.0005, \"volume\": 27.01, \"account_equity\": 99944.11, \"daily_loss_headroom\": 0.05, \"total_loss_headroom\": 0.1, \"spread\": 0.6000000000003638, \"reason_codes\": [\"pre_range_break\", \"level=7733.95\"], \"feature_snapshot\": {\"pre_high\": 7733.95, \"pre_low\": 7730.25, \"pre_range\": 3.699999999999818, \"sl_dist\": 1.849999999999909, \"tp_dist\": 3.699999999999818, \"spread\": 0.6000000000003638, \"minutes_since_entry\": 177}, \"R\": null, \"outcome\": null, \"retcode\": 10027, \"fill\": 0.0, \"actual_slippage\": null, \"ticket\": 0}",
+  "{\"intent_id\": \"41403b0170ca5d36\", \"strategy_id\": \"BOT_A_gold_0630_breakout\", \"strategy_version\": \"1.1.0\", \"timestamp\": \"2026-08-12T11:12:00+01:00\", \"symbol\": \"XAUUSD\", \"side\": 1, \"entry\": 4404.61, \"stop\": 4374.61, \"target\": 4464.61, \"risk_pct\": 0.001, \"volume\": 0.03, \"account_equity\": 99944.11, \"daily_loss_headroom\": 0.05, \"total_loss_headroom\": 0.1, \"spread\": 0.36999999999989086, \"reason_codes\": [\"pre_range_break\", \"level=4404.56\"], \"feature_snapshot\": {\"pre_high\": 4404.56, \"pre_low\": 4378.21, \"pre_range\": 26.350000000000364, \"sl_dist\": 30.0, \"tp_dist\": 60.0, \"spread\": 0.36999999999989086, \"minutes_since_entry\": 282}, \"R\": null, \"outcome\": null, \"retcode\": 10009, \"fill\": 0.0, \"actual_slippage\": null, \"ticket\": 517323462}",
+  "{\"intent_id\": \"70b7f75a825b4e92\", \"strategy_id\": \"BOT_E_eurusd_london_breakout\", \"strategy_version\": \"1.0.0\", \"timestamp\": \"2026-08-12T12:04:00+01:00\", \"symbol\": \"EURUSD\", \"side\": -1, \"entry\": 1.15347, \"stop\": 1.1537199999999999, \"target\": 1.15297, \"risk_pct\": 0.0005, \"volume\": 2.0, \"account_equity\": 99960.04, \"daily_loss_headroom\": 0.05, \"total_loss_headroom\": 0.1001602897301909, \"spread\": 2.999999999997449e-05, \"reason_codes\": [\"pre_range_break\", \"level=1.15\"], \"feature_snapshot\": {\"pre_high\": 1.15398, \"pre_low\": 1.15348, \"pre_range\": 0.0004999999999999449, \"sl_dist\": 0.00024999999999997247, \"tp_dist\": 0.0004999999999999449, \"spread\": 2.999999999997449e-05, \"minutes_since_entry\": 244}, \"R\": null, \"outcome\": null, \"retcode\": 10009, \"fill\": 0.0, \"actual_slippage\": null, \"ticket\": 517358729}",
+  "{\"kind\": \"close\", \"intent_id\": \"70b7f75a825b4e92\", \"strategy_id\": \"BOT_E_eurusd_london_breakout\", \"ticket\": 517358729, \"closed_at\": \"2026-08-12T08:10:02+00:00\", \"exit\": 1.15374, \"gross\": -58.0, \"swap\": 0.0, \"commission\": -10.0, \"net\": -68.0, \"R\": -1.3605436732518315, \"outcome\": \"stop\", \"mfe\": 0.0, \"mae\": -0.00011999999999989797, \"mfe_R\": 0.0, \"mae_R\": -0.4799999999998579, \"samples\": 5, \"holding_minutes\": 5}",
+  "{\"intent_id\": \"619508e5a87d4855\", \"strategy_id\": \"BOT_B_nas100_usopen_breakout\", \"strategy_version\": \"1.0.0\", \"timestamp\": \"2026-08-12T16:02:00+01:00\", \"symbol\": \"US100.cash\", \"side\": 1, \"entry\": 29749.18, \"stop\": 29721.655, \"target\": 29804.23, \"risk_pct\": 0.001, \"volume\": 3.63, \"account_equity\": 99895.22, \"daily_loss_headroom\": 0.05, \"total_loss_headroom\": 0.10019223833709026, \"spread\": 1.6500000000014552, \"reason_codes\": [\"pre_range_break\", \"level=29740.53\"], \"feature_snapshot\": {\"pre_high\": 29740.53, \"pre_low\": 29685.48, \"pre_range\": 55.04999999999927, \"sl_dist\": 27.524999999999636, \"tp_dist\": 55.04999999999927, \"spread\": 1.6500000000014552, \"minutes_since_entry\": 92}, \"R\": null, \"outcome\": null, \"retcode\": 10009, \"fill\": 0.0, \"actual_slippage\": null, \"ticket\": 517529078}",
+  "{\"kind\": \"close\", \"intent_id\": \"619508e5a87d4855\", \"strategy_id\": \"BOT_B_nas100_usopen_breakout\", \"ticket\": 517529078, \"closed_at\": \"2026-08-12T12:15:02+00:00\", \"exit\": 29721.63, \"gross\": -100.01, \"swap\": 0.0, \"commission\": 0.0, \"net\": -100.01, \"R\": -1.001149003926314, \"outcome\": \"stop\", \"mfe\": 0.0, \"mae\": -23.5, \"mfe_R\": 0.0, \"mae_R\": -0.8537693006357405, \"samples\": 12, \"holding_minutes\": 12}",
+  "{\"intent_id\": \"86f4d5a331106006\", \"strategy_id\": \"BOT_D_gold_ny_breakout\", \"strategy_version\": \"1.0.0\", \"timestamp\": \"2026-08-12T16:30:00+01:00\", \"symbol\": \"XAUUSD\", \"side\": 1, \"entry\": 4432.47, \"stop\": 4421.305, \"target\": 4454.8, \"risk_pct\": 0.0005, \"volume\": 0.04, \"account_equity\": 99854.43, \"daily_loss_headroom\": 0.05, \"total_loss_headroom\": 0.10078596047286306, \"spread\": 0.9900000000006912, \"reason_codes\": [\"pre_range_break\", \"level=4424.07\"], \"feature_snapshot\": {\"pre_high\": 4424.07, \"pre_low\": 4401.74, \"pre_range\": 22.329999999999927, \"sl_dist\": 11.164999999999964, \"tp_dist\": 22.329999999999927, \"spread\": 0.9900000000006912, \"minutes_since_entry\": 120}, \"R\": null, \"outcome\": null, \"retcode\": 10009, \"fill\": 0.0, \"actual_slippage\": null, \"ticket\": 517571614}",
+  "{\"kind\": \"close\", \"intent_id\": \"86f4d5a331106006\", \"strategy_id\": \"BOT_D_gold_ny_breakout\", \"ticket\": 517571614, \"closed_at\": \"2026-08-12T12:31:02+00:00\", \"exit\": 4390.33, \"gross\": -148.36, \"swap\": 0.0, \"commission\": -0.24, \"net\": -148.60000000000002, \"R\": -2.9763326474348717, \"outcome\": \"time_or_manual\", \"mfe\": 0.0, \"mae\": 0.0, \"mfe_R\": 0.0, \"mae_R\": 0.0, \"samples\": 0, \"holding_minutes\": 0}",
+  "{\"intent_id\": \"7a76baf1360e862e\", \"strategy_id\": \"BOT_F_nas100_vwap_reversion\", \"strategy_version\": \"1.0.0\", \"timestamp\": \"2026-08-12T16:33:00+01:00\", \"symbol\": \"US100.cash\", \"side\": -1, \"entry\": 29781.93, \"stop\": 29798.255236305613, \"target\": 29746.01494037028, \"risk_pct\": 0.0005, \"volume\": 3.0500000000000003, \"account_equity\": 99667.85, \"daily_loss_headroom\": 0.05, \"total_loss_headroom\": 0.10040591238897015, \"spread\": 1.9500000000007276, \"reason_codes\": [\"vwap_reversion\", \"dev=+3.67sig\"], \"feature_snapshot\": {\"vwap\": 29723.0465672838, \"sigma\": 16.32523630561108, \"dev_sigma\": 3.6666196798404185, \"sl_dist\": 16.325236305612634, \"pre_range\": 32.65047261122216, \"spread\": 1.9500000000007276, \"minutes_since_entry\": 93}, \"R\": null, \"outcome\": null, \"retcode\": 10009, \"fill\": 0.0, \"actual_slippage\": null, \"ticket\": 517598104}",
+  "{\"kind\": \"close\", \"intent_id\": \"7a76baf1360e862e\", \"strategy_id\": \"BOT_F_nas100_vwap_reversion\", \"ticket\": 517598104, \"closed_at\": \"2026-08-12T12:35:02+00:00\", \"exit\": 29798.08, \"gross\": -49.26, \"swap\": 0.0, \"commission\": 0.0, \"net\": -49.26, \"R\": -0.98848324710526, \"outcome\": \"stop\", \"mfe\": 0.0, \"mae\": -9.650000000001455, \"mfe_R\": 0.0, \"mae_R\": -0.5911093609520234, \"samples\": 1, \"holding_minutes\": 1}",
+  "{\"kind\": \"close\", \"intent_id\": \"41403b0170ca5d36\", \"strategy_id\": \"BOT_A_gold_0630_breakout\", \"ticket\": 517323462, \"closed_at\": \"2026-08-13T13:37:02+00:00\", \"exit\": 4374.59, \"gross\": -89.79, \"swap\": -8.4, \"commission\": -0.18, \"net\": -98.37000000000002, \"R\": -0.9842500973794255, \"outcome\": \"stop\", \"mfe\": 33.24000000000069, \"mae\": -11.989999999999782, \"mfe_R\": 1.108000000000023, \"mae_R\": -0.3996666666666594, \"samples\": 968, \"holding_minutes\": 1388}",
+  "{\"intent_id\": \"664f4488b589d3b8\", \"strategy_id\": \"BOT_F_nas100_vwap_reversion\", \"market_state\": {\"ms_symbol\": \"US100.cash\", \"ms_timestamp\": \"2026-08-13T17:38:00+01:00\", \"spread\": 1.4500000000007276, \"d1_bars\": 259, \"d1_price_vs_sma20\": 0.03839173046203153, \"d1_price_vs_sma50\": 0.02131016798706756, \"d1_price_vs_sma200\": 0.11931788632011199, \"d1_above_sma20\": true, \"d1_above_sma50\": true, \"d1_above_sma200\": true, \"d1_sma20_slope\": 0.0001745738255529391, \"d1_sma50_slope\": -0.0028525048588920695, \"d1_hh\": true, \"d1_hl\": false, \"d1_lh\": false, \"d1_ll\": false, \"d1_structure\": \"mixed\", \"d1_atr20\": 633.7489999999998, \"d1_trend_strength_atr\": 1.7457621234905307, \"h4_bars\": 259, \"h4_price_vs_sma20\": 0.007748224439250417, \"h4_price_vs_sma50\": 0.014631980494987545, \"h4_price_vs_sma200\": 0.026749606420594027, \"h4_above_sma20\": true, \"h4_above_sma50\": true, \"h4_above_sma200\": true, \"h4_sma20_slope\": 0.00039610756391426135, \"h4_sma50_slope\": 0.0046845939199559004, \"h4_hh\": false, \"h4_hl\": true, \"h4_lh\": true, \"h4_ll\": false, \"h4_structure\": \"mixed\", \"h4_atr20\": 128.58449999999976, \"h4_trend_strength_atr\": 1.7893175304954545, \"h1_bars\": 299, \"h1_price_vs_sma20\": 0.005545947755777008, \"h1_price_vs_sma50\": 0.008076257818138479, \"h1_price_vs_sma200\": 0.016143073849955156, \"h1_above_sma20\": true, \"h1_above_sma50\": true, \"h1_above_sma200\": true, \"h1_sma20_slope\": 1.0669016740259145e-05, \"h1_sma50_slope\": 0.00032191933558059347, \"h1_hh\": true, \"h1_hl\": false, \"h1_lh\": false, \"h1_ll\": false, \"h1_structure\": \"mixed\", \"h1_atr20\": 50.79100000000053, \"h1_trend_strength_atr\": 3.2494733318895075, \"m15_bars\": 299, \"m15_price_vs_sma20\": 0.005418004323665282, \"m15_price_vs_sma50\": 0.005356824614071233, \"m15_price_vs_sma200\": 0.008052551270604976, \"m15_above_sma20\": true, \"m15_above_sma50\": true, \"m15_above_sma200\": true, \"m15_sma20_slope\": 0.00015131724636877162, \"m15_sma50_slope\": 0.00014620656758199108, \"m15_hh\": true, \"m15_hl\": true, \"m15_lh\": false, \"m15_ll\": false, \"m15_structure\": \"up\", \"m15_atr20\": 27.754000000000268, \"m15_trend_strength_atr\": 5.810225553073295, \"ret_1h\": 0.005031128850299771, \"ret_4h\": 0.005134090968635041, \"ret_1d\": 0.0073415304611743615, \"ret_3d\": 0.009312157105591856, \"ret_5d\": 0.018536179911122774, \"mom_1d_atr\": 0.34412677574244727, \"roc_5d_atr\": 0.859314965388506, \"atr20_d1\": 633.7489999999998, \"atr_percentile\": 0.63, \"vol_expansion\": 0.583653780913263, \"vol_regime\": \"contracting\", \"realized_vol_intraday\": 0.008982871564480653, \"realized_vol_60m\": 0.0147440994193744, \"session_range\": 223.60000000000218, \"session_range_atr\": 0.35282106954015274, \"lvl_prev_day_high\": 29891.53, \"dist_prev_day_high\": 32.900000000001455, \"dist_prev_day_high_atr\": 0.05191329690461281, \"lvl_prev_day_low\": 29518.13, \"dist_prev_day_low\": 406.2999999999993, \"dist_prev_day_low_atr\": 0.6411055480955384, \"lvl_prev_day_close\": 29706.34, \"dist_prev_day_close\": 218.09000000000015, \"dist_prev_day_close_atr\": 0.34412677574244727, \"lvl_high_20d\": 29954.43, \"dist_high_20d\": -30.0, \"dist_high_20d_atr\": -0.0473373528005567, \"lvl_low_20d\": 27057.84, \"dist_low_20d\": 2866.59, \"dist_low_20d_atr\": 4.523226072151595, \"lvl_daily_open\": 29744.78, \"dist_daily_open\": 179.65000000000146, \"dist_daily_open_atr\": 0.283471847687336, \"lvl_asia_high\": 29797.84, \"dist_asia_high\": 126.59000000000015, \"dist_asia_high_atr\": 0.19974784970074932, \"lvl_asia_low\": 29675.84, \"dist_asia_low\": 248.59000000000015, \"dist_asia_low_atr\": 0.39225308442301327, \"lvl_london_high\": 29931.63, \"dist_london_high\": -7.200000000000728, \"dist_london_high_atr\": -0.011360964672134757, \"lvl_london_low\": 29708.03, \"dist_london_low\": 216.40000000000146, \"dist_london_low_atr\": 0.341460104868018, \"lvl_weekly_open\": 29811.43, \"dist_weekly_open\": 113.0, \"dist_weekly_open_atr\": 0.1783040288820969, \"lvl_h1_swing_high\": 29818.28, \"dist_h1_swing_high\": 106.15000000000146, \"dist_h1_swing_high_atr\": 0.1674953333259721, \"lvl_h1_swing_low\": 29716.23, \"dist_h1_swing_low\": 208.20000000000073, \"dist_h1_swing_low_atr\": 0.3285212284358647, \"lvl_h4_swing_high\": 29891.53, \"dist_h4_swing_high\": 32.900000000001455, \"dist_h4_swing_high_atr\": 0.05191329690461281, \"lvl_h4_swing_low\": 29675.84, \"dist_h4_swing_low\": 248.59000000000015, \"dist_h4_swing_low_atr\": 0.39225308442301327, \"room_above\": 7.200000000000728, \"room_below\": 32.900000000001455, \"room_above_atr\": 0.011360964672134757, \"room_below_atr\": 0.05191329690461281, \"spread_over_atr\": 0.0022879720520280556, \"minutes_since_session_open\": 188, \"m1_excursion_median_60\": 8.0, \"m1_excursion_p90_60\": 23.440000000000882, \"rq_dist_vwap\": 153.5992612503578, \"rq_dist_vwap_atr\": 0.2423660806571022, \"rq_zscore\": 4.825104000531542, \"rq_session_range_atr\": 0.35282106954015274, \"rq_range_percentile\": 0.9946808510638298, \"ms_labels\": [\"TREND_UP\", \"RANGE\", \"MID_VOL\", \"VOL_CONTRACTING\", \"NEAR_HTF_RESISTANCE\", \"NEAR_HTF_SUPPORT\"], \"macro_symbol\": \"US100.cash\", \"macro_dxy_ret_1d\": null, \"macro_dxy_ret_5d\": null, \"macro_dxy_trend\": null, \"macro_gold_ret_1d\": -0.006730729967741489, \"macro_gold_ret_5d\": 0.033523350918811756, \"macro_gold_trend\": \"up\", \"macro_spx_ret_1d\": 0.005144756802117234, \"macro_spx_ret_5d\": 0.010637814542457269, \"macro_spx_trend\": \"up\", \"macro_risk\": \"RISK_ON\", \"macro_equity_ret_1d\": 0.005144756802117234, \"macro_minutes_to_event\": null, \"macro_minutes_since_event\": null, \"macro_event_category\": null, \"macro_calendar_status\": \"UNAVAILABLE \\u2014 no verified feed; MT5 Python API exposes none\", \"macro_labels\": [\"RISK_ON\"]}, \"shadows\": {\"v2_trend_align\": true, \"v3_htf_room\": false, \"v4_low_vol\": true, \"v6_wide_stop\": false}, \"strategy_version\": \"1.0.0\", \"timestamp\": \"2026-08-13T17:38:00+01:00\", \"symbol\": \"US100.cash\", \"side\": -1, \"entry\": 29924.43, \"stop\": 30019.49235, \"target\": 29831.835443249787, \"risk_pct\": 0.0005, \"volume\": 0.52, \"account_equity\": 99479.87, \"daily_loss_headroom\": 0.05, \"total_loss_headroom\": 0.1, \"spread\": 1.4500000000007276, \"reason_codes\": [\"vwap_reversion\", \"dev=+4.85sig\"], \"feature_snapshot\": {\"vwap\": 29770.830738749642, \"sigma\": 31.83335762989503, \"dev_sigma\": 4.847878852258703, \"sl_dist\": 31.833357629893726, \"pre_range\": 63.66671525979006, \"spread\": 1.4500000000007276, \"minutes_since_entry\": 158, \"d1_trend\": \"mixed\", \"d1_above_sma200\": true, \"d1_sma20\": 28865.629500000003, \"d1_sma50\": 29291.7926, \"d1_sma200\": 26756.97955, \"d1_atr20_d1\": 610.7035, \"d1_dist_sma20_atr\": 1.7361133512416391, \"d1_prev_day_range\": 373.3999999999978, \"d1_vs_prev_day\": \"above\", \"stop_geometry\": {\"ok\": true, \"widened_to\": 95.06234999999997, \"checks\": {\"spread\": 11.6, \"D1 ATR\": 95.0623, \"recent M1 excursion\": 46.88}, \"reason\": \"stop 31.83 below D1 ATR floor 95.06\"}}, \"R\": null, \"outcome\": null, \"retcode\": 10027, \"fill\": 0.0, \"actual_slippage\": null, \"ticket\": 0}",
+  "{\"intent_id\": \"ce1f2d3c40a9534f\", \"strategy_id\": \"BOT_F_nas100_vwap_reversion\", \"market_state\": {\"ms_symbol\": \"US100.cash\", \"ms_timestamp\": \"2026-08-13T17:39:00+01:00\", \"spread\": 1.4500000000007276, \"d1_bars\": 259, \"d1_price_vs_sma20\": 0.038252928589386066, \"d1_price_vs_sma50\": 0.021173649407701195, \"d1_price_vs_sma200\": 0.11916826704431357, \"d1_above_sma20\": true, \"d1_above_sma50\": true, \"d1_above_sma200\": true, \"d1_sma20_slope\": 0.0001745738255529391, \"d1_sma50_slope\": -0.0028525048588920695, \"d1_hh\": true, \"d1_hl\": false, \"d1_lh\": false, \"d1_ll\": false, \"d1_structure\": \"mixed\", \"d1_atr20\": 633.7489999999998, \"d1_trend_strength_atr\": 1.7394504764504566, \"h4_bars\": 259, \"h4_price_vs_sma20\": 0.007613518685531566, \"h4_price_vs_sma50\": 0.01449635458926503, \"h4_price_vs_sma200\": 0.026612360751230156, \"h4_above_sma20\": true, \"h4_above_sma50\": true, \"h4_above_sma200\": true, \"h4_sma20_slope\": 0.00039610756391426135, \"h4_sma50_slope\": 0.0046845939199559004, \"h4_hh\": false, \"h4_hl\": true, \"h4_lh\": true, \"h4_ll\": false, \"h4_structure\": \"mixed\", \"h4_atr20\": 128.58449999999976, \"h4_trend_strength_atr\": 1.758209582025771, \"h1_bars\": 299, \"h1_price_vs_sma20\": 0.005411536380488552, \"h1_price_vs_sma50\": 0.007941508216182065, \"h1_price_vs_sma200\": 0.016007245956311072, \"h1_above_sma20\": true, \"h1_above_sma50\": true, \"h1_above_sma200\": true, \"h1_sma20_slope\": 1.0669016740259145e-05, \"h1_sma50_slope\": 0.00032191933558059347, \"h1_hh\": true, \"h1_hl\": false, \"h1_lh\": false, \"h1_ll\": false, \"h1_structure\": \"mixed\", \"h1_atr20\": 50.79100000000053, \"h1_trend_strength_atr\": 3.1707192219093936, \"m15_bars\": 299, \"m15_price_vs_sma20\": 0.005283610050581562, \"m15_price_vs_sma50\": 0.005222438518882242, \"m15_price_vs_sma200\": 0.007917804837503912, \"m15_above_sma20\": true, \"m15_above_sma50\": true, \"m15_above_sma200\": true, \"m15_sma20_slope\": 0.00015131724636877162, \"m15_sma50_slope\": 0.00014620656758199108, \"m15_hh\": true, \"m15_hl\": true, \"m15_lh\": false, \"m15_ll\": false, \"m15_structure\": \"up\", \"m15_atr20\": 27.754000000000268, \"m15_trend_strength_atr\": 5.666102183468915, \"ret_1h\": 0.004896786290879085, \"ret_4h\": 0.004999734646263354, \"ret_1d\": 0.007206879070259076, \"ret_3d\": 0.009177242300917987, \"ret_5d\": 0.018400032130876154, \"mom_1d_atr\": 0.33781512870237307, \"roc_5d_atr\": 0.8530033183484318, \"atr20_d1\": 633.7489999999998, \"atr_percentile\": 0.63, \"vol_expansion\": 0.583653780913263, \"vol_regime\": \"contracting\", \"realized_vol_intraday\": 0.008982503337776518, \"realized_vol_60m\": 0.014764284156518766, \"session_range\": 223.60000000000218, \"session_range_atr\": 0.35282106954015274, \"lvl_prev_day_high\": 29891.53, \"dist_prev_day_high\": 28.900000000001455, \"dist_prev_day_high_atr\": 0.04560164986453859, \"lvl_prev_day_low\": 29518.13, \"dist_prev_day_low\": 402.2999999999993, \"dist_prev_day_low_atr\": 0.6347939010554642, \"lvl_prev_day_close\": 29706.34, \"dist_prev_day_close\": 214.09000000000015, \"dist_prev_day_close_atr\": 0.33781512870237307, \"lvl_high_20d\": 29954.43, \"dist_high_20d\": -34.0, \"dist_high_20d_atr\": -0.05364899984063093, \"lvl_low_20d\": 27057.84, \"dist_low_20d\": 2862.59, \"dist_low_20d_atr\": 4.516914425111521, \"lvl_daily_open\": 29744.78, \"dist_daily_open\": 175.65000000000146, \"dist_daily_open_atr\": 0.27716020064726177, \"lvl_asia_high\": 29797.84, \"dist_asia_high\": 122.59000000000015, \"dist_asia_high_atr\": 0.1934362026606751, \"lvl_asia_low\": 29675.84, \"dist_asia_low\": 244.59000000000015, \"dist_asia_low_atr\": 0.385941437382939, \"lvl_london_high\": 29931.63, \"dist_london_high\": -11.200000000000728, \"dist_london_high_atr\": -0.017672611712208984, \"lvl_london_low\": 29708.03, \"dist_london_low\": 212.40000000000146, \"dist_london_low_atr\": 0.3351484578279437, \"lvl_weekly_open\": 29817.83, \"dist_weekly_open\": 102.59999999999854, \"dist_weekly_open_atr\": 0.16189374657790162, \"lvl_h1_swing_high\": 29818.28, \"dist_h1_swing_high\": 102.15000000000146, \"dist_h1_swing_high_atr\": 0.16118368628589788, \"lvl_h1_swing_low\": 29716.23, \"dist_h1_swing_low\": 204.20000000000073, \"dist_h1_swing_low_atr\": 0.3222095813957904, \"lvl_h4_swing_high\": 29891.53, \"dist_h4_swing_high\": 28.900000000001455, \"dist_h4_swing_high_atr\": 0.04560164986453859, \"lvl_h4_swing_low\": 29675.84, \"dist_h4_swing_low\": 244.59000000000015, \"dist_h4_swing_low_atr\": 0.385941437382939, \"room_above\": 11.200000000000728, \"room_below\": 28.900000000001455, \"room_above_atr\": 0.017672611712208984, \"room_below_atr\": 0.04560164986453859, \"spread_over_atr\": 0.0022879720520280556, \"minutes_since_session_open\": 189, \"m1_excursion_median_60\": 8.099999999998545, \"m1_excursion_p90_60\": 23.440000000000882, \"rq_dist_vwap\": 147.81482983029127, \"rq_dist_vwap_atr\": 0.23323875829435836, \"rq_zscore\": 4.411421682603422, \"rq_session_range_atr\": 0.35282106954015274, \"rq_range_percentile\": 0.9894179894179894, \"ms_labels\": [\"TREND_UP\", \"RANGE\", \"MID_VOL\", \"VOL_CONTRACTING\", \"NEAR_HTF_RESISTANCE\", \"NEAR_HTF_SUPPORT\"], \"macro_symbol\": \"US100.cash\", \"macro_dxy_ret_1d\": null, \"macro_dxy_ret_5d\": null, \"macro_dxy_trend\": null, \"macro_gold_ret_1d\": -0.006846425022798752, \"macro_gold_ret_5d\": 0.03340296710689383, \"macro_gold_trend\": \"up\", \"macro_spx_ret_1d\": 0.0050802052738598835, \"macro_spx_ret_5d\": 0.010572910243845435, \"macro_spx_trend\": \"up\", \"macro_risk\": \"RISK_ON\", \"macro_equity_ret_1d\": 0.0050802052738598835, \"macro_minutes_to_event\": null, \"macro_minutes_since_event\": null, \"macro_event_category\": null, \"macro_calendar_status\": \"UNAVAILABLE \\u2014 no verified feed; MT5 Python API exposes none\", \"macro_labels\": [\"RISK_ON\"]}, \"shadows\": {\"v2_trend_align\": true, \"v3_htf_room\": false, \"v4_low_vol\": true, \"v6_wide_stop\": false}, \"strategy_version\": \"1.0.0\", \"timestamp\": \"2026-08-13T17:39:00+01:00\", \"symbol\": \"US100.cash\", \"side\": -1, \"entry\": 29920.43, \"stop\": 30015.49235, \"target\": 29831.306102101826, \"risk_pct\": 0.0005, \"volume\": 0.52, \"account_equity\": 99479.87, \"daily_loss_headroom\": 0.05, \"total_loss_headroom\": 0.1, \"spread\": 1.4500000000007276, \"reason_codes\": [\"vwap_reversion\", \"dev=+4.43sig\"], \"feature_snapshot\": {\"vwap\": 29772.61517016971, \"sigma\": 33.50730001922139, \"dev_sigma\": 4.433058758690801, \"sl_dist\": 33.507300019220565, \"pre_range\": 67.01460003844278, \"spread\": 1.4500000000007276, \"minutes_since_entry\": 159, \"d1_trend\": \"mixed\", \"d1_above_sma200\": true, \"d1_sma20\": 28865.429500000006, \"d1_sma50\": 29291.712600000003, \"d1_sma200\": 26756.95955, \"d1_atr20_d1\": 610.7035, \"d1_dist_sma20_atr\": 1.7298910191279326, \"d1_prev_day_range\": 373.3999999999978, \"d1_vs_prev_day\": \"above\", \"stop_geometry\": {\"ok\": true, \"widened_to\": 95.06234999999997, \"checks\": {\"spread\": 11.6, \"D1 ATR\": 95.0623, \"recent M1 excursion\": 46.88}, \"reason\": \"stop 33.51 below D1 ATR floor 95.06\"}}, \"R\": null, \"outcome\": null, \"retcode\": 10027, \"fill\": 0.0, \"actual_slippage\": null, \"ticket\": 0}",
+  "{\"intent_id\": \"5685accb64496262\", \"strategy_id\": \"BOT_F_nas100_vwap_reversion\", \"market_state\": {\"ms_symbol\": \"US100.cash\", \"ms_timestamp\": \"2026-08-13T17:40:00+01:00\", \"spread\": 1.4499999999970896, \"d1_bars\": 259, \"d1_price_vs_sma20\": 0.03866586416050637, \"d1_price_vs_sma50\": 0.021579792181316185, \"d1_price_vs_sma200\": 0.11961338438981392, \"d1_above_sma20\": true, \"d1_above_sma50\": true, \"d1_above_sma200\": true, \"d1_sma20_slope\": 0.0001745738255529391, \"d1_sma50_slope\": -0.0028525048588920695, \"d1_hh\": true, \"d1_hl\": false, \"d1_lh\": false, \"d1_ll\": false, \"d1_structure\": \"mixed\", \"d1_atr20\": 633.7489999999998, \"d1_trend_strength_atr\": 1.7582276263946797, \"h4_bars\": 259, \"h4_price_vs_sma20\": 0.008014268302845197, \"h4_price_vs_sma50\": 0.014899841658789558, \"h4_price_vs_sma200\": 0.02702066661758773, \"h4_above_sma20\": true, \"h4_above_sma50\": true, \"h4_above_sma200\": true, \"h4_sma20_slope\": 0.00039610756391426135, \"h4_sma50_slope\": 0.0046845939199559004, \"h4_hh\": false, \"h4_hl\": true, \"h4_lh\": true, \"h4_ll\": false, \"h4_structure\": \"mixed\", \"h4_atr20\": 128.58449999999976, \"h4_trend_strength_atr\": 1.8507557287230905, \"h1_bars\": 299, \"h1_price_vs_sma20\": 0.005811410221971756, \"h1_price_vs_sma50\": 0.008342388282002443, \"h1_price_vs_sma200\": 0.016411333939902267, \"h1_above_sma20\": true, \"h1_above_sma50\": true, \"h1_above_sma200\": true, \"h1_sma20_slope\": 1.0669016740259145e-05, \"h1_sma50_slope\": 0.00032191933558059347, \"h1_hh\": true, \"h1_hl\": false, \"h1_lh\": false, \"h1_ll\": false, \"h1_structure\": \"mixed\", \"h1_atr20\": 50.79100000000053, \"h1_trend_strength_atr\": 3.4050126991002605, \"m15_bars\": 299, \"m15_price_vs_sma20\": 0.005683433013005677, \"m15_price_vs_sma50\": 0.005622237152069538, \"m15_price_vs_sma200\": 0.008318675475979621, \"m15_above_sma20\": true, \"m15_above_sma50\": true, \"m15_above_sma200\": true, \"m15_sma20_slope\": 0.00015131724636877162, \"m15_sma50_slope\": 0.00014620656758199108, \"m15_hh\": true, \"m15_hl\": true, \"m15_lh\": false, \"m15_ll\": false, \"m15_structure\": \"up\", \"m15_atr20\": 27.754000000000268, \"m15_trend_strength_atr\": 6.094869208041998, \"ret_1h\": 0.005296455405155331, \"ret_4h\": 0.0053994447053196115, \"ret_1d\": 0.007607466958231779, \"ret_3d\": 0.009578613844822392, \"ret_5d\": 0.018805071777109772, \"mom_1d_atr\": 0.35659227864659615, \"roc_5d_atr\": 0.871780468292655, \"atr20_d1\": 633.7489999999998, \"atr_percentile\": 0.63, \"vol_expansion\": 0.583653780913263, \"vol_regime\": \"contracting\", \"realized_vol_intraday\": 0.008988157811716602, \"realized_vol_60m\": 0.01477970505162361, \"session_range\": 226.3000000000029, \"session_range_atr\": 0.357081431292204, \"lvl_prev_day_high\": 29891.53, \"dist_prev_day_high\": 40.80000000000291, \"dist_prev_day_high_atr\": 0.06437879980876171, \"lvl_prev_day_low\": 29518.13, \"dist_prev_day_low\": 414.2000000000007, \"dist_prev_day_low_atr\": 0.6535710509996874, \"lvl_prev_day_close\": 29706.34, \"dist_prev_day_close\": 225.9900000000016, \"dist_prev_day_close_atr\": 0.35659227864659615, \"lvl_high_20d\": 29954.43, \"dist_high_20d\": -22.099999999998545, \"dist_high_20d_atr\": -0.034871849896407806, \"lvl_low_20d\": 27057.84, \"dist_low_20d\": 2874.4900000000016, \"dist_low_20d_atr\": 4.535691575055743, \"lvl_daily_open\": 29744.78, \"dist_daily_open\": 187.5500000000029, \"dist_daily_open_atr\": 0.2959373505914849, \"lvl_asia_high\": 29797.84, \"dist_asia_high\": 134.4900000000016, \"dist_asia_high_atr\": 0.21221335260489824, \"lvl_asia_low\": 29675.84, \"dist_asia_low\": 256.4900000000016, \"dist_asia_low_atr\": 0.40471858732716215, \"lvl_london_high\": 29934.33, \"dist_london_high\": -2.0, \"dist_london_high_atr\": -0.0031558235200371135, \"lvl_london_low\": 29708.03, \"dist_london_low\": 224.3000000000029, \"dist_london_low_atr\": 0.35392560777216686, \"lvl_weekly_open\": 29822.73, \"dist_weekly_open\": 109.60000000000218, \"dist_weekly_open_atr\": 0.17293912889803725, \"lvl_h1_swing_high\": 29818.28, \"dist_h1_swing_high\": 114.05000000000291, \"dist_h1_swing_high_atr\": 0.179960836230121, \"lvl_h1_swing_low\": 29716.23, \"dist_h1_swing_low\": 216.10000000000218, \"dist_h1_swing_low_atr\": 0.34098673134001356, \"lvl_h4_swing_high\": 29891.53, \"dist_h4_swing_high\": 40.80000000000291, \"dist_h4_swing_high_atr\": 0.06437879980876171, \"lvl_h4_swing_low\": 29675.84, \"dist_h4_swing_low\": 256.4900000000016, \"dist_h4_swing_low_atr\": 0.40471858732716215, \"room_above\": 2.0, \"room_below\": 40.80000000000291, \"room_above_atr\": 0.0031558235200371135, \"room_below_atr\": 0.06437879980876171, \"spread_over_atr\": 0.002287972052022315, \"minutes_since_session_open\": 190, \"m1_excursion_median_60\": 8.099999999998545, \"m1_excursion_p90_60\": 23.440000000000882, \"rq_dist_vwap\": 157.98598846288223, \"rq_dist_vwap_atr\": 0.24928794911373792, \"rq_zscore\": 4.424966543690729, \"rq_session_range_atr\": 0.357081431292204, \"rq_range_percentile\": 0.9947368421052631, \"ms_labels\": [\"TREND_UP\", \"RANGE\", \"MID_VOL\", \"VOL_CONTRACTING\", \"NEAR_HTF_RESISTANCE\", \"NEAR_HTF_SUPPORT\"], \"macro_symbol\": \"US100.cash\", \"macro_dxy_ret_1d\": null, \"macro_dxy_ret_5d\": null, \"macro_dxy_trend\": null, \"macro_gold_ret_1d\": -0.005902716338410441, \"macro_gold_ret_5d\": 0.03438492133744053, \"macro_gold_trend\": \"up\", \"macro_spx_ret_1d\": 0.005364231998192581, \"macro_spx_ret_5d\": 0.010858489157737017, \"macro_spx_trend\": \"up\", \"macro_risk\": \"RISK_ON\", \"macro_equity_ret_1d\": 0.005364231998192581, \"macro_minutes_to_event\": null, \"macro_minutes_since_event\": null, \"macro_event_category\": null, \"macro_calendar_status\": \"UNAVAILABLE \\u2014 no verified feed; MT5 Python API exposes none\", \"macro_labels\": [\"RISK_ON\"]}, \"shadows\": {\"v2_trend_align\": true, \"v3_htf_room\": false, \"v4_low_vol\": true, \"v6_wide_stop\": false}, \"strategy_version\": \"1.0.0\", \"timestamp\": \"2026-08-13T17:40:00+01:00\", \"symbol\": \"US100.cash\", \"side\": -1, \"entry\": 29932.33, \"stop\": 30027.392350000002, \"target\": 29837.103406922273, \"risk_pct\": 0.0005, \"volume\": 0.52, \"account_equity\": 99479.87, \"daily_loss_headroom\": 0.05, \"total_loss_headroom\": 0.1, \"spread\": 1.4499999999970896, \"reason_codes\": [\"vwap_reversion\", \"dev=+4.45sig\"], \"feature_snapshot\": {\"vwap\": 29774.34401153712, \"sigma\": 35.70331818398585, \"dev_sigma\": 4.445272779549886, \"sl_dist\": 35.703318183986994, \"pre_range\": 71.4066363679717, \"spread\": 1.4499999999970896, \"minutes_since_entry\": 160, \"d1_trend\": \"mixed\", \"d1_above_sma200\": true, \"d1_sma20\": 28866.0245, \"d1_sma50\": 29291.950600000004, \"d1_sma200\": 26757.019050000003, \"d1_atr20_d1\": 610.8385000000001, \"d1_dist_sma20_atr\": 1.7480160467946915, \"d1_prev_day_range\": 373.3999999999978, \"d1_vs_prev_day\": \"above\", \"stop_geometry\": {\"ok\": true, \"widened_to\": 95.06234999999997, \"checks\": {\"spread\": 11.6, \"D1 ATR\": 95.0623, \"recent M1 excursion\": 46.88}, \"reason\": \"stop 35.70 below D1 ATR floor 95.06\"}}, \"R\": null, \"outcome\": null, \"retcode\": 10027, \"fill\": 0.0, \"actual_slippage\": null, \"ticket\": 0}",
+  "{\"intent_id\": \"32c9747f54e841c6\", \"strategy_id\": \"BOT_F_nas100_vwap_reversion\", \"market_state\": {\"ms_symbol\": \"US100.cash\", \"ms_timestamp\": \"2026-08-13T18:07:00+01:00\", \"spread\": 1.4500000000007276, \"d1_bars\": 259, \"d1_price_vs_sma20\": 0.04324806098121475, \"d1_price_vs_sma50\": 0.026086611782648324, \"d1_price_vs_sma200\": 0.12455269073210916, \"d1_above_sma20\": true, \"d1_above_sma50\": true, \"d1_above_sma200\": true, \"d1_sma20_slope\": 0.0001745738255529391, \"d1_sma50_slope\": -0.0028525048588920695, \"d1_hh\": true, \"d1_hl\": false, \"d1_lh\": false, \"d1_ll\": false, \"d1_structure\": \"mixed\", \"d1_atr20\": 633.7489999999998, \"d1_trend_strength_atr\": 1.9665908743051288, \"h4_bars\": 259, \"h4_price_vs_sma20\": 0.012461241997488747, \"h4_price_vs_sma50\": 0.019377191871454005, \"h4_price_vs_sma200\": 0.031551489277462576, \"h4_above_sma20\": true, \"h4_above_sma50\": true, \"h4_above_sma200\": true, \"h4_sma20_slope\": 0.00039610756391426135, \"h4_sma50_slope\": 0.0046845939199559004, \"h4_hh\": false, \"h4_hl\": true, \"h4_lh\": true, \"h4_ll\": false, \"h4_structure\": \"mixed\", \"h4_atr20\": 128.58449999999976, \"h4_trend_strength_atr\": 2.877706877578509, \"h1_bars\": 299, \"h1_price_vs_sma20\": 0.00978566811017669, \"h1_price_vs_sma50\": 0.012510434814658754, \"h1_price_vs_sma200\": 0.02058111213084016, \"h1_above_sma20\": true, \"h1_above_sma50\": true, \"h1_above_sma200\": true, \"h1_sma20_slope\": 0.00043926472545310837, \"h1_sma50_slope\": 0.0005812507663265556, \"h1_hh\": true, \"h1_hl\": true, \"h1_lh\": false, \"h1_ll\": false, \"h1_structure\": \"up\", \"h1_atr20\": 62.24100000000053, \"h1_trend_strength_atr\": 4.680981989363916, \"m15_bars\": 299, \"m15_price_vs_sma20\": 0.0093329383654152, \"m15_price_vs_sma50\": 0.009692434524352108, \"m15_price_vs_sma200\": 0.01265459009818815, \"m15_above_sma20\": true, \"m15_above_sma50\": true, \"m15_above_sma200\": true, \"m15_sma20_slope\": 0.0010184473052492222, \"m15_sma50_slope\": 0.00047752860012260825, \"m15_hh\": true, \"m15_hl\": true, \"m15_lh\": false, \"m15_ll\": false, \"m15_structure\": \"up\", \"m15_atr20\": 43.87650000000012, \"m15_trend_strength_atr\": 6.335840370129712, \"ret_1h\": -0.00020451917541852715, \"ret_4h\": 0.009706005431332931, \"ret_1d\": 0.012052646000820122, \"ret_3d\": 0.014032488834113455, \"ret_5d\": 0.023299650372500258, \"mom_1d_atr\": 0.5649555265570454, \"roc_5d_atr\": 1.0801437162031042, \"atr20_d1\": 633.7489999999998, \"atr_percentile\": 0.63, \"vol_expansion\": 0.583653780913263, \"vol_regime\": \"contracting\", \"realized_vol_intraday\": 0.009310041203921593, \"realized_vol_60m\": 0.02041018666509312, \"session_range\": 376.15000000000146, \"session_range_atr\": 0.5935315085309825, \"lvl_prev_day_high\": 29891.53, \"dist_prev_day_high\": 172.85000000000218, \"dist_prev_day_high_atr\": 0.27274204771921096, \"lvl_prev_day_low\": 29518.13, \"dist_prev_day_low\": 546.25, \"dist_prev_day_low_atr\": 0.8619342989101366, \"lvl_prev_day_close\": 29706.34, \"dist_prev_day_close\": 358.0400000000009, \"dist_prev_day_close_atr\": 0.5649555265570454, \"lvl_high_20d\": 29954.43, \"dist_high_20d\": 109.95000000000073, \"dist_high_20d_atr\": 0.17349139801404145, \"lvl_low_20d\": 27057.84, \"dist_low_20d\": 3006.540000000001, \"dist_low_20d_atr\": 4.744054822966193, \"lvl_daily_open\": 29744.78, \"dist_daily_open\": 319.6000000000022, \"dist_daily_open_atr\": 0.5043005985019342, \"lvl_asia_high\": 29797.84, \"dist_asia_high\": 266.5400000000009, \"dist_asia_high_atr\": 0.4205766005153475, \"lvl_asia_low\": 29675.84, \"dist_asia_low\": 388.5400000000009, \"dist_asia_low_atr\": 0.6130818352376114, \"lvl_london_high\": 30084.18, \"dist_london_high\": -19.799999999999272, \"dist_london_high_atr\": -0.031242652848366276, \"lvl_london_low\": 29708.03, \"dist_london_low\": 356.3500000000022, \"dist_london_low_atr\": 0.5622888556826161, \"lvl_weekly_open\": 29790.93, \"dist_weekly_open\": 273.4500000000007, \"dist_weekly_open_atr\": 0.4314799707770755, \"lvl_h1_swing_high\": 29789.58, \"dist_h1_swing_high\": 274.7999999999993, \"dist_h1_swing_high_atr\": 0.43361015165309824, \"lvl_h1_swing_low\": 29716.23, \"dist_h1_swing_low\": 348.15000000000146, \"dist_h1_swing_low_atr\": 0.5493499792504628, \"lvl_h4_swing_high\": 29891.53, \"dist_h4_swing_high\": 172.85000000000218, \"dist_h4_swing_high_atr\": 0.27274204771921096, \"lvl_h4_swing_low\": 29675.84, \"dist_h4_swing_low\": 388.5400000000009, \"dist_h4_swing_low_atr\": 0.6130818352376114, \"room_above\": 19.799999999999272, \"room_below\": 109.95000000000073, \"room_above_atr\": 0.031242652848366276, \"room_below_atr\": 0.17349139801404145, \"spread_over_atr\": 0.0022879720520280556, \"minutes_since_session_open\": 217, \"m1_excursion_median_60\": 15.100000000000364, \"m1_excursion_p90_60\": 35.590000000000146, \"rq_dist_vwap\": 232.59051795040068, \"rq_dist_vwap_atr\": 0.36700731354274446, \"rq_zscore\": 2.5303317497675413, \"rq_session_range_atr\": 0.5935315085309825, \"rq_range_percentile\": 0.967741935483871, \"ms_labels\": [\"TREND_UP\", \"RANGE\", \"MID_VOL\", \"VOL_CONTRACTING\", \"NEAR_HTF_RESISTANCE\", \"NEAR_HTF_SUPPORT\"], \"macro_symbol\": \"US100.cash\", \"macro_dxy_ret_1d\": null, \"macro_dxy_ret_5d\": null, \"macro_dxy_trend\": null, \"macro_gold_ret_1d\": -0.007041518645052092, \"macro_gold_ret_5d\": 0.0331999669534635, \"macro_gold_trend\": \"up\", \"macro_spx_ret_1d\": 0.007462156666559139, \"macro_spx_ret_5d\": 0.012967878862617077, \"macro_spx_trend\": \"up\", \"macro_risk\": \"RISK_ON\", \"macro_equity_ret_1d\": 0.007462156666559139, \"macro_minutes_to_event\": null, \"macro_minutes_since_event\": null, \"macro_event_category\": null, \"macro_calendar_status\": \"UNAVAILABLE \\u2014 no verified feed; MT5 Python API exposes none\", \"macro_labels\": [\"RISK_ON\"]}, \"shadows\": {\"v2_trend_align\": true, \"v3_htf_room\": false, \"v4_low_vol\": true, \"v6_wide_stop\": false}, \"strategy_version\": \"1.0.0\", \"timestamp\": \"2026-08-13T18:07:00+01:00\", \"symbol\": \"US100.cash\", \"side\": -1, \"entry\": 30064.38, \"stop\": 30159.44235, \"target\": 29924.39068922976, \"risk_pct\": 0.000477, \"volume\": 0.5, \"account_equity\": 99479.87, \"daily_loss_headroom\": 0.05, \"total_loss_headroom\": 0.09535500391168619, \"spread\": 1.4500000000007276, \"reason_codes\": [\"vwap_reversion\", \"dev=+2.54sig\"], \"feature_snapshot\": {\"vwap\": 29831.7894820496, \"sigma\": 91.92095778419905, \"dev_sigma\": 2.538218960883251, \"sl_dist\": 91.92095778419753, \"pre_range\": 183.8419155683981, \"spread\": 1.4500000000007276, \"minutes_since_entry\": 187, \"d1_trend\": \"mixed\", \"d1_above_sma200\": true, \"d1_sma20\": 28872.627, \"d1_sma50\": 29294.5916, \"d1_sma200\": 26757.679299999996, \"d1_atr20_d1\": 618.3309999999999, \"d1_dist_sma20_atr\": 1.9297156377409534, \"d1_prev_day_range\": 373.3999999999978, \"d1_vs_prev_day\": \"above\", \"stop_geometry\": {\"ok\": true, \"widened_to\": 95.06234999999997, \"checks\": {\"spread\": 11.6, \"D1 ATR\": 95.0623, \"recent M1 excursion\": 71.18}, \"reason\": \"stop 91.92 below D1 ATR floor 95.06\"}}, \"R\": null, \"outcome\": null, \"retcode\": 10009, \"fill\": 0.0, \"actual_slippage\": null, \"ticket\": 518767124}",
+  "{\"kind\": \"close\", \"intent_id\": \"32c9747f54e841c6\", \"strategy_id\": \"BOT_F_nas100_vwap_reversion\", \"ticket\": 518767124, \"closed_at\": \"2026-08-13T14:35:02+00:00\", \"exit\": 30160.98, \"gross\": -48.15, \"swap\": 0.0, \"commission\": 0.0, \"net\": -48.15, \"R\": -1.0147117826592966, \"outcome\": \"stop\", \"mfe\": 0.0, \"mae\": -87.0, \"mfe_R\": 0.0, \"mae_R\": -0.9151888208107611, \"samples\": 27, \"holding_minutes\": 27}"
+ ],
+ "brain_events": [
+  "{\"ts\": \"2026-08-12T08:10:02+00:00\", \"kind\": \"trade_learned\", \"intent_id\": \"70b7f75a825b4e92\", \"strategy_id\": \"BOT_E_eurusd_london_breakout\", \"R\": -1.3605436732518315, \"regime\": \"narrow_range|tight_spread|late_break\", \"lesson\": \"INSUFFICIENT_DATA\", \"slippage\": 0, \"outcome\": \"stop\", \"spread\": 2.999999999997449e-05}",
+  "{\"ts\": \"2026-08-12T08:10:02+00:00\", \"kind\": \"beliefs_updated\", \"n_new_trades\": 1}",
+  "{\"ts\": \"2026-08-12T12:15:02+00:00\", \"kind\": \"trade_learned\", \"intent_id\": \"619508e5a87d4855\", \"strategy_id\": \"BOT_B_nas100_usopen_breakout\", \"R\": -1.001149003926314, \"regime\": \"narrow_range|tight_spread|late_break\", \"lesson\": \"INSUFFICIENT_DATA\", \"slippage\": 0, \"outcome\": \"stop\", \"spread\": 1.6500000000014552}",
+  "{\"ts\": \"2026-08-12T12:15:02+00:00\", \"kind\": \"beliefs_updated\", \"n_new_trades\": 1}",
+  "{\"ts\": \"2026-08-12T12:31:02+00:00\", \"kind\": \"trade_learned\", \"intent_id\": \"86f4d5a331106006\", \"strategy_id\": \"BOT_D_gold_ny_breakout\", \"R\": -2.9763326474348717, \"regime\": \"narrow_range|tight_spread|late_break\", \"lesson\": \"INSUFFICIENT_DATA\", \"slippage\": 0, \"outcome\": \"time_or_manual\", \"spread\": 0.9900000000006912}",
+  "{\"ts\": \"2026-08-12T12:31:02+00:00\", \"kind\": \"beliefs_updated\", \"n_new_trades\": 1}",
+  "{\"ts\": \"2026-08-12T12:35:02+00:00\", \"kind\": \"trade_learned\", \"intent_id\": \"7a76baf1360e862e\", \"strategy_id\": \"BOT_F_nas100_vwap_reversion\", \"R\": -0.98848324710526, \"regime\": \"narrow_range|tight_spread|late_break\", \"lesson\": \"INSUFFICIENT_DATA\", \"slippage\": 0, \"outcome\": \"stop\", \"spread\": 1.9500000000007276}",
+  "{\"ts\": \"2026-08-12T12:35:02+00:00\", \"kind\": \"beliefs_updated\", \"n_new_trades\": 1}",
+  "{\"ts\": \"2026-08-13T13:37:02+00:00\", \"kind\": \"trade_learned\", \"intent_id\": \"41403b0170ca5d36\", \"strategy_id\": \"BOT_A_gold_0630_breakout\", \"R\": -0.9842500973794255, \"regime\": \"narrow_range|tight_spread|late_break\", \"lesson\": \"INSUFFICIENT_DATA\", \"slippage\": 0, \"outcome\": \"stop\", \"spread\": 0.36999999999989086}",
+  "{\"ts\": \"2026-08-13T13:37:02+00:00\", \"kind\": \"beliefs_updated\", \"n_new_trades\": 1}",
+  "{\"ts\": \"2026-08-13T14:35:02+00:00\", \"kind\": \"trade_learned\", \"intent_id\": \"32c9747f54e841c6\", \"strategy_id\": \"BOT_F_nas100_vwap_reversion\", \"R\": -1.0147117826592966, \"regime\": \"wide_range|tight_spread|late_break\", \"lesson\": \"INSUFFICIENT_DATA\", \"slippage\": 0, \"outcome\": \"stop\", \"spread\": 1.4500000000007276}",
+  "{\"ts\": \"2026-08-13T14:35:02+00:00\", \"kind\": \"beliefs_updated\", \"n_new_trades\": 1}",
+  "{\"ts\": \"2026-08-13T20:42:12+00:00\", \"kind\": \"evidence_voided\", \"intent_ids\": [\"70b7f75a825b4e92\", \"619508e5a87d4855\", \"86f4d5a331106006\", \"7a76baf1360e862e\", \"41403b0170ca5d36\", \"32c9747f54e841c6\"], \"reason\": \"broker clock read as UTC instead of server time (UTC+3): every session window fired 3h early, so these trades measured different sessions than the strategies they claim to test. Fixed in 7d80635.\", \"n\": 6}",
+  "{\"ts\": \"2026-08-13T20:42:29+00:00\", \"kind\": \"scoreboard\", \"rows\": [{\"strategy_id\": \"BOT_A_gold_0630_breakout\", \"n\": 0, \"exp\": 0.15, \"se\": null, \"t\": null, \"weight_live\": 0.0, \"source\": \"prior only\", \"stage\": \"DEMO_CANDIDATE\", \"symbol\": \"XAUUSD\", \"confidence\": 0.0, \"contrib_pct\": 0.3}, {\"strategy_id\": \"BOT_B_nas100_usopen_breakout\", \"n\": 0, \"exp\": 0.0, \"se\": null, \"t\": null, \"weight_live\": 0.0, \"source\": \"prior only\", \"stage\": \"DEMO_CANDIDATE\", \"symbol\": \"US100.cash\", \"confidence\": 0.0, \"contrib_pct\": 0.0}, {\"strategy_id\": \"BOT_C_sp500_london_breakout\", \"n\": 0, \"exp\": 0.0, \"se\": null, \"t\": null, \"weight_live\": 0.0, \"source\": \"prior only\", \"stage\": \"DEMO_CANDIDATE\", \"symbol\": \"US500.cash\", \"confidence\": 0.0, \"contrib_pct\": 0.0}, {\"strategy_id\": \"BOT_D_gold_ny_breakout\", \"n\": 0, \"exp\": 0.0, \"se\": null, \"t\": null, \"weight_live\": 0.0, \"source\": \"prior only\", \"stage\": \"DEMO_CANDIDATE\", \"symbol\": \"XAUUSD\", \"confidence\": 0.0, \"contrib_pct\": 0.0}, {\"strategy_id\": \"BOT_E_eurusd_london_breakout\", \"n\": 0, \"exp\": 0.0, \"se\": null, \"t\": null, \"weight_live\": 0.0, \"source\": \"prior only\", \"stage\": \"DEMO_CANDIDATE\", \"symbol\": \"EURUSD\", \"confidence\": 0.0, \"contrib_pct\": 0.0}, {\"strategy_id\": \"BOT_F_nas100_vwap_reversion\", \"n\": 0, \"exp\": 0.0, \"se\": null, \"t\": null, \"weight_live\": 0.0, \"source\": \"prior only\", \"stage\": \"DEMO_CANDIDATE\", \"symbol\": \"US100.cash\", \"confidence\": 0.0, \"contrib_pct\": 0.0}, {\"strategy_id\": \"BOT_G_nas100_h4_pullback\", \"n\": 0, \"exp\": 0.0, \"se\": null, \"t\": null, \"weight_live\": 0.0, \"source\": \"prior only\", \"stage\": \"DEMO_CANDIDATE\", \"symbol\": \"US100.cash\", \"confidence\": 0.0, \"contrib_pct\": 0.0}, {\"strategy_id\": \"BOT_H_gold_sweep_reclaim\", \"n\": 0, \"exp\": 0.0, \"se\": null, \"t\": null, \"weight_live\": 0.0, \"source\": \"prior only\", \"stage\": \"DEMO_CANDIDATE\", \"symbol\": \"XAUUSD\", \"confidence\": 0.0, \"contrib_pct\": 0.0}], \"allocation\": {\"BOT_A_gold_0630_breakout\": 1.0, \"BOT_B_nas100_usopen_breakout\": 0.0, \"BOT_C_sp500_london_breakout\": 0.0, \"BOT_D_gold_ny_breakout\": 0.0, \"BOT_E_eurusd_london_breakout\": 0.0, \"BOT_F_nas100_vwap_reversion\": 0.0, \"BOT_G_nas100_h4_pullback\": 0.0, \"BOT_H_gold_sweep_reclaim\": 0.0}}"
+ ],
+ "controller_state": {
+  "starting_balance": 99944.11,
+  "anchored_on": "2026-08-13",
+  "day": "2026-08-14",
+  "day_start_equity": 99431.72
+ },
+ "open_positions_track": {},
+ "account": {
+  "login": 1514166963,
+  "server": "FTMO-Demo",
+  "balance": 99431.72,
+  "equity": 99431.72,
+  "margin": 0.0,
+  "free_margin": 99431.72,
+  "currency": "USD",
+  "trade_mode": 0
+ },
+ "terminal": {
+  "trade_allowed": true,
+  "connected": true,
+  "ping_last": 22043,
+  "build": 6090
+ },
+ "positions": [],
+ "orders": [],
+ "deals": [
+  {
+   "ticket": 495961173,
+   "symbol": "XAUUSD",
+   "type": 0,
+   "volume": 0.03,
+   "price": 4404.52,
+   "profit": 0.0,
+   "swap": 0.0,
+   "commission": -0.09,
+   "magic": 990001,
+   "comment": "41403b0170ca5d36",
+   "time": 1786529522
+  },
+  {
+   "ticket": 495992526,
+   "symbol": "EURUSD",
+   "type": 1,
+   "volume": 2.0,
+   "price": 1.15345,
+   "profit": 0.0,
+   "swap": 0.0,
+   "commission": -5.0,
+   "magic": 990001,
+   "comment": "70b7f75a825b4e92",
+   "time": 1786532643
+  },
+  {
+   "ticket": 495995507,
+   "symbol": "EURUSD",
+   "type": 0,
+   "volume": 2.0,
+   "price": 1.15374,
+   "profit": -58.0,
+   "swap": 0.0,
+   "commission": -5.0,
+   "magic": 990001,
+   "comment": "[sl 1.15372]",
+   "time": 1786532972
+  },
+  {
+   "ticket": 496154971,
+   "symbol": "US100.cash",
+   "type": 0,
+   "volume": 3.63,
+   "price": 29749.18,
+   "profit": 0.0,
+   "swap": 0.0,
+   "commission": 0.0,
+   "magic": 990001,
+   "comment": "619508e5a87d4855",
+   "time": 1786546922
+  },
+  {
+   "ticket": 496166071,
+   "symbol": "US100.cash",
+   "type": 1,
+   "volume": 3.63,
+   "price": 29721.63,
+   "profit": -100.01,
+   "swap": 0.0,
+   "commission": 0.0,
+   "magic": 990001,
+   "comment": "[sl 29721.66]",
+   "time": 1786547697
+  },
+  {
+   "ticket": 496196125,
+   "symbol": "XAUUSD",
+   "type": 0,
+   "volume": 0.04,
+   "price": 4427.42,
+   "profit": 0.0,
+   "swap": 0.0,
+   "commission": -0.12,
+   "magic": 990001,
+   "comment": "86f4d5a331106006",
+   "time": 1786548605
+  },
+  {
+   "ticket": 496197309,
+   "symbol": "XAUUSD",
+   "type": 1,
+   "volume": 0.04,
+   "price": 4390.33,
+   "profit": -148.36,
+   "swap": 0.0,
+   "commission": -0.12,
+   "magic": 990001,
+   "comment": "[sl 4421.31]",
+   "time": 1786548608
+  },
+  {
+   "ticket": 496223658,
+   "symbol": "US100.cash",
+   "type": 1,
+   "volume": 3.05,
+   "price": 29781.93,
+   "profit": 0.0,
+   "swap": 0.0,
+   "commission": 0.0,
+   "magic": 990001,
+   "comment": "7a76baf1360e862e",
+   "time": 1786548782
+  },
+  {
+   "ticket": 496227925,
+   "symbol": "US100.cash",
+   "type": 0,
+   "volume": 3.05,
+   "price": 29798.08,
+   "profit": -49.26,
+   "swap": 0.0,
+   "commission": 0.0,
+   "magic": 990001,
+   "comment": "[sl 29798.26]",
+   "time": 1786548863
+  },
+  {
+   "ticket": 496920443,
+   "symbol": "XAUUSD",
+   "type": 1,
+   "volume": 0.03,
+   "price": 4374.59,
+   "profit": -89.79,
+   "swap": -8.4,
+   "commission": -0.09,
+   "magic": 990001,
+   "comment": "[sl 4374.61]",
+   "time": 1786612803
+  },
+  {
+   "ticket": 497344575,
+   "symbol": "US100.cash",
+   "type": 1,
+   "volume": 0.5,
+   "price": 30064.68,
+   "profit": 0.0,
+   "swap": 0.0,
+   "commission": 0.0,
+   "magic": 990001,
+   "comment": "32c9747f54e841c6",
+   "time": 1786640822
+  },
+  {
+   "ticket": 497397527,
+   "symbol": "US100.cash",
+   "type": 0,
+   "volume": 0.5,
+   "price": 30160.98,
+   "profit": -48.15,
+   "swap": 0.0,
+   "commission": 0.0,
+   "magic": 990001,
+   "comment": "[sl 30159.44]",
+   "time": 1786642481
+  }
+ ],
+ "spreads": {
+  "EURUSD": {
+   "spread": 1e-05,
+   "stops_level": 0,
+   "contract": 100000.0
+  },
+  "US100.cash": {
+   "spread": 1.93,
+   "stops_level": 0,
+   "contract": 1.0
+  },
+  "US500.cash": {
+   "spread": 0.63,
+   "stops_level": 0,
+   "contract": 1.0
+  },
+  "XAUUSD": {
+   "spread": 0.48,
+   "stops_level": 0,
+   "contract": 100.0
+  }
+ }
+}
