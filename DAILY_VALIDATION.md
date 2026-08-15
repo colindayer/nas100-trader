@@ -1,19 +1,19 @@
 ﻿# DAILY VALIDATION — 2026-08-15
 
-## DESK STATUS: **RED**
+## DESK STATUS: **AMBER**
 
 **VALID TRADES: 0 / 30**
 
 
 ## Faults
 
-- **RED** controller last cycle 790 min ago -- not firing
-- **RED** WRONG ACCOUNT 61552095
+_none_
 
 ## Execution
 
-- controller cycles logged today: **0**
-- last cycle: 47399s ago
+- controller cycles logged today: **3**
+- cycle spacing: median 60s, max 48179s (blind spot risk)
+- last cycle: 60s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
@@ -30,12 +30,12 @@
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 2598
-- `CORRELATION_CAP` × 1732
-- `OUTSIDE_WINDOW` × 977
-- `OUTRANKED` × 866
+- `REGIME_MISMATCH` × 2607
+- `CORRELATION_CAP` × 1738
+- `OUTSIDE_WINDOW` × 980
+- `OUTRANKED` × 869
 - `FIRST_BREAK_ALREADY_OCCURRED` × 422
-- `NO_BREAKOUT` × 153
+- `NO_BREAKOUT` × 156
 
 ## Learning
 
@@ -48,4 +48,4 @@
 
 ## Recommendation
 
-**FIX PROVEN DEFECT** — controller last cycle 790 min ago -- not firing
+**FIX PROVEN DEFECT** — market_state_attached_pct at 0.0%. Infrastructure before strategy.
