@@ -7,13 +7,14 @@
 
 ## Faults
 
-- **RED** controller last cycle 536 min ago -- not firing
+- **RED** controller last cycle 551 min ago -- not firing
+- **RED** WRONG ACCOUNT 61552095
 
 ## Execution
 
 - controller cycles logged today: **97**
 - cycle spacing: median 60s, max 48179s (blind spot risk)
-- last cycle: 32158s ago
+- last cycle: 33058s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
@@ -48,4 +49,4 @@
 
 ## Recommendation
 
-**FIX PROVEN DEFECT** — controller last cycle 536 min ago -- not firing
+**FIX PROVEN DEFECT** — controller last cycle 551 min ago -- not firing
