@@ -7,13 +7,13 @@
 
 ## Faults
 
-- AMBER host clock 20 min from broker
+- AMBER host clock 25 min from broker
 
 ## Execution
 
-- controller cycles logged today: **33**
+- controller cycles logged today: **48**
 - cycle spacing: median 60s, max 48179s (blind spot risk)
-- last cycle: 59s ago
+- last cycle: 60s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
@@ -30,12 +30,12 @@
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 2697
-- `CORRELATION_CAP` × 1798
-- `OUTSIDE_WINDOW` × 1010
-- `OUTRANKED` × 899
+- `REGIME_MISMATCH` × 2742
+- `CORRELATION_CAP` × 1828
+- `OUTSIDE_WINDOW` × 1014
+- `OUTRANKED` × 914
 - `FIRST_BREAK_ALREADY_OCCURRED` × 422
-- `NO_BREAKOUT` × 186
+- `NO_BREAKOUT` × 190
 
 ## Learning
 
