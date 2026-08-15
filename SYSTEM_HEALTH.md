@@ -1,8 +1,8 @@
-﻿# SYSTEM HEALTH — 2026-08-15 23:00 UTC
+﻿# SYSTEM HEALTH — 2026-08-15 23:15 UTC
 
 ```json
 {
- "last_cycle_age_s": 31258.2,
+ "last_cycle_age_s": 32158.2,
  "trade_ledger_writable": true,
  "brain_ledger_writable": true,
  "disk_free_gb": 24.0,
@@ -11,11 +11,13 @@
  "trade_allowed": true,
  "mt5_connected": true,
  "desk_clock": "2026-08-15 23:54:59+01:00",
- "host_broker_gap_s": 303,
+ "host_broker_gap_s": 1203,
  "faults": [
-  "controller last cycle 521 min ago -- not firing"
+  "controller last cycle 536 min ago -- not firing"
  ],
- "warnings": [],
+ "warnings": [
+  "host clock 20 min from broker"
+ ],
  "status": "RED"
 }
 ```
