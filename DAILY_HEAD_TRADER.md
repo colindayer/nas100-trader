@@ -1,6 +1,6 @@
-﻿# DAILY HEAD TRADER REVIEW — 2026-08-14
+﻿# DAILY HEAD TRADER REVIEW — 2026-08-15
 
-_generated 2026-08-14 20:00 UTC on the trading host_
+_generated 2026-08-15 20:00 UTC on the trading host_
 
 
 ## Account
@@ -9,39 +9,39 @@ _generated 2026-08-14 20:00 UTC on the trading host_
 - total headroom **9.49%** of 10%
 - daily headroom **5.00%** of 5%
 - target: **+10.51%** remaining to +10%
-- terminal: trade_allowed **True**, connected True, ping 22043
+- terminal: trade_allowed **True**, connected True, ping 20847
 
 ## What the market offered
 
 
 **EURUSD** — WEAK_TREND, COMPRESSION, AT_HTF_LEVEL, RISK_OFF
   - WEAK_TREND: d1 up, h4 transition
-  - COMPRESSION: 5d range 0.75x the 20d
-  - AT_HTF_LEVEL: 0.11 ATR to a level
+  - COMPRESSION: 5d range 0.71x the 20d
+  - AT_HTF_LEVEL: 0.01 ATR to a level
   - RISK_OFF: macro_risk
-  - regimes d1/h4/h1: up/transition/up, ATR20 0.004919499999999988, range position 120d 0.46511627906976744
+  - regimes d1/h4/h1: up/transition/up, ATR20 0.005079999999999996, range position 120d 0.4670224933282499
 
 **US100.cash** — TRANSITION, COMPRESSION, AT_HTF_LEVEL, RISK_OFF
   - TRANSITION: d1 unconfirmed, h4 up
-  - COMPRESSION: 5d range 0.61x the 20d
-  - AT_HTF_LEVEL: 0.05 ATR to a level
+  - COMPRESSION: 5d range 0.58x the 20d
+  - AT_HTF_LEVEL: 0.00 ATR to a level
   - RISK_OFF: macro_risk
-  - regimes d1/h4/h1: transition/up/transition, ATR20 622.4934999999999, range position 120d 0.9116194658765611
+  - regimes d1/h4/h1: transition/up/transition, ATR20 594.583, range position 120d 0.9108799951871737
 
 **US500.cash** — STRONG_TREND, COMPRESSION, EXTENDED, AT_HTF_LEVEL, RISK_OFF
   - STRONG_TREND: d1 and h4 both up
-  - COMPRESSION: 5d range 0.61x the 20d
-  - EXTENDED: +2.44 ATR from the d1 mean
-  - AT_HTF_LEVEL: 0.11 ATR to a level
+  - COMPRESSION: 5d range 0.57x the 20d
+  - EXTENDED: +2.30 ATR from the d1 mean
+  - AT_HTF_LEVEL: 0.01 ATR to a level
   - RISK_OFF: macro_risk
-  - regimes d1/h4/h1: up/up/transition, ATR20 88.43099999999995, range position 120d 0.9791356481973836
+  - regimes d1/h4/h1: up/up/transition, ATR20 85.12099999999995, range position 120d 0.977002020631713
 
 **XAUUSD** — WEAK_TREND, EXTENDED, AT_HTF_LEVEL, RISK_OFF
   - WEAK_TREND: d1 up, h4 transition
-  - EXTENDED: +2.47 ATR from the d1 mean
-  - AT_HTF_LEVEL: 0.13 ATR to a level
+  - EXTENDED: +2.24 ATR from the d1 mean
+  - AT_HTF_LEVEL: 0.01 ATR to a level
   - RISK_OFF: macro_risk
-  - regimes d1/h4/h1: up/transition/transition, ATR20 88.85350000000001, range position 120d 0.29367362827065635
+  - regimes d1/h4/h1: up/transition/transition, ATR20 89.955, range position 120d 0.29376840537521604
 
 ## Today's trades (0)
 
