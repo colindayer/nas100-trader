@@ -1,0 +1,71 @@
+{
+  "_metadata": {
+    "id": "friday_20260814_allocation",
+    "captured_from": "data/logs/events.jsonl, 2026-08-14 (856 controller cycles)",
+    "immutable": true,
+    "purpose": "Reproduce the allocation-ordering defect: caps applied before candidates exist.",
+    "proves": "Lost observation opportunity only. BOT_C and BOT_E were denied funding on every cycle before either had been asked to generate a signal, so the desk holds no record of what they would have produced.",
+    "does_not_claim": [
+      "that BOT_C or BOT_E had a valid signal on any cycle",
+      "that BOT_C or BOT_E would have produced a profitable trade",
+      "that BOT_A's held budget was wrongly allocated on the merits"
+    ],
+    "measured": {
+      "cycles": 856,
+      "bot_c_not_funded_cycles": 856,
+      "bot_e_not_funded_cycles": 856,
+      "bot_a_held_group_budget_cycles": 305,
+      "bot_a_reason_while_holding": "FIRST_BREAK_ALREADY_OCCURRED",
+      "candidates_produced_by_c_or_e": null,
+      "candidates_produced_by_c_or_e_note": "unknown and unknowable: never evaluated"
+    }
+  },
+  "cycle": {
+    "ts_london": "2026-08-14 13:22:00",
+    "opportunities_by_symbol": {
+      "US500": {
+        "opportunities": [
+          "TREND_UP",
+          "EXPANSION"
+        ]
+      },
+      "XAUUSD": {
+        "opportunities": [
+          "TREND_UP",
+          "EXPANSION"
+        ]
+      },
+      "EURUSD": {
+        "opportunities": [
+          "TREND_UP",
+          "EXPANSION"
+        ]
+      }
+    },
+    "bots": [
+      {
+        "strategy_id": "BOT_A",
+        "symbol": "US500",
+        "playbook": "BREAKOUT",
+        "risk_pct": 0.0015,
+        "produces_signal": false,
+        "no_signal_reason": "first break already occurred this session"
+      },
+      {
+        "strategy_id": "BOT_C",
+        "symbol": "XAUUSD",
+        "playbook": "BREAKOUT",
+        "risk_pct": 0.0015,
+        "produces_signal": true
+      },
+      {
+        "strategy_id": "BOT_E",
+        "symbol": "EURUSD",
+        "playbook": "BREAKOUT",
+        "risk_pct": 0.0015,
+        "produces_signal": true
+      }
+    ],
+    "open_positions": []
+  }
+}

@@ -339,6 +339,86 @@ def trend_context(mt5, symbol, price) -> dict:
         return {"trend": "unknown", "error": str(e)}
 
 
+def exposure_gate(sent_group: dict, sent_total: float, group: str, risk: float,
+                  group_cap=None, total_cap=None) -> tuple[bool, str]:
+    """The arithmetic that must hold at EVERY order_send:
+
+        already live + already sent this cycle + this order  <=  applicable caps
+
+    Separate from allocate() on purpose. The allocator reasons about a plan; this reasons about
+    what the broker will be holding one call from now, and it is the last thing to run before
+    the only order_send on this desk.
+    """
+    import desk as _D
+    gc = _D.GROUP_CAP if group_cap is None else group_cap
+    tc = _D.TOTAL_CAP if total_cap is None else total_cap
+    g_after, t_after = sent_group.get(group, 0.0) + risk, sent_total + risk
+    if g_after > gc + 1e-12:
+        return False, (f"pre-send exposure gate: {group} would reach {g_after:.4%} "
+                       f"of {gc:.4%} group cap")
+    if t_after > tc + 1e-12:
+        return False, (f"pre-send exposure gate: desk would reach {t_after:.4%} "
+                       f"of {tc:.4%} total cap")
+    return True, "within caps"
+
+
+def desk_exposure(mt5, trades, known_strategies, magic=990001) -> dict:
+    """What the desk ACTUALLY has at risk, per correlation group, plus anything it cannot explain.
+
+    MT5 is authoritative for whether exposure EXISTS. The ledger supplies attribution: which
+    strategy owns it and what risk was intended. Neither alone suffices -- the broker does not
+    know our playbooks, and the ledger does not know what the broker is holding.
+
+    Unattributable exposure is never counted as zero. It halts new ENTRIES for the cycle; it
+    never touches an existing position, and time_exits() runs before this and is unaffected.
+    """
+    from desk import correlation_group
+    by_ticket, faults, seen = {}, [], {}
+    closed = {t["intent_id"] for t in trades if t.get("kind") == "close"}
+    for t in trades:
+        if t.get("kind") == "close" or not t.get("ticket") or t["intent_id"] in closed:
+            continue
+        tk = t["ticket"]
+        if tk in seen:
+            faults.append({"code": "DUPLICATE_TICKET", "ticket": tk,
+                           "detail": f"ticket claimed by {seen[tk]} and {t['intent_id']}"})
+        seen[tk] = t["intent_id"]
+        by_ticket[tk] = t
+
+    live = [p for p in (mt5.positions_get() or []) if p.magic == magic]
+    pending = [o for o in (mt5.orders_get() or []) if getattr(o, "magic", None) == magic]
+    if pending:
+        # this desk only ever sends TRADE_ACTION_DEAL at market, so a pending order carrying
+        # our magic means something outside the desk is acting with the desk's identity.
+        faults.append({"code": "UNEXPECTED_PENDING_ORDER",
+                       "tickets": [o.ticket for o in pending]})
+
+    per_group, live_tickets = {}, set()
+    for pos in live:
+        live_tickets.add(pos.ticket)
+        row = by_ticket.get(pos.ticket)
+        if row is None:
+            faults.append({"code": "EXPOSURE_UNRECONCILED", "ticket": pos.ticket,
+                           "symbol": pos.symbol,
+                           "detail": "broker position on the desk magic has no open ledger row"})
+            continue
+        bot = known_strategies.get(row.get("strategy_id"))
+        if bot is None:
+            faults.append({"code": "UNKNOWN_STRATEGY", "ticket": pos.ticket,
+                           "strategy_id": row.get("strategy_id"),
+                           "detail": "ledger names a strategy this desk does not run"})
+            continue
+        g = correlation_group(bot)
+        per_group[g] = per_group.get(g, 0.0) + (row.get("risk_pct") or 0.0)
+
+    # ledger says open, broker does not hold it. reconcile() runs earlier in the same cycle, so
+    # this is recorded explicitly by the caller and never treated as broker/ledger agreement.
+    ahead = sorted(tk for tk in by_ticket if tk not in live_tickets)
+    return {"per_group": per_group, "total": sum(per_group.values()),
+            "faults": faults, "ledger_ahead_of_broker": ahead,
+            "open_tickets": sorted(live_tickets)}
+
+
 # ==================================================================== reconciliation
 OPEN_STATE = DATA / "open_positions.json"
 
@@ -1344,26 +1424,52 @@ def main():
                    for b in BOTS}
     except Exception:
         beliefs = {}
-    plan = DESK.allocate(BOTS, opp_by_symbol, lambda b: risk_for(b, st_), st_,
-                         beliefs=beliefs)
-    print(f"\n  CIO: {sum(1 for d in plan['decisions'].values() if d['allow'])} "
-          f"of {len(BOTS)} funded, {plan['total_risk']:.3%} total risk")
-
     import desk_events as EV
+
+    # ---- EXPOSURE. What is genuinely at risk right now, per playbook. Faults block new
+    # ENTRIES only: time_exits() already ran above and open positions keep their broker stops.
+    known = {b.strategy_id: b for b in BOTS}
+    expo = desk_exposure(mt5, trades, known)
+    if expo["ledger_ahead_of_broker"]:
+        # Recorded, never silently normalised. reconcile() runs earlier in this same cycle, so
+        # a ticket still listed here is a ledger row whose position did not close as expected.
+        print(f"  LEDGER_AHEAD_OF_BROKER: {expo['ledger_ahead_of_broker']} "
+              f"(ledger open, broker has none; reconcile ran earlier this cycle)")
+        EV.emit("challenge_controller", "LEDGER_AHEAD_OF_BROKER",
+                tickets=expo["ledger_ahead_of_broker"], counted_as_exposure=False,
+                note="reconcile() precedes this gate; treated as zero exposure, not as agreement")
+    if expo["faults"]:
+        for f in expo["faults"]:
+            print(f"  !! {f['code']}: {f}")
+            EV.emit("challenge_controller", "EXPOSURE_FAULT", **f)
+        print("  NO NEW ORDERS THIS CYCLE -- open exposure could not be attributed to this "
+              "desk's strategies, so no cap can be proven. Existing positions are untouched.")
+        mt5.shutdown(); return
+    if expo["per_group"]:
+        print(f"  OPEN EXPOSURE {expo['per_group']} (total {expo['total']:.3%})")
+
+    # ---- PASS 1: OBSERVATION. Every regime-eligible bot evaluates its setup. No capacity
+    # test may happen here -- denying a bot the chance to LOOK was the defect: on 2026-08-14
+    # BOT_C and BOT_E were refused funding before either had produced a signal, so the desk
+    # cannot say what it would have seen.
+    candidates, ctxs = {}, {}
     for bot in BOTS:
-        d = plan["decisions"].get(bot.strategy_id, {})
-        if not d.get("allow"):
-            print(f"  {bot.strategy_id}: NOT FUNDED -- {d.get('reason','no decision')}")
-            EV.no_trade(bot, desk_now, d.get("reason", "no decision"), funded=False,
-                        utility=d.get("utility"),
-                        opportunities=opp_by_symbol.get(bot.symbol, {}).get("opportunities"))
+        opp = opp_by_symbol.get(bot.symbol, {}).get("opportunities", [])
+        ok, why = DESK.eligibility(bot, opp)
+        if not ok:
+            print(f"  {bot.strategy_id}: NOT ELIGIBLE -- {why}")
+            EV.no_trade(bot, desk_now, why, funded=False, opportunities=opp)
             continue
         if not mt5.symbol_select(bot.symbol, True):
-            print(f"  {bot.strategy_id}: symbol_select failed"); continue
+            print(f"  {bot.strategy_id}: symbol_select failed")
+            EV.no_trade(bot, desk_now, "symbol_select failed", funded=True, opportunities=opp)
+            continue
         tick = mt5.symbol_info_tick(bot.symbol)
         r = mt5.copy_rates_from_pos(bot.symbol, mt5.TIMEFRAME_M1, 0, 600)
-        if r is None or not len(r):
-            print(f"  {bot.strategy_id}: no M1 data"); continue
+        if tick is None or r is None or not len(r):
+            print(f"  {bot.strategy_id}: no M1 data")
+            EV.no_trade(bot, desk_now, "no M1 data", funded=True, opportunities=opp)
+            continue
         m1 = pd.DataFrame(r)
         import market_state as _MS
         m1.index = _MS.to_london(m1["time"], _MS.broker_utc_offset(mt5, bot.symbol))
@@ -1371,43 +1477,75 @@ def main():
         # ONE clock for the whole desk: the broker's. Using m1.index[-1] gave each symbol its
         # own "now", so a closed market evaluated its window against an hour-old timestamp.
         ctx = {"now_london": desk_now, "m1": m1,
-               "bid": tick.bid, "ask": tick.ask, "traded_today": traded_today, "d1": d1}
+               "bid": tick.bid, "ask": tick.ask, "traded_today": traded_today, "d1": d1,
+               "state": states.get(bot.symbol, {})}
 
-        # TASK-0005. The GLOBAL clock is the freshest tick across five symbols, so it stays
-        # FEED_FRESH while one instrument's own feed is frozen -- and this bot would evaluate
-        # stale bars and reach order_send. Per-bot, not desk-wide: one stale symbol skips its
-        # own bots and leaves every other specialist independently evaluable.
+        # TASK-0005, carried into TASK-0004's PASS 1. The GLOBAL clock is the freshest tick
+        # across five symbols, so it stays FEED_FRESH while ONE instrument's own feed is
+        # frozen -- and this bot would evaluate stale bars and reach order_send. Placed here,
+        # inside observation and before generate_signal, so a stale symbol produces NO
+        # CANDIDATE at all: it cannot be observed, ranked, funded or sent. Per-bot, never
+        # desk-wide, so every other specialist stays independently evaluable.
         _sym_ok, _sym_why = MS.symbol_feed_fresh(mt5, bot.symbol)
         if not _sym_ok:
             print(f"  {bot.strategy_id}: SYMBOL_FEED_STALE -- {_sym_why}")
             EV.emit("challenge_controller", "SYMBOL_FEED_STALE", bot=bot.strategy_id,
                     symbol=bot.symbol, detail=_sym_why)
-            EV.no_trade(bot, desk_now, f"SYMBOL_FEED_STALE: {_sym_why}", funded=True)
+            EV.no_trade(bot, desk_now, f"SYMBOL_FEED_STALE: {_sym_why}", funded=True,
+                        opportunities=opp)
             continue
 
-        blackout = in_event_blackout(ctx["now_london"])
+        # desk_now, not ctx["now_london"] -- TASK-0004's form. They are the same object here;
+        # the direct name is kept so pass 1 reads from ONE clock variable throughout.
+        blackout = in_event_blackout(desk_now)
         if blackout:
-            print(f"  {bot.strategy_id}: no trade -- {blackout}"); continue
+            print(f"  {bot.strategy_id}: no trade -- {blackout}")
+            EV.no_trade(bot, desk_now, blackout, funded=True, opportunities=opp)
+            continue
 
-        ctx["state"] = states.get(bot.symbol, {})
         sig = bot.generate_signal(ctx)
         if sig is None:
             why = getattr(bot, "no_signal_reason", "unspecified")
             print(f"  {bot.strategy_id}: no trade -- {why}")
             # beyond_level is THE field 2026-08-14 lacked: was price actually observed past
             # the trigger during an evaluation? Without it a refusal and a miss are identical.
-            st_ = states.get(bot.symbol, {})
-            lvl_hi, lvl_lo = st_.get("_probe_hi"), st_.get("_probe_lo")
+            bstate = states.get(bot.symbol, {})
             EV.no_trade(bot, desk_now, why, funded=True,
                         bid=tick.bid, ask=tick.ask,
                         spread=round(tick.ask - tick.bid, 6),
-                        d1_regime=st_.get("d1_regime"), h4_regime=st_.get("h4_regime"),
-                        atr20_d1=st_.get("atr20_d1"),
-                        opportunities=opp_by_symbol.get(bot.symbol, {}).get("opportunities"),
-                        cycle_gap_s=_cycle_gap_s(), utility=d.get("utility"),
-                        risk_pct=d.get("risk"))
+                        d1_regime=bstate.get("d1_regime"), h4_regime=bstate.get("h4_regime"),
+                        atr20_d1=bstate.get("atr20_d1"),
+                        opportunities=opp, cycle_gap_s=_cycle_gap_s())
             continue
+        candidates[bot.strategy_id] = sig
+        ctxs[bot.strategy_id] = ctx
 
+    # ---- PASS 2: ALLOCATION. Only bots that actually produced a signal compete for capacity,
+    # and they compete against exposure that is REAL, not against each other's hypotheticals.
+    plan = DESK.allocate(BOTS, opp_by_symbol, lambda b: risk_for(b, st_), st_,
+                         beliefs=beliefs, open_group_risk=expo["per_group"],
+                         candidates=set(candidates))
+    print(f"\n  CIO: {len(candidates)} candidate(s); "
+          f"{sum(1 for d in plan['decisions'].values() if d['allow'])} funded, "
+          f"{plan['total_risk']:.3%} total risk")
+
+    # Allocation is FROZEN for the cycle. A rejected order does NOT promote a capped candidate:
+    # that is same-cycle failover, a separate execution policy, deliberately not implemented.
+    sent_group, sent_total = dict(expo["per_group"]), expo["total"]
+
+    for bot in BOTS:
+        if bot.strategy_id not in candidates:
+            continue                                  # already recorded in pass 1
+        d = plan["decisions"].get(bot.strategy_id, {})
+        if not d.get("allow"):
+            print(f"  {bot.strategy_id}: CANDIDATE NOT FUNDED -- {d.get('reason','no decision')}")
+            EV.no_trade(bot, desk_now, d.get("reason", "no decision"), funded=False,
+                        had_candidate=True, utility=d.get("utility"),
+                        opportunities=opp_by_symbol.get(bot.symbol, {}).get("opportunities"))
+            continue
+        sig = candidates[bot.strategy_id]
+        ctx = ctxs[bot.strategy_id]
+        d1 = ctx["d1"]
         import market_state as MS, macro_context as MC, shadows as SH
         sess = ctx["now_london"].normalize() + pd.Timedelta(
             hours=getattr(bot, "ENTRY_H", getattr(bot, "SESSION_H", 8)),
@@ -1491,6 +1629,22 @@ def main():
         if a.dry_run:
             print(f"     DRY RUN -- not sent"); continue
 
+        # ---- PRE-SEND EXPOSURE GATE. The last thing before the only order_send on this desk.
+        # It proves, per order: already live + already sent this cycle + this one <= caps.
+        # The allocator computed the same arithmetic, but the allocator reasons about a plan
+        # while this reasons about what the broker will actually be holding one call from now.
+        grp = DESK.correlation_group(bot)
+        okgate, why = exposure_gate(sent_group, sent_total, grp, risk)
+        if not okgate:
+            print(f"  {bot.strategy_id}: BLOCKED -- {why}")
+            EV.emit("challenge_controller", "EXPOSURE_GATE_BLOCK", bot=bot.strategy_id,
+                    playbook=grp, intent_id=iid, open_group=expo["per_group"].get(grp, 0.0),
+                    sent_group=sent_group.get(grp, 0.0), this_order=risk,
+                    total_before=sent_total, group_cap=DESK.GROUP_CAP,
+                    total_cap=DESK.TOTAL_CAP, reason=why)
+            EV.no_trade(bot, desk_now, why, funded=False, had_candidate=True)
+            continue
+
         req = {"action": mt5.TRADE_ACTION_DEAL, "symbol": bot.symbol, "volume": float(vol),
                "type": mt5.ORDER_TYPE_BUY if sig.side > 0 else mt5.ORDER_TYPE_SELL,
                "price": ctx["ask"] if sig.side > 0 else ctx["bid"],
@@ -1505,6 +1659,9 @@ def main():
                 requested_price=req["price"], fill=getattr(res, "price", None),
                 requested_volume=float(vol), filled_volume=getattr(res, "volume", None),
                 sl=req["sl"], tp=req["tp"], risk_pct=risk, ts_london=str(desk_now))
+        if rc == mt5.TRADE_RETCODE_DONE:
+            sent_group[grp] = sent_group.get(grp, 0.0) + risk
+            sent_total += risk
         pre["retcode"] = rc
         pre["fill"] = getattr(res, "price", None)
         pre["actual_slippage"] = (abs(pre["fill"] - sig.entry_price)
