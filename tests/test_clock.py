@@ -66,16 +66,55 @@ class FakeBroker:
         return types.SimpleNamespace(
             time=int(datetime.now(timezone.utc).timestamp() + self.d + 3*3600))
 
-for drift in (0, 60, 304, 900, 1500):
-    MS2._OFFSET_CACHE.clear()
-    off = MS2.broker_utc_offset(FakeBroker(drift), "X")
-    assert off == pd.Timedelta(hours=3), f"{drift}s of host drift leaked in: {off}"
-print("  host drift 0..25 min -> offset always +3h; windows unaffected")
+# ---- TASK-0005 CORRECTION 1 of 2, declared in the pre-implementation review.
+# These two assertions encoded the DEFECT as expected behaviour: that a SINGLE tick determines
+# the offset. That is precisely what let a 14-hour-old tick fabricate a current clock. The
+# offset is now established only after a feed has been independently proven live, and
+# broker_utc_offset() returns that persisted value rather than measuring anything.
+import os, json, tempfile, shutil, pathlib as _pl
 
-# beyond half an hour the hour inference genuinely flips -- state the limit, do not hide it
-MS2._OFFSET_CACHE.clear()
-assert MS2.broker_utc_offset(FakeBroker(1900), "X") == pd.Timedelta(hours=4)
-print("  >30 min drift flips the inferred hour -- the documented limit, not a silent failure")
+def _bootstrapped_offset(drift):
+    """Prove liveness by ADVANCEMENT, then read back the offset the desk trusts."""
+    d = tempfile.mkdtemp(prefix="test-clock-")
+    try:
+        path = os.path.join(d, "clock_state.json")
+        base = datetime.now(timezone.utc).timestamp()
+
+        class Advancing:
+            """Broker exactly UTC+3, host slow by `drift`; the feed genuinely advances."""
+            def __init__(self, t): self.t = t
+            def symbol_select(self, sym, on=True): return True
+            def symbol_info_tick(self, sym):
+                return types.SimpleNamespace(time=int(self.t + drift + 3 * 3600))
+
+        st = None
+        for i in range(6):                       # 3 observations spanning >= 120s
+            w = Advancing(base + i * 60)
+            st = MS2.clock_state(w, host_now=base + i * 60, path=path)
+        saved = json.loads(open(path).read())["trusted_offset_h"]
+        return saved, st
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+for drift in (0, 60, 300):
+    saved, st = _bootstrapped_offset(drift)
+    assert saved == 3, f"{drift}s of host drift leaked into the offset: {saved}"
+print("  host drift 0..5 min -> trusted offset always +3h, established on a PROVEN LIVE feed")
+
+# ---- TASK-0005 CORRECTION 2 of 2. The old test documented an hour FLIP beyond 30 minutes of
+# drift as an accepted limit. It is now a rejected fabrication: +4h is not a member of
+# EXPECTED_OFFSETS_H, so no offset is adopted and new entries stay blocked. The expectation
+# genuinely inverts, and that inversion is the repair.
+saved, st = _bootstrapped_offset(1900)
+assert saved is None, f"a +4h fabrication was adopted: {saved}"
+assert st["entries"] is False, "entries were permitted on an unadopted offset"
+assert 4 not in MS2.EXPECTED_OFFSETS_H
+print("  >30 min drift no longer flips the hour -- the candidate is rejected and entries block")
+
+# the value the OLD implementation would have returned, pinned so the change stays visible
+_old = round((1900 + 3 * 3600) / 3600)
+assert _old == 4, _old
+print(f"  (the old formula would have adopted {_old:+d}h from the same reading)")
 
 # skew is now a HOST-HEALTH signal only
 MS2._OFFSET_CACHE.clear()

@@ -523,15 +523,17 @@ def preflight(mt5, acct, trades) -> list:
           "AlgoTrading is OFF in the terminal -- every order will retcode 10027")
     check("mt5_connected", term is not None and term.connected, "terminal not connected")
 
+    # TASK-0005. The offset is no longer measured here; it is whatever was established on a
+    # feed proven live and persisted. An absent offset is NORMAL during bootstrap and must not
+    # be a desk fault, because preflight failure would skip time_exits() and reconcile() below.
     off = MS.broker_utc_offset(mt5, "XAUUSD")
-    check("broker_offset_sane", pd.Timedelta(hours=-14) <= off <= pd.Timedelta(hours=14),
-          f"offset {off} is implausible")
-    skew = MS.clock_skew(mt5, "XAUUSD")
-    if abs(skew.total_seconds()) > 120 and False:
-        # a WARNING, not a fault: the conversion is self-consistent either way, but a host
-        # clock minutes off true time shifts every session window by that much.
-        print(f"  ! CLOCK SKEW {skew.total_seconds():+.0f}s from a quarter-hour boundary "
-              f"-- run 'w32tm /resync' on this host; session windows are shifted by this much")
+    if off != pd.Timedelta(0):
+        check("broker_offset_sane",
+              int(off.total_seconds() // 3600) in MS.EXPECTED_OFFSETS_H,
+              f"offset {off} is not one of {MS.EXPECTED_OFFSETS_H}")
+    # The old duplicate `and False` skew branch is REMOVED, not deferred: clock_skew() computes
+    # exactly the residual that HOST_CLOCK_UNTRUSTED now acts on, and two gates reading the same
+    # measurement -- one dead, one live -- is how a check silently stops meaning anything.
 
     r = mt5.copy_rates_from_pos("XAUUSD", mt5.TIMEFRAME_M1, 0, 5)
     check("xauusd_available", r is not None and len(r) > 0, "no XAUUSD M1 data")
@@ -540,7 +542,13 @@ def preflight(mt5, acct, trades) -> list:
         bnow = MS.broker_now_london(mt5, "XAUUSD")
         age = abs((bnow - bar).total_seconds())
         # measured against the BROKER's own clock, so host drift cannot fail this
-        check("fresh_m1_data", age < 900, f"newest M1 bar is {age/60:.0f} minutes old")
+        # fresh_m1_data REMOVED. It compared the newest bar against the newest TICK, both
+        # broker-stamped and both converted with the same offset, so they froze together: the
+        # production measurement was 52s against a 14-hour-old feed. Freshness is now decided
+        # by MS.clock_state() AFTER time_exits() and reconcile(), so a dead feed can never
+        # stop position management. `age` is kept as a reported diagnostic only.
+        print(f"  bar-vs-tick gap {age:.0f}s (diagnostic only; freshness is decided by "
+              f"clock_state after exits and reconciliation)")
         host_gap = abs((pd.Timestamp.now(tz="Europe/London") - bnow).total_seconds())
         if host_gap > 120:
             print(f"  ! HOST CLOCK is {host_gap/60:.1f} min from the broker's. Session windows "
@@ -1261,6 +1269,24 @@ def main():
         if nc:
             print(f"RECONCILED {nc} closed position(s)")
 
+    # ==== TASK-0005 ENTRY FRESHNESS GATE ====================================================
+    # Deliberately placed AFTER time_exits() and reconcile(). Those two protect open positions
+    # and neither consumes the repaired value -- time_exits() runs on the host clock and the
+    # ledger, reconcile() reads broker deals -- so losing clock confidence must never reach
+    # them. Everything below this gate is NEW ENTRIES only.
+    import market_state as MS
+    _clock = MS.clock_state(mt5)
+    _EV.emit("challenge_controller", "CLOCK_STATE", state=_clock["state"],
+             entries_permitted=_clock["entries"], offset_h=_clock.get("offset_h"),
+             reason=_clock["reason"], age_s=_clock.get("age"), residual_s=_clock.get("resid"),
+             market_ts=_clock.get("market_ts"))
+    print(f"  CLOCK {_clock['state']}: {_clock['reason']}")
+    if not _clock["entries"]:
+        print("  NO NEW ENTRIES THIS CYCLE -- a trustworthy current market clock could not be "
+              "established. Open positions keep their broker stops; exits and reconciliation "
+              "have already run.")
+        mt5.shutdown(); return
+
     try:                                   # the Brain ingests before the desk decides
         from trading_brain import learn
         n = learn()
@@ -1346,6 +1372,18 @@ def main():
         # own "now", so a closed market evaluated its window against an hour-old timestamp.
         ctx = {"now_london": desk_now, "m1": m1,
                "bid": tick.bid, "ask": tick.ask, "traded_today": traded_today, "d1": d1}
+
+        # TASK-0005. The GLOBAL clock is the freshest tick across five symbols, so it stays
+        # FEED_FRESH while one instrument's own feed is frozen -- and this bot would evaluate
+        # stale bars and reach order_send. Per-bot, not desk-wide: one stale symbol skips its
+        # own bots and leaves every other specialist independently evaluable.
+        _sym_ok, _sym_why = MS.symbol_feed_fresh(mt5, bot.symbol)
+        if not _sym_ok:
+            print(f"  {bot.strategy_id}: SYMBOL_FEED_STALE -- {_sym_why}")
+            EV.emit("challenge_controller", "SYMBOL_FEED_STALE", bot=bot.strategy_id,
+                    symbol=bot.symbol, detail=_sym_why)
+            EV.no_trade(bot, desk_now, f"SYMBOL_FEED_STALE: {_sym_why}", funded=True)
+            continue
 
         blackout = in_event_blackout(ctx["now_london"])
         if blackout:
