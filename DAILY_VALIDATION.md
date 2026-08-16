@@ -11,9 +11,9 @@ _none_
 
 ## Execution
 
-- controller cycles logged today: **188**
+- controller cycles logged today: **203**
 - cycle spacing: median 60s, max 100920s (blind spot risk)
-- last cycle: 0s ago
+- last cycle: 60s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
@@ -25,18 +25,18 @@ _none_
 | fills_with_intent_pct | 100.0% |
 | market_state_attached_pct | 0.0%  **<- FIX INFRASTRUCTURE** |
 | net_economics_pct | 100.0% |
-| no_trade_reasons_coded_pct | 98.7%  **<- FIX INFRASTRUCTURE** |
+| no_trade_reasons_coded_pct | 98.0%  **<- FIX INFRASTRUCTURE** |
 | rejections_explained_pct | 100.0% |
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 2961
+- `REGIME_MISMATCH` × 3006
 - `CORRELATION_CAP` × 1926
-- `OUTSIDE_WINDOW` × 1038
+- `OUTSIDE_WINDOW` × 1053
 - `OUTRANKED` × 963
 - `FIRST_BREAK_ALREADY_OCCURRED` × 422
 - `NO_BREAKOUT` × 190
-- `UNMAPPED` × 96
+- `UNMAPPED` × 156
 
 **UNMAPPED reasons exist** — a decision the validator cannot count. Add the pattern to `desk_events.REASON_PATTERNS`.
 
