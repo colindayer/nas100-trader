@@ -1,18 +1,19 @@
 ﻿# DAILY VALIDATION — 2026-08-16
 
-## DESK STATUS: **RED**
+## DESK STATUS: **AMBER**
 
 **VALID TRADES: 0 / 30**
 
 
 ## Faults
 
-- **RED** controller last cycle 1676 min ago -- not firing
+- AMBER host clock 2555 min from broker
 
 ## Execution
 
-- controller cycles logged today: **0**
-- last cycle: 100559s ago
+- controller cycles logged today: **8**
+- cycle spacing: median 60s, max 100920s (blind spot risk)
+- last cycle: 60s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
@@ -43,8 +44,8 @@
 
 ## Code updates
 
-- up to date
+- 0 commit(s) available -- NOT applied
 
 ## Recommendation
 
-**FIX PROVEN DEFECT** — controller last cycle 1676 min ago -- not firing
+**FIX PROVEN DEFECT** — market_state_attached_pct at 0.0%. Infrastructure before strategy.

@@ -3054,3 +3054,135 @@ DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
 PREFLIGHT FAILED -- DESK FAULT, NOT TRADING:
   x broker_offset_sane: offset -2 days +06:00:00 is implausible
   A failed instrumentation check is not a market veto. Fix the desk.
+
+===== cycle 2026-08-16 18:16:02 UTC (host local 2026-08-16 11:16:02) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  ! HOST CLOCK is 21.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+
+PREFLIGHT FAILED -- DESK FAULT, NOT TRADING:
+  x broker_offset_sane: offset -2 days +06:00:00 is implausible
+  A failed instrumentation check is not a market veto. Fix the desk.
+
+===== cycle 2026-08-16 18:17:02 UTC (host local 2026-08-16 11:17:02) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  ! HOST CLOCK is 22.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+
+PREFLIGHT FAILED -- DESK FAULT, NOT TRADING:
+  x broker_offset_sane: offset -2 days +06:00:00 is implausible
+  A failed instrumentation check is not a market veto. Fix the desk.
+
+===== cycle 2026-08-16 18:18:02 UTC (host local 2026-08-16 11:18:02) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  ! HOST CLOCK is 23.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+
+PREFLIGHT FAILED -- DESK FAULT, NOT TRADING:
+  x broker_offset_sane: offset -2 days +06:00:00 is implausible
+  A failed instrumentation check is not a market veto. Fix the desk.
+
+===== cycle 2026-08-16 18:19:02 UTC (host local 2026-08-16 11:19:02) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  ! HOST CLOCK is 24.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+
+PREFLIGHT FAILED -- DESK FAULT, NOT TRADING:
+  x broker_offset_sane: offset -2 days +06:00:00 is implausible
+  A failed instrumentation check is not a market veto. Fix the desk.
+
+===== cycle 2026-08-16 18:21:01 UTC (host local 2026-08-16 11:21:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+DRY RUN: intents will be printed, nothing sent.
+
+  bar-vs-tick gap 359s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+  ! HOST CLOCK is 2546.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK BOOTSTRAPPING: awaiting advancement proof
+  NO NEW ENTRIES THIS CYCLE -- a trustworthy current market clock could not be established. Open positions keep their broker stops; exits and reconciliation have already run.
+
+===== cycle 2026-08-16 18:21:14 UTC (host local 2026-08-16 11:21:14) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  bar-vs-tick gap 359s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+  ! HOST CLOCK is 2546.3 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK BOOTSTRAPPING: awaiting advancement proof
+  NO NEW ENTRIES THIS CYCLE -- a trustworthy current market clock could not be established. Open positions keep their broker stops; exits and reconciliation have already run.
+
+===== cycle 2026-08-16 18:22:01 UTC (host local 2026-08-16 11:22:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  bar-vs-tick gap 359s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+  ! HOST CLOCK is 2547.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK BOOTSTRAPPING: awaiting advancement proof
+  NO NEW ENTRIES THIS CYCLE -- a trustworthy current market clock could not be established. Open positions keep their broker stops; exits and reconciliation have already run.
+
+===== cycle 2026-08-16 18:22:16 UTC (host local 2026-08-16 11:22:16) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+DRY RUN: intents will be printed, nothing sent.
+
+  ! HOST CLOCK is 32.7 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+
+PREFLIGHT FAILED -- DESK FAULT, NOT TRADING:
+  x broker_offset_sane: offset -2 days +05:00:00 is implausible
+  A failed instrumentation check is not a market veto. Fix the desk.
+
+===== cycle 2026-08-16 18:23:01 UTC (host local 2026-08-16 11:23:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  ! HOST CLOCK is 31.9 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+
+PREFLIGHT FAILED -- DESK FAULT, NOT TRADING:
+  x broker_offset_sane: offset -2 days +05:00:00 is implausible
+  A failed instrumentation check is not a market veto. Fix the desk.
+
+===== cycle 2026-08-16 18:24:01 UTC (host local 2026-08-16 11:24:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  ! HOST CLOCK is 30.9 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+
+PREFLIGHT FAILED -- DESK FAULT, NOT TRADING:
+  x broker_offset_sane: offset -2 days +05:00:00 is implausible
+  A failed instrumentation check is not a market veto. Fix the desk.
+
+===== cycle 2026-08-16 18:25:01 UTC (host local 2026-08-16 11:25:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  ! HOST CLOCK is 30.0 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+
+PREFLIGHT FAILED -- DESK FAULT, NOT TRADING:
+  x broker_offset_sane: offset -2 days +05:00:00 is implausible
+  A failed instrumentation check is not a market veto. Fix the desk.
+
+===== cycle 2026-08-16 18:26:00 UTC (host local 2026-08-16 11:26:00) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  bar-vs-tick gap 359s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+  ! HOST CLOCK is 2551.0 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK BOOTSTRAPPING: awaiting advancement proof
+  NO NEW ENTRIES THIS CYCLE -- a trustworthy current market clock could not be established. Open positions keep their broker stops; exits and reconciliation have already run.
+
+===== cycle 2026-08-16 18:27:01 UTC (host local 2026-08-16 11:27:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  bar-vs-tick gap 359s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+  ! HOST CLOCK is 2552.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK BOOTSTRAPPING: awaiting advancement proof
+  NO NEW ENTRIES THIS CYCLE -- a trustworthy current market clock could not be established. Open positions keep their broker stops; exits and reconciliation have already run.
+
+===== cycle 2026-08-16 18:28:01 UTC (host local 2026-08-16 11:28:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  bar-vs-tick gap 359s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+  ! HOST CLOCK is 2553.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK BOOTSTRAPPING: awaiting advancement proof
+  NO NEW ENTRIES THIS CYCLE -- a trustworthy current market clock could not be established. Open positions keep their broker stops; exits and reconciliation have already run.
+
+===== cycle 2026-08-16 18:29:01 UTC (host local 2026-08-16 11:29:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  bar-vs-tick gap 359s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+  ! HOST CLOCK is 2554.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK BOOTSTRAPPING: awaiting advancement proof
+  NO NEW ENTRIES THIS CYCLE -- a trustworthy current market clock could not be established. Open positions keep their broker stops; exits and reconciliation have already run.
+
+===== cycle 2026-08-16 18:30:01 UTC (host local 2026-08-16 11:30:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99431.72
+  bar-vs-tick gap 359s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+  ! HOST CLOCK is 2555.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK BOOTSTRAPPING: awaiting advancement proof
+  NO NEW ENTRIES THIS CYCLE -- a trustworthy current market clock could not be established. Open positions keep their broker stops; exits and reconciliation have already run.
