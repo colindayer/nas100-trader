@@ -362,6 +362,98 @@ def exposure_gate(sent_group: dict, sent_total: float, group: str, risk: float,
     return True, "within caps"
 
 
+def size_position(equity: float, intended_risk_pct: float, stop_distance: float,
+                  info, entry_price: float, max_notional_mult: float = None) -> dict:
+    """Turn a risk budget into an executable volume that can NEVER imply more risk than asked.
+
+    THE DEFECT THIS REPLACES. Volume was rounded to the NEAREST volume_step and floored at
+    volume_min:  vol = max(volume_min, round(money/per_lot/step) * step).  Rounding to nearest
+    goes UP half the time, and the ledger recorded the INTENDED risk regardless -- so exposure
+    accounting, both caps and R all read a number the broker never honoured.
+
+    Measured on FTMO-Demo 1514166963 (2026-08-16): one XAUUSD volume_step of 0.01 is $14.10 at
+    the 14.10 floor stop, which is 28.4% of a 0.05% budget on ~99.4k equity. BOT_H is widened
+    to that floor on EVERY trade and realised 1.13x its intended risk; BOT_D reached the same
+    whenever the opening range was tight. volume_min is 0.01 on all four traded symbols and
+    never binds on this broker, so step granularity was the sole cause.
+
+    FLOOR, never nearest. Under-risking by less than one step is a rounding cost; over-risking
+    is a broken risk limit. If flooring lands below volume_min the trade is SKIPPED, because
+    the only alternative is to silently buy more risk than was authorised.
+    """
+    out = {"intended_risk_pct": intended_risk_pct, "volume": None, "per_lot": None,
+           "raw_volume": None, "realised_risk_dollars": None, "realised_risk_pct": None,
+           "ok": False, "reason": None}
+    step = getattr(info, "volume_step", 0.0) or 0.0
+    vmin = getattr(info, "volume_min", 0.0) or 0.0
+    vmax = getattr(info, "volume_max", None)
+    tick_value = getattr(info, "trade_tick_value", 0.0) or 0.0
+    tick_size = getattr(info, "trade_tick_size", 0.0) or 0.0
+    if not (stop_distance and tick_size and step and equity):
+        out["reason"] = "incomplete symbol economics or stop distance"
+        return out
+
+    per_lot = stop_distance * (tick_value / tick_size)
+    out["per_lot"] = per_lot
+    if per_lot <= 0:
+        out["reason"] = "non-positive risk per lot"
+        return out
+
+    money = equity * intended_risk_pct
+    raw = money / per_lot
+    out["raw_volume"] = raw
+    vol = math.floor(raw / step + 1e-9) * step            # FLOOR. never nearest, never up.
+    vol = round(vol, 8)
+
+    if vmax:
+        vol = min(vol, vmax)
+    contract = getattr(info, "trade_contract_size", 0) or 1
+    cap_mult = MAX_NOTIONAL_MULT if max_notional_mult is None else max_notional_mult
+    if entry_price and contract:
+        notional = vol * contract * entry_price
+        if notional > cap_mult * equity:
+            capped = (cap_mult * equity) / (contract * entry_price)
+            vol = math.floor(capped / step + 1e-9) * step
+            vol = round(vol, 8)
+            out["notional_capped"] = True
+
+    if vol < vmin - 1e-12 or vol <= 0:
+        # The ONLY honest outcome. Up-sizing to volume_min would buy risk nobody authorised.
+        out["reason"] = (f"minimum executable lot {vmin} implies "
+                         f"{(vmin * per_lot) / equity:.4%} risk, above the requested "
+                         f"{intended_risk_pct:.4%} -- skipped, never up-sized")
+        return out
+
+    realised = vol * per_lot
+    out.update({"volume": vol, "realised_risk_dollars": realised,
+                "realised_risk_pct": realised / equity, "ok": True,
+                "reason": "floored to volume_step"})
+    return out
+
+
+def realised_risk_of(row: dict, equity_fallback: float = None, info=None) -> float:
+    """The risk a ledger row can be PROVEN to carry, never less.
+
+    Rows written after TASK-0006 carry realised_risk_pct directly. Older rows carry only the
+    INTENDED figure, which is exactly the number that could understate reality -- so where the
+    row has enough to reconstruct the truth (volume, entry, stop, symbol economics) it is
+    recomputed, and the larger of proven and intended is used. Never the smaller.
+    """
+    r = row.get("realised_risk_pct")
+    if r is not None:
+        return float(r)
+    intended = float(row.get("risk_pct") or row.get("intended_risk_pct") or 0.0)
+    eq = float(row.get("account_equity") or equity_fallback or 0.0)
+    vol, entry, stop = row.get("volume"), row.get("entry"), row.get("stop")
+    if info is not None and vol and entry is not None and stop is not None and eq:
+        ts = getattr(info, "trade_tick_size", 0.0) or 0.0
+        tv = getattr(info, "trade_tick_value", 0.0) or 0.0
+        if ts:
+            proven = (abs(entry - stop) * (tv / ts) * float(vol)) / eq
+            return max(proven, intended)      # never read a legacy row as carrying LESS
+    return intended
+
+
 def desk_exposure(mt5, trades, known_strategies, magic=990001) -> dict:
     """What the desk ACTUALLY has at risk, per correlation group, plus anything it cannot explain.
 
@@ -409,7 +501,14 @@ def desk_exposure(mt5, trades, known_strategies, magic=990001) -> dict:
                            "detail": "ledger names a strategy this desk does not run"})
             continue
         g = correlation_group(bot)
-        per_group[g] = per_group.get(g, 0.0) + (row.get("risk_pct") or 0.0)
+        # REALISED, not intended. The intended figure is the one that could understate what the
+        # broker is actually holding, and a cap enforced on it is a cap enforced on a wish.
+        info = None
+        try:
+            info = mt5.symbol_info(pos.symbol)
+        except Exception:
+            info = None
+        per_group[g] = per_group.get(g, 0.0) + realised_risk_of(row, info=info)
 
     # ledger says open, broker does not hold it. reconcile() runs earlier in the same cycle, so
     # this is recorded explicitly by the caller and never treated as broker/ledger agreement.
@@ -464,7 +563,9 @@ def reconcile(mt5, magic=990001) -> int:
         d = sorted(deals, key=lambda x: x.time)
         net = sum(x.profit + x.swap + x.commission for x in d)
         exit_px = d[-1].price
-        risk_money = r["risk_pct"] * r["account_equity"]
+        # R against what was actually committed. Normalising by an intended figure the broker
+        # never honoured makes every R in the ledger wrong by the sizing error.
+        risk_money = realised_risk_of(r) * r["account_equity"]
         R = net / risk_money if risk_money else None
         dist = abs(r["entry"] - r["stop"])
         if abs(exit_px - r["target"]) < abs(exit_px - r["stop"]):
@@ -729,7 +830,7 @@ def challenge_anchors(acct, trades) -> dict:
     closed = {t["intent_id"] for t in trades if t.get("kind") == "close"}
     for t in by_ticket.values():
         if t["intent_id"] not in closed:
-            open_risk += t.get("risk_pct") or 0.0
+            open_risk += realised_risk_of(t)      # proven risk, never the intended figure
 
     return {"equity": float(acct.equity), "balance": float(acct.balance),
             "starting_balance": float(st["starting_balance"]),
@@ -1577,21 +1678,25 @@ def main():
             print(f"  {bot.strategy_id}: SIGNAL but VETOED -- {veto}"); continue
 
         info = mt5.symbol_info(bot.symbol)
-        money = st.equity * risk
-        per_lot = sig.risk_distance() * (info.trade_tick_value / info.trade_tick_size)
-        vol = max(info.volume_min,
-                  round(money / per_lot / info.volume_step) * info.volume_step)
-        contract = info.trade_contract_size or 1
-        notional = vol * contract * sig.entry_price
-        if notional > MAX_NOTIONAL_MULT * st.equity:
-            capped = (MAX_NOTIONAL_MULT * st.equity) / (contract * sig.entry_price)
-            capped = int(capped / info.volume_step) * info.volume_step
-            print(f"  {bot.strategy_id}: notional {notional:,.0f} > "
-                  f"{MAX_NOTIONAL_MULT}x equity -- volume {vol} -> {capped}")
-            vol = capped
-        if vol < info.volume_min:
-            print(f"  {bot.strategy_id}: SIGNAL but volume {vol} below min "
-                  f"{info.volume_min} after caps -- skipped"); continue
+        sized = size_position(st.equity, risk, sig.risk_distance(), info, sig.entry_price)
+        if not sized["ok"]:
+            print(f"  {bot.strategy_id}: SIGNAL but NOT SIZEABLE -- {sized['reason']}")
+            EV.emit("challenge_controller", "SIZE_SKIPPED", bot=bot.strategy_id,
+                    symbol=bot.symbol, intended_risk_pct=risk,
+                    raw_volume=sized.get("raw_volume"), volume_min=getattr(info, "volume_min", None),
+                    reason=sized["reason"])
+            EV.no_trade(bot, desk_now, f"not sizeable: {sized['reason']}", funded=False,
+                        had_candidate=True)
+            continue
+        vol = sized["volume"]
+        realised_pct = sized["realised_risk_pct"]
+        if sized.get("notional_capped"):
+            print(f"  {bot.strategy_id}: notional > {MAX_NOTIONAL_MULT}x equity -- volume reduced")
+        if realised_pct < risk:
+            print(f"  {bot.strategy_id}: volume floored to {vol} -- realised risk "
+                  f"{realised_pct:.4%} of an intended {risk:.4%} "
+                  f"(one {info.volume_step} step is worth "
+                  f"{sized['per_lot'] * info.volume_step / st.equity:.4%})")
         iid = intent_id(acct.login, bot.strategy_id, bot.symbol, sig.side, vol, sig.timestamp)
         print(f"  {bot.strategy_id}: SIGNAL side={sig.side:+d} entry={sig.entry_price:.2f} "
               f"sl={sig.stop_price:.2f} tp={sig.target_price:.2f} risk={risk:.3%} "
@@ -1611,7 +1716,12 @@ def main():
                "market_state": state, "shadows": shadow_verdicts,
                "strategy_version": bot.strategy_version, "timestamp": sig.timestamp,
                "symbol": bot.symbol, "side": sig.side, "entry": sig.entry_price,
-               "stop": sig.stop_price, "target": sig.target_price, "risk_pct": risk,
+               "stop": sig.stop_price, "target": sig.target_price,
+               "risk_pct": risk,                       # legacy field == intended, kept for readers
+               "intended_risk_pct": risk,
+               "realised_risk_pct": realised_pct,
+               "realised_risk_dollars": sized["realised_risk_dollars"],
+               "risk_per_lot": sized["per_lot"],
                "volume": vol, "account_equity": st.equity,
                "daily_loss_headroom": st.daily_headroom, "total_loss_headroom": st.total_headroom,
                "spread": ctx["ask"] - ctx["bid"], "reason_codes": sig.reason_codes,
@@ -1634,7 +1744,7 @@ def main():
         # The allocator computed the same arithmetic, but the allocator reasons about a plan
         # while this reasons about what the broker will actually be holding one call from now.
         grp = DESK.correlation_group(bot)
-        okgate, why = exposure_gate(sent_group, sent_total, grp, risk)
+        okgate, why = exposure_gate(sent_group, sent_total, grp, realised_pct)
         if not okgate:
             print(f"  {bot.strategy_id}: BLOCKED -- {why}")
             EV.emit("challenge_controller", "EXPOSURE_GATE_BLOCK", bot=bot.strategy_id,
@@ -1660,8 +1770,8 @@ def main():
                 requested_volume=float(vol), filled_volume=getattr(res, "volume", None),
                 sl=req["sl"], tp=req["tp"], risk_pct=risk, ts_london=str(desk_now))
         if rc == mt5.TRADE_RETCODE_DONE:
-            sent_group[grp] = sent_group.get(grp, 0.0) + risk
-            sent_total += risk
+            sent_group[grp] = sent_group.get(grp, 0.0) + realised_pct
+            sent_total += realised_pct
         pre["retcode"] = rc
         pre["fill"] = getattr(res, "price", None)
         pre["actual_slippage"] = (abs(pre["fill"] - sig.entry_price)
