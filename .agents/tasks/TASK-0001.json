@@ -1,0 +1,66 @@
+{
+  "task_id": "TASK-0001",
+  "created_at": "2026-08-14T12:04:46+00:00",
+  "originating_agent": "claude-code",
+  "assigned_role": "IMPLEMENTER",
+  "permission_level": 1,
+  "risk_level": "LOW",
+  "objective": "Add tests/test_desk_events_codes.py asserting that every pattern in desk_events.REASON_PATTERNS maps to a code that is neither UNMAPPED nor UNSPECIFIED, and that an unrecognised string maps to UNMAPPED.",
+  "rationale": "A no-trade reason with no code cannot be counted by the validator. This locks the mapping so a future reason cannot silently become uncountable.",
+  "base_commit": "0ddfa70715cc4cf411e35b4cca14c7dee406a27a",
+  "allowed_paths": [
+    "tests/**"
+  ],
+  "forbidden_paths": [
+    "challenge_controller.py",
+    "desk.py",
+    "trading_brain.py",
+    "bot_base.py",
+    "market_state.py",
+    "macro_context.py",
+    "shadows.py",
+    "desk_events.py",
+    "desk_orchestrator.py",
+    "config/**",
+    "data/**",
+    ".agents/policy.json",
+    "scripts/**"
+  ],
+  "read_only": false,
+  "required_tests": [
+    "tests/test_desk_events_codes.py"
+  ],
+  "acceptance_criteria": [
+    "the new test file exists and passes",
+    "the ENTIRE worktree (committed, staged, unstaged, untracked) touches only tests/**",
+    "no existing test file is modified",
+    "no new third-party dependency"
+  ],
+  "depends_on": [],
+  "status": "REVIEWED",
+  "lease_minutes": 60,
+  "claimed_by": "cline",
+  "head_commit": "674e52a8c632b9628c4b45b99de6a30b1373e10d",
+  "violations": [
+    {
+      "path": "docs/AI_CHANGELOG.md",
+      "rule": "NOT_ALLOWED",
+      "detail": "outside allowed_paths ['tests/**']"
+    },
+    {
+      "path": "docs/CURRENT_PROJECT_STATE.md",
+      "rule": "NOT_ALLOWED",
+      "detail": "outside allowed_paths ['tests/**']"
+    },
+    {
+      "path": "vault/11-Daily-Journal/2026-08-14.md",
+      "rule": "NOT_ALLOWED",
+      "detail": "outside allowed_paths ['tests/**']"
+    },
+    {
+      "path": "vault/AI-ChangeLog.md",
+      "rule": "NOT_ALLOWED",
+      "detail": "outside allowed_paths ['tests/**']"
+    }
+  ]
+}

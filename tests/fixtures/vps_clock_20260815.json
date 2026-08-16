@@ -1,0 +1,35 @@
+{
+  "_metadata": {
+    "id": "vps_clock_20260815",
+    "immutable": true,
+    "captured_from": "FTMO VPS, read-only MetaTrader5 probe, 2026-08-15",
+    "purpose": "Pin the exact production measurement in which a stale tick manufactured a current-looking desk clock.",
+    "proves": "Clock fabrication only. It makes no claim about trades, signals or allocation.",
+    "old_algorithm": {
+      "formula": "offset = round((tick.time - host_now_utc) / 3600)",
+      "derived_offset_h": -13,
+      "manufactured_desk_now_london": "2026-08-15 13:54:59+01:00",
+      "bar_vs_tick_gap_s": 52,
+      "reported_symptom": "HOST CLOCK is 5.9 min from the broker's"
+    },
+    "required_of_new_implementation": [
+      "must not return -13h",
+      "must not produce 2026-08-15 13:54:59+01:00",
+      "must report FEED_STALE",
+      "must not permit new entries"
+    ]
+  },
+  "observation": {
+    "latest_tick_raw_epoch_utc": "2026-08-14T23:54:59Z",
+    "host_now_utc": "2026-08-15T12:56:34Z",
+    "true_broker_offset_h": 3,
+    "per_symbol_raw_ticks_utc": {
+      "XAUUSD": "2026-08-14T23:49:52Z",
+      "EURUSD": "2026-08-14T23:54:59Z",
+      "USDJPY": "2026-08-14T23:54:45Z",
+      "GBPUSD": "2026-08-14T23:54:59Z",
+      "US100.cash": "2026-08-14T23:49:59Z"
+    },
+    "staleness_s": 46895
+  }
+}

@@ -20,8 +20,11 @@ COMPONENTS, NOT A VERDICT
 from __future__ import annotations
 
 import argparse
+import json
 import math
-from datetime import datetime
+import os
+from datetime import datetime, timezone
+from pathlib import Path
 
 LONDON = "Europe/London"
 TFS = {"D1": "TIMEFRAME_D1", "H4": "TIMEFRAME_H4", "H1": "TIMEFRAME_H1",
@@ -31,6 +34,273 @@ DUR = {"D1": "1D", "H4": "4h", "H1": "1h", "M15": "15min", "M5": "5min", "M1": "
 
 
 _OFFSET_CACHE = {}
+
+# ==================================================================== clock safety (TASK-0005)
+# THE DEFECT THIS REPLACES. broker_utc_offset() computed `tick.time - host_now` and rounded it
+# to hours. That is a TIMEZONE only while the tick is CURRENT. The moment the feed freezes it
+# measures TIMEZONE MINUS STALENESS, and to_london() then subtracts the same value back out, so
+# the staleness cancels itself and an arbitrarily old tick yields a current-looking clock.
+#
+# Measured on the VPS 2026-08-15: freshest tick 2026-08-14 23:54:59, host 12:56:34 UTC,
+# offset -13h, desk_now 2026-08-15 13:54:59 London -- from 14-hour-old data. All three guards
+# passed: fresh_m1_data compared a stale bar against a stale tick (52s apart), the +/-14h
+# sanity band contained -13h, and the leftover 5.9 min was printed as a host NTP warning.
+#
+# THE RULE. A potentially stale market timestamp may never both establish its own timezone
+# interpretation and prove its own freshness. The trusted offset is an INPUT to the freshness
+# test and can never be an OUTPUT of it.
+CLOCK_STATE_PATH = Path(__file__).resolve().parent / "data" / "logs" / "clock_state.json"
+CLOCK_SCHEMA = 1
+
+HOST_DRIFT_TOLERANCE_S       = 300
+FEED_LATENCY_ALLOWANCE_S     = 60
+FEED_MAX_AGE_S               = 360
+FEED_MAX_FUTURE_S            = 60      # a tick may be OLD; it may never be from the FUTURE
+FEED_NO_ADVANCE_S            = 120     # ELAPSED host time is trustworthy when ABSOLUTE is not
+BOOTSTRAP_MIN_OBSERVATIONS   = 3
+BOOTSTRAP_MIN_SPAN_S         = 120
+TRUSTED_OFFSET_MAX_AGE_S     = 86400
+OFFSET_MIN_CHANGE_INTERVAL_S = 3600
+EXPECTED_OFFSETS_H           = (2, 3)  # FTMO-Demo and Pepperstone-Demo are both EET/EEST
+
+# Freshness is measured against host UTC, so a host wrong by more than the tolerance would make
+# a LIVE feed fail the absolute test. There is no independent clock source on this host, so the
+# two constants must be provably compatible or the states contradict each other.
+assert HOST_DRIFT_TOLERANCE_S + FEED_LATENCY_ALLOWANCE_S <= FEED_MAX_AGE_S
+
+CLOCK_STATE_CORRUPT          = "CLOCK_STATE_CORRUPT"
+BOOTSTRAPPING                = "BOOTSTRAPPING"
+FEED_FRESH                   = "FEED_FRESH"
+FEED_STALE                   = "FEED_STALE"
+OFFSET_REVALIDATION_REQUIRED = "OFFSET_REVALIDATION_REQUIRED"
+HOST_CLOCK_UNTRUSTED         = "HOST_CLOCK_UNTRUSTED"
+
+
+def _blank_clock_state() -> dict:
+    return {"schema_version": CLOCK_SCHEMA, "trusted_offset_h": None, "offset_at": None,
+            "last_ts": None, "last_seen": None, "obs": [], "state": None,
+            "offset_changed_at": None}
+
+
+def _load_clock_state(path):
+    """Returns (state, error). A corrupt file is NEVER repaired into a permissive value."""
+    p = Path(path)
+    if not p.exists():
+        return None, "missing"
+    try:
+        st = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return None, "corrupt"
+    if not isinstance(st, dict) or st.get("schema_version") != CLOCK_SCHEMA:
+        return None, "corrupt"
+    types = (("trusted_offset_h", (int, type(None))), ("offset_at", (float, int, type(None))),
+             ("last_ts", (int, float, type(None))), ("last_seen", (float, int, type(None))),
+             ("obs", list), ("state", (str, type(None))),
+             ("offset_changed_at", (float, int, type(None))))
+    for key, allowed in types:
+        if key not in st or not isinstance(st[key], allowed):
+            return None, "corrupt"
+    if st["trusted_offset_h"] is not None and st["trusted_offset_h"] not in EXPECTED_OFFSETS_H:
+        return None, "corrupt"          # an impossible persisted offset is corruption
+    return st, None
+
+
+def _save_clock_state(path, st) -> None:
+    """Atomic. os.replace is atomic on Windows and POSIX alike, so a crash mid-write leaves
+    either the old valid state or the new one, never a truncated file."""
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_suffix(p.suffix + ".tmp")
+    with tmp.open("w", encoding="utf-8") as f:
+        json.dump(st, f)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(str(tmp), str(p))
+
+
+def _advancement_proved(obs) -> bool:
+    """3+ STRICTLY increasing market timestamps spanning >= BOOTSTRAP_MIN_SPAN_S of host time.
+    This is the only timezone-free proof that a feed is alive: it uses DIFFERENCES only, so it
+    is immune to both the broker offset and to absolute host error."""
+    if len(obs) < BOOTSTRAP_MIN_OBSERVATIONS:
+        return False
+    w = obs[-BOOTSTRAP_MIN_OBSERVATIONS:]
+    if any(w[i + 1][0] <= w[i][0] for i in range(len(w) - 1)):
+        return False
+    return (w[-1][1] - w[0][1]) >= BOOTSTRAP_MIN_SPAN_S
+
+
+def market_timestamps(mt5) -> dict:
+    """Raw broker tick epoch per CLOCK_SYMBOL. None where unavailable."""
+    out = {}
+    for sym in CLOCK_SYMBOLS:
+        try:
+            if not mt5.symbol_select(sym, True):
+                out[sym] = None
+                continue
+            t = mt5.symbol_info_tick(sym)
+            out[sym] = int(t.time) if (t and t.time) else None
+        except Exception:
+            out[sym] = None
+    return out
+
+
+def clock_state(mt5, host_now=None, path=None) -> dict:
+    """The ONE clock/freshness verdict for a cycle. Exactly one state holds.
+
+    Order is the fail-closed proof: staleness is decided before any offset question, so a
+    frozen feed can never be re-interpreted as a timezone change.
+    """
+    from datetime import datetime as _dt, timezone as _tz
+    path = CLOCK_STATE_PATH if path is None else path
+    host_now = float(_dt.now(_tz.utc).timestamp()) if host_now is None else float(host_now)
+
+    st, err = _load_clock_state(path)
+    if err == "corrupt":
+        try:
+            os.replace(str(path), f"{path}.corrupt.{int(host_now)}")
+        except Exception:
+            pass
+        _save_clock_state(path, _blank_clock_state())
+        return {"state": CLOCK_STATE_CORRUPT, "entries": False, "offset_h": None,
+                "reason": "clock state unreadable; preserved aside, bootstrap required"}
+    if st is None:
+        st = _blank_clock_state()
+        _save_clock_state(path, st)
+
+    stamps = market_timestamps(mt5)
+    live = [v for v in stamps.values() if v]
+    if not live:
+        if st.get("last_seen") is None:
+            st["last_seen"] = host_now
+        _save_clock_state(path, st)
+        return {"state": FEED_STALE, "entries": False, "offset_h": st.get("trusted_offset_h"),
+                "reason": "no tick available from any CLOCK_SYMBOL", "stamps": stamps}
+    market_ts = max(live)
+
+    prev_ts, prev_seen = st.get("last_ts"), st.get("last_seen")
+    advanced = prev_ts is None or market_ts > prev_ts
+    backward = prev_ts is not None and market_ts < prev_ts
+    elapsed = 0.0 if prev_seen is None else host_now - prev_seen
+    # FROZEN and BACKWARD are different observations and must not collapse:
+    #   market_ts == last_ts -> the feed stopped        -> FEED_STALE
+    #   market_ts <  last_ts -> the timeline moved      -> OFFSET_REVALIDATION_REQUIRED
+    stalled = (not advanced) and (not backward) and elapsed > FEED_NO_ADVANCE_S
+    if advanced or backward:
+        st["last_ts"], st["last_seen"] = market_ts, host_now
+
+    def enter(state):
+        """The proof window belongs to ONE state. Without this a pre-freeze window let a FROZEN
+        feed satisfy the advancement proof and adopt an offset -- the simulation caught it."""
+        if st.get("state") != state:
+            st["state"], st["obs"] = state, []
+        st["obs"] = (st["obs"] + [[market_ts, host_now]])[-8:]
+
+    def out(state, reason, entries=False, **kw):
+        _save_clock_state(path, st)
+        return {"state": state, "entries": entries, "reason": reason,
+                "offset_h": st.get("trusted_offset_h"), "stamps": stamps,
+                "market_ts": market_ts, **kw}
+
+    trusted = st.get("trusted_offset_h")
+    oat = st.get("offset_at")
+    expired = trusted is not None and (oat is None or host_now - float(oat) > TRUSTED_OFFSET_MAX_AGE_S)
+
+    # ---- no usable trusted offset: BOOTSTRAPPING, blocked, advancement proof first.
+    # The circle is broken because liveness is proved by ADVANCEMENT ACROSS TIME while the
+    # offset is derived from a SINGLE ABSOLUTE DIFFERENCE -- two different measurements.
+    if trusted is None or expired:
+        if expired:
+            st["trusted_offset_h"] = st["offset_at"] = None
+        enter(BOOTSTRAPPING)
+        if not _advancement_proved(st["obs"]):
+            return out(BOOTSTRAPPING, "awaiting advancement proof")
+        cand = int(round((market_ts - host_now) / 3600.0))
+        if cand not in EXPECTED_OFFSETS_H:
+            return out(BOOTSTRAPPING, f"candidate {cand:+d}h not in {EXPECTED_OFFSETS_H}")
+        resid = (market_ts - host_now) - cand * 3600.0
+        if abs(resid) > HOST_DRIFT_TOLERANCE_S:      # sub-hour part: host drift, not timezone
+            return out(HOST_CLOCK_UNTRUSTED,
+                       f"residual {resid:+.0f}s exceeds {HOST_DRIFT_TOLERANCE_S}s", resid=resid)
+        st["trusted_offset_h"], st["offset_at"] = cand, host_now
+        st["offset_changed_at"] = host_now
+        st["last_ts"], st["last_seen"] = market_ts, host_now
+        return out(BOOTSTRAPPING, f"offset {cand:+d}h adopted; re-evaluating next cycle")
+
+    if stalled:
+        enter(FEED_STALE)
+        return out(FEED_STALE, f"no advancement for {elapsed:.0f}s")
+
+    # HOST BEFORE OFFSET. The sub-hour part of the raw difference is host drift no matter which
+    # hour is correct -- this is clock_skew()'s formula -- so it stays small across a legitimate
+    # DST step and large under real host error. Testing it first keeps the two diagnostics
+    # cleanly separated: a stale feed is a broker/network/terminal problem, an untrusted host is
+    # a Windows/NTP problem, and an operator must not be sent to the wrong one. Staleness is
+    # already decided above, so this can never mask a dead feed.
+    raw = market_ts - host_now
+    resid = raw - round(raw / 3600.0) * 3600.0
+    if abs(resid) > HOST_DRIFT_TOLERANCE_S:
+        enter(HOST_CLOCK_UNTRUSTED)
+        return out(HOST_CLOCK_UNTRUSTED,
+                   f"host residual {resid:+.0f}s exceeds {HOST_DRIFT_TOLERANCE_S}s", resid=resid)
+
+    age = host_now - (market_ts - trusted * 3600.0)
+    if backward or not (-FEED_MAX_FUTURE_S <= age <= FEED_MAX_AGE_S):
+        enter(OFFSET_REVALIDATION_REQUIRED)
+        if not _advancement_proved(st["obs"]):
+            return out(OFFSET_REVALIDATION_REQUIRED,
+                       f"age {age:+.0f}s out of band; awaiting advancement proof", age=age)
+        cand = int(round((market_ts - host_now) / 3600.0))
+        if cand not in EXPECTED_OFFSETS_H:
+            return out(OFFSET_REVALIDATION_REQUIRED,
+                       f"candidate {cand:+d}h implausible; keeping {trusted:+d}h")
+        if cand == trusted:
+            return out(HOST_CLOCK_UNTRUSTED,
+                       f"offset confirmed {cand:+d}h; residual {resid:+.0f}s is the host",
+                       resid=resid)
+        if abs(cand - trusted) != 1:
+            return out(OFFSET_REVALIDATION_REQUIRED,
+                       f"candidate {cand:+d}h is not a 1h step from {trusted:+d}h")
+        since = host_now - float(st.get("offset_changed_at") or 0.0)
+        if since < OFFSET_MIN_CHANGE_INTERVAL_S:
+            return out(OFFSET_REVALIDATION_REQUIRED,
+                       f"offset changed {since / 3600:.1f}h ago; minimum interval not met")
+        st["trusted_offset_h"], st["offset_at"] = cand, host_now
+        st["offset_changed_at"] = host_now
+        st["last_ts"], st["last_seen"] = market_ts, host_now
+        return out(OFFSET_REVALIDATION_REQUIRED,
+                   f"DST {trusted:+d}h -> {cand:+d}h adopted; re-evaluating next cycle")
+
+    enter(FEED_FRESH)
+    st["offset_at"] = host_now
+    return out(FEED_FRESH, "feed advancing, age in band, host within tolerance",
+               entries=True, age=age, resid=resid)
+
+
+def symbol_feed_fresh(mt5, symbol, host_now=None, path=None) -> tuple:
+    """Per-symbol gate for the TRADED instrument. A GLOBAL clock built from the freshest tick
+    across five symbols stays FEED_FRESH while one instrument's own feed is frozen, and the bot
+    trading it would evaluate stale bars and reach order_send. Global freshness is not enough.
+    """
+    from datetime import datetime as _dt, timezone as _tz
+    host_now = float(_dt.now(_tz.utc).timestamp()) if host_now is None else float(host_now)
+    st, err = _load_clock_state(CLOCK_STATE_PATH if path is None else path)
+    trusted = None if err else st.get("trusted_offset_h")
+    if trusted is None:
+        return False, "no trusted offset"
+    try:
+        t = mt5.symbol_info_tick(symbol)
+        ts = int(t.time) if (t and t.time) else None
+    except Exception:
+        ts = None
+    if ts is None:
+        return False, f"no tick for {symbol}"
+    age = host_now - (ts - trusted * 3600.0)
+    if not (-FEED_MAX_FUTURE_S <= age <= FEED_MAX_AGE_S):
+        return False, f"{symbol} feed is {age:+.0f}s old"
+    return True, f"{symbol} feed {age:+.0f}s"
+
+
 
 
 def broker_utc_offset(mt5, symbol="XAUUSD"):
@@ -43,6 +313,12 @@ def broker_utc_offset(mt5, symbol="XAUUSD"):
     Measured, not hardcoded -- brokers change offset with DST and this must not need a code
     change twice a year.
 
+    TASK-0005: this no longer MEASURES anything. It returns the offset that was established
+    earlier, on a feed independently proven live, and persisted. Deriving it from the current
+    tick is exactly the defect being repaired -- see clock_state() above. Zero is returned when
+    no trusted offset exists, and clock_state() blocks new entries in that condition, so an
+    unverified offset can only ever reach diagnostics.
+
     ROUNDED TO THE HOUR, and the evidence says that is right. Broker offsets are whole hours
     (FTMO is UTC+2/+3 by season). The HOST is the unreliable clock: this VPS drifted -133s ->
     -209s -> -304s across three runs despite NTP, which is normal on a hypervisor guest whose
@@ -54,17 +330,11 @@ def broker_utc_offset(mt5, symbol="XAUUSD"):
     precise. The residual is reported by clock_skew() as a host-health signal.
     """
     import pandas as pd
-    from datetime import datetime, timezone
     if "off" in _OFFSET_CACHE:
         return _OFFSET_CACHE["off"]
-    off = pd.Timedelta(0)
-    try:
-        tick = mt5.symbol_info_tick(symbol)
-        if tick and tick.time:
-            delta = tick.time - datetime.now(timezone.utc).timestamp()
-            off = pd.Timedelta(hours=round(delta / 3600))
-    except Exception:
-        pass
+    st, err = _load_clock_state(CLOCK_STATE_PATH)
+    h = None if err else st.get("trusted_offset_h")
+    off = pd.Timedelta(hours=h) if h is not None else pd.Timedelta(0)
     _OFFSET_CACHE["off"] = off
     return off
 

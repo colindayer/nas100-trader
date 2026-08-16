@@ -189,17 +189,37 @@ def correlation_group(bot) -> str:
     return getattr(bot, "playbook", "UNGROUPED")
 
 
-def allocate(bots, opportunities_by_symbol: dict, risk_of, challenge_state,
-             group_cap=0.0015, total_cap=0.0075, beliefs=None) -> dict:
-    """Bots propose, the CIO allocates. Ranks by expected utility and ALWAYS funds the best
-    eligible specialist at minimum experimental risk.
+# ONE definition of capacity. The pre-send gate in challenge_controller imports these, so the
+# allocator's plan and the gate that guards order_send can never drift apart.
+GROUP_CAP = 0.0015
+TOTAL_CAP = 0.0075
 
-    The desk is paid to decide under uncertainty. Freezing because no specialist is a perfect
-    match returns zero information and zero P&L; a 0.05% probe returns one observation. Only
-    HARD safety reasons stop a trade: wrong regime for the specialist, correlated-group cap,
-    total risk cap, or a challenge-drawdown veto.
+
+def allocate(bots, opportunities_by_symbol: dict, risk_of, challenge_state,
+             group_cap=GROUP_CAP, total_cap=TOTAL_CAP, beliefs=None, open_group_risk=None,
+             candidates=None) -> dict:
+    """Bots propose, the CIO allocates -- but only among bots that HAVE something to propose.
+
+    THE DEFECT THIS FIXES. The cap used to be applied here, before any bot had been asked
+    whether a setup existed, so a bot holding budget it could never use denied another bot the
+    chance to LOOK. Measured on 2026-08-14: C and E were refused observation on 856/856 cycles
+    while A held budget for 305 of them reporting FIRST_BREAK_ALREADY_OCCURRED -- it takes one
+    trade a day and had already refused that day's only setup.
+
+    `candidates` is the set of strategy_ids that produced a real signal this cycle. When it is
+    supplied, only those compete for capacity; everyone else is eligible-but-idle and consumes
+    nothing. When it is None the old behaviour is preserved, so eligibility can still be asked
+    on its own before any signal exists.
+
+    `open_group_risk` is risk ALREADY LIVE at the broker, per playbook. It used to be ignored
+    entirely -- group_used started empty every cycle, so an open breakout position consumed no
+    group capacity at all.
+
+    CIO remains the sole allocator. Only the population being ranked has changed.
     """
-    decisions, group_used, total = {}, {}, 0.0
+    decisions, total = {}, 0.0
+    group_used = dict(open_group_risk or {})
+    total = sum(group_used.values())
     beliefs = beliefs or {}
     scored = []
     for bot in bots:
@@ -209,6 +229,13 @@ def allocate(bots, opportunities_by_symbol: dict, risk_of, challenge_state,
         if not ok:
             decisions[bot.strategy_id] = {"allow": False, "risk": 0.0, "reason": why,
                                           "utility": 0.0}
+            continue
+        if candidates is not None and bot.strategy_id not in candidates:
+            # eligible, observed, produced nothing. Consumes ZERO capacity -- it is not
+            # competing, so it must not be ranked and must not hold budget.
+            decisions[bot.strategy_id] = {"allow": False, "risk": 0.0, "utility": u["score"],
+                                          "no_candidate": True,
+                                          "reason": "eligible but produced no candidate"}
             continue
         scored.append((u["score"], bot, u))
     scored.sort(key=lambda x: -x[0])

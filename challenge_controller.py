@@ -339,6 +339,185 @@ def trend_context(mt5, symbol, price) -> dict:
         return {"trend": "unknown", "error": str(e)}
 
 
+def exposure_gate(sent_group: dict, sent_total: float, group: str, risk: float,
+                  group_cap=None, total_cap=None) -> tuple[bool, str]:
+    """The arithmetic that must hold at EVERY order_send:
+
+        already live + already sent this cycle + this order  <=  applicable caps
+
+    Separate from allocate() on purpose. The allocator reasons about a plan; this reasons about
+    what the broker will be holding one call from now, and it is the last thing to run before
+    the only order_send on this desk.
+    """
+    import desk as _D
+    gc = _D.GROUP_CAP if group_cap is None else group_cap
+    tc = _D.TOTAL_CAP if total_cap is None else total_cap
+    g_after, t_after = sent_group.get(group, 0.0) + risk, sent_total + risk
+    if g_after > gc + 1e-12:
+        return False, (f"pre-send exposure gate: {group} would reach {g_after:.4%} "
+                       f"of {gc:.4%} group cap")
+    if t_after > tc + 1e-12:
+        return False, (f"pre-send exposure gate: desk would reach {t_after:.4%} "
+                       f"of {tc:.4%} total cap")
+    return True, "within caps"
+
+
+def size_position(equity: float, intended_risk_pct: float, stop_distance: float,
+                  info, entry_price: float, max_notional_mult: float = None) -> dict:
+    """Turn a risk budget into an executable volume that can NEVER imply more risk than asked.
+
+    THE DEFECT THIS REPLACES. Volume was rounded to the NEAREST volume_step and floored at
+    volume_min:  vol = max(volume_min, round(money/per_lot/step) * step).  Rounding to nearest
+    goes UP half the time, and the ledger recorded the INTENDED risk regardless -- so exposure
+    accounting, both caps and R all read a number the broker never honoured.
+
+    Measured on FTMO-Demo 1514166963 (2026-08-16): one XAUUSD volume_step of 0.01 is $14.10 at
+    the 14.10 floor stop, which is 28.4% of a 0.05% budget on ~99.4k equity. BOT_H is widened
+    to that floor on EVERY trade and realised 1.13x its intended risk; BOT_D reached the same
+    whenever the opening range was tight. volume_min is 0.01 on all four traded symbols and
+    never binds on this broker, so step granularity was the sole cause.
+
+    FLOOR, never nearest. Under-risking by less than one step is a rounding cost; over-risking
+    is a broken risk limit. If flooring lands below volume_min the trade is SKIPPED, because
+    the only alternative is to silently buy more risk than was authorised.
+    """
+    out = {"intended_risk_pct": intended_risk_pct, "volume": None, "per_lot": None,
+           "raw_volume": None, "realised_risk_dollars": None, "realised_risk_pct": None,
+           "ok": False, "reason": None}
+    step = getattr(info, "volume_step", 0.0) or 0.0
+    vmin = getattr(info, "volume_min", 0.0) or 0.0
+    vmax = getattr(info, "volume_max", None)
+    tick_value = getattr(info, "trade_tick_value", 0.0) or 0.0
+    tick_size = getattr(info, "trade_tick_size", 0.0) or 0.0
+    if not (stop_distance and tick_size and step and equity):
+        out["reason"] = "incomplete symbol economics or stop distance"
+        return out
+
+    per_lot = stop_distance * (tick_value / tick_size)
+    out["per_lot"] = per_lot
+    if per_lot <= 0:
+        out["reason"] = "non-positive risk per lot"
+        return out
+
+    money = equity * intended_risk_pct
+    raw = money / per_lot
+    out["raw_volume"] = raw
+    vol = math.floor(raw / step + 1e-9) * step            # FLOOR. never nearest, never up.
+    vol = round(vol, 8)
+
+    if vmax:
+        vol = min(vol, vmax)
+    contract = getattr(info, "trade_contract_size", 0) or 1
+    cap_mult = MAX_NOTIONAL_MULT if max_notional_mult is None else max_notional_mult
+    if entry_price and contract:
+        notional = vol * contract * entry_price
+        if notional > cap_mult * equity:
+            capped = (cap_mult * equity) / (contract * entry_price)
+            vol = math.floor(capped / step + 1e-9) * step
+            vol = round(vol, 8)
+            out["notional_capped"] = True
+
+    if vol < vmin - 1e-12 or vol <= 0:
+        # The ONLY honest outcome. Up-sizing to volume_min would buy risk nobody authorised.
+        out["reason"] = (f"minimum executable lot {vmin} implies "
+                         f"{(vmin * per_lot) / equity:.4%} risk, above the requested "
+                         f"{intended_risk_pct:.4%} -- skipped, never up-sized")
+        return out
+
+    realised = vol * per_lot
+    out.update({"volume": vol, "realised_risk_dollars": realised,
+                "realised_risk_pct": realised / equity, "ok": True,
+                "reason": "floored to volume_step"})
+    return out
+
+
+def realised_risk_of(row: dict, equity_fallback: float = None, info=None) -> float:
+    """The risk a ledger row can be PROVEN to carry, never less.
+
+    Rows written after TASK-0006 carry realised_risk_pct directly. Older rows carry only the
+    INTENDED figure, which is exactly the number that could understate reality -- so where the
+    row has enough to reconstruct the truth (volume, entry, stop, symbol economics) it is
+    recomputed, and the larger of proven and intended is used. Never the smaller.
+    """
+    r = row.get("realised_risk_pct")
+    if r is not None:
+        return float(r)
+    intended = float(row.get("risk_pct") or row.get("intended_risk_pct") or 0.0)
+    eq = float(row.get("account_equity") or equity_fallback or 0.0)
+    vol, entry, stop = row.get("volume"), row.get("entry"), row.get("stop")
+    if info is not None and vol and entry is not None and stop is not None and eq:
+        ts = getattr(info, "trade_tick_size", 0.0) or 0.0
+        tv = getattr(info, "trade_tick_value", 0.0) or 0.0
+        if ts:
+            proven = (abs(entry - stop) * (tv / ts) * float(vol)) / eq
+            return max(proven, intended)      # never read a legacy row as carrying LESS
+    return intended
+
+
+def desk_exposure(mt5, trades, known_strategies, magic=990001) -> dict:
+    """What the desk ACTUALLY has at risk, per correlation group, plus anything it cannot explain.
+
+    MT5 is authoritative for whether exposure EXISTS. The ledger supplies attribution: which
+    strategy owns it and what risk was intended. Neither alone suffices -- the broker does not
+    know our playbooks, and the ledger does not know what the broker is holding.
+
+    Unattributable exposure is never counted as zero. It halts new ENTRIES for the cycle; it
+    never touches an existing position, and time_exits() runs before this and is unaffected.
+    """
+    from desk import correlation_group
+    by_ticket, faults, seen = {}, [], {}
+    closed = {t["intent_id"] for t in trades if t.get("kind") == "close"}
+    for t in trades:
+        if t.get("kind") == "close" or not t.get("ticket") or t["intent_id"] in closed:
+            continue
+        tk = t["ticket"]
+        if tk in seen:
+            faults.append({"code": "DUPLICATE_TICKET", "ticket": tk,
+                           "detail": f"ticket claimed by {seen[tk]} and {t['intent_id']}"})
+        seen[tk] = t["intent_id"]
+        by_ticket[tk] = t
+
+    live = [p for p in (mt5.positions_get() or []) if p.magic == magic]
+    pending = [o for o in (mt5.orders_get() or []) if getattr(o, "magic", None) == magic]
+    if pending:
+        # this desk only ever sends TRADE_ACTION_DEAL at market, so a pending order carrying
+        # our magic means something outside the desk is acting with the desk's identity.
+        faults.append({"code": "UNEXPECTED_PENDING_ORDER",
+                       "tickets": [o.ticket for o in pending]})
+
+    per_group, live_tickets = {}, set()
+    for pos in live:
+        live_tickets.add(pos.ticket)
+        row = by_ticket.get(pos.ticket)
+        if row is None:
+            faults.append({"code": "EXPOSURE_UNRECONCILED", "ticket": pos.ticket,
+                           "symbol": pos.symbol,
+                           "detail": "broker position on the desk magic has no open ledger row"})
+            continue
+        bot = known_strategies.get(row.get("strategy_id"))
+        if bot is None:
+            faults.append({"code": "UNKNOWN_STRATEGY", "ticket": pos.ticket,
+                           "strategy_id": row.get("strategy_id"),
+                           "detail": "ledger names a strategy this desk does not run"})
+            continue
+        g = correlation_group(bot)
+        # REALISED, not intended. The intended figure is the one that could understate what the
+        # broker is actually holding, and a cap enforced on it is a cap enforced on a wish.
+        info = None
+        try:
+            info = mt5.symbol_info(pos.symbol)
+        except Exception:
+            info = None
+        per_group[g] = per_group.get(g, 0.0) + realised_risk_of(row, info=info)
+
+    # ledger says open, broker does not hold it. reconcile() runs earlier in the same cycle, so
+    # this is recorded explicitly by the caller and never treated as broker/ledger agreement.
+    ahead = sorted(tk for tk in by_ticket if tk not in live_tickets)
+    return {"per_group": per_group, "total": sum(per_group.values()),
+            "faults": faults, "ledger_ahead_of_broker": ahead,
+            "open_tickets": sorted(live_tickets)}
+
+
 # ==================================================================== reconciliation
 OPEN_STATE = DATA / "open_positions.json"
 
@@ -384,7 +563,9 @@ def reconcile(mt5, magic=990001) -> int:
         d = sorted(deals, key=lambda x: x.time)
         net = sum(x.profit + x.swap + x.commission for x in d)
         exit_px = d[-1].price
-        risk_money = r["risk_pct"] * r["account_equity"]
+        # R against what was actually committed. Normalising by an intended figure the broker
+        # never honoured makes every R in the ledger wrong by the sizing error.
+        risk_money = realised_risk_of(r) * r["account_equity"]
         R = net / risk_money if risk_money else None
         dist = abs(r["entry"] - r["stop"])
         if abs(exit_px - r["target"]) < abs(exit_px - r["stop"]):
@@ -523,15 +704,17 @@ def preflight(mt5, acct, trades) -> list:
           "AlgoTrading is OFF in the terminal -- every order will retcode 10027")
     check("mt5_connected", term is not None and term.connected, "terminal not connected")
 
+    # TASK-0005. The offset is no longer measured here; it is whatever was established on a
+    # feed proven live and persisted. An absent offset is NORMAL during bootstrap and must not
+    # be a desk fault, because preflight failure would skip time_exits() and reconcile() below.
     off = MS.broker_utc_offset(mt5, "XAUUSD")
-    check("broker_offset_sane", pd.Timedelta(hours=-14) <= off <= pd.Timedelta(hours=14),
-          f"offset {off} is implausible")
-    skew = MS.clock_skew(mt5, "XAUUSD")
-    if abs(skew.total_seconds()) > 120 and False:
-        # a WARNING, not a fault: the conversion is self-consistent either way, but a host
-        # clock minutes off true time shifts every session window by that much.
-        print(f"  ! CLOCK SKEW {skew.total_seconds():+.0f}s from a quarter-hour boundary "
-              f"-- run 'w32tm /resync' on this host; session windows are shifted by this much")
+    if off != pd.Timedelta(0):
+        check("broker_offset_sane",
+              int(off.total_seconds() // 3600) in MS.EXPECTED_OFFSETS_H,
+              f"offset {off} is not one of {MS.EXPECTED_OFFSETS_H}")
+    # The old duplicate `and False` skew branch is REMOVED, not deferred: clock_skew() computes
+    # exactly the residual that HOST_CLOCK_UNTRUSTED now acts on, and two gates reading the same
+    # measurement -- one dead, one live -- is how a check silently stops meaning anything.
 
     r = mt5.copy_rates_from_pos("XAUUSD", mt5.TIMEFRAME_M1, 0, 5)
     check("xauusd_available", r is not None and len(r) > 0, "no XAUUSD M1 data")
@@ -540,7 +723,13 @@ def preflight(mt5, acct, trades) -> list:
         bnow = MS.broker_now_london(mt5, "XAUUSD")
         age = abs((bnow - bar).total_seconds())
         # measured against the BROKER's own clock, so host drift cannot fail this
-        check("fresh_m1_data", age < 900, f"newest M1 bar is {age/60:.0f} minutes old")
+        # fresh_m1_data REMOVED. It compared the newest bar against the newest TICK, both
+        # broker-stamped and both converted with the same offset, so they froze together: the
+        # production measurement was 52s against a 14-hour-old feed. Freshness is now decided
+        # by MS.clock_state() AFTER time_exits() and reconcile(), so a dead feed can never
+        # stop position management. `age` is kept as a reported diagnostic only.
+        print(f"  bar-vs-tick gap {age:.0f}s (diagnostic only; freshness is decided by "
+              f"clock_state after exits and reconciliation)")
         host_gap = abs((pd.Timestamp.now(tz="Europe/London") - bnow).total_seconds())
         if host_gap > 120:
             print(f"  ! HOST CLOCK is {host_gap/60:.1f} min from the broker's. Session windows "
@@ -641,7 +830,7 @@ def challenge_anchors(acct, trades) -> dict:
     closed = {t["intent_id"] for t in trades if t.get("kind") == "close"}
     for t in by_ticket.values():
         if t["intent_id"] not in closed:
-            open_risk += t.get("risk_pct") or 0.0
+            open_risk += realised_risk_of(t)      # proven risk, never the intended figure
 
     return {"equity": float(acct.equity), "balance": float(acct.balance),
             "starting_balance": float(st["starting_balance"]),
@@ -1261,6 +1450,24 @@ def main():
         if nc:
             print(f"RECONCILED {nc} closed position(s)")
 
+    # ==== TASK-0005 ENTRY FRESHNESS GATE ====================================================
+    # Deliberately placed AFTER time_exits() and reconcile(). Those two protect open positions
+    # and neither consumes the repaired value -- time_exits() runs on the host clock and the
+    # ledger, reconcile() reads broker deals -- so losing clock confidence must never reach
+    # them. Everything below this gate is NEW ENTRIES only.
+    import market_state as MS
+    _clock = MS.clock_state(mt5)
+    _EV.emit("challenge_controller", "CLOCK_STATE", state=_clock["state"],
+             entries_permitted=_clock["entries"], offset_h=_clock.get("offset_h"),
+             reason=_clock["reason"], age_s=_clock.get("age"), residual_s=_clock.get("resid"),
+             market_ts=_clock.get("market_ts"))
+    print(f"  CLOCK {_clock['state']}: {_clock['reason']}")
+    if not _clock["entries"]:
+        print("  NO NEW ENTRIES THIS CYCLE -- a trustworthy current market clock could not be "
+              "established. Open positions keep their broker stops; exits and reconciliation "
+              "have already run.")
+        mt5.shutdown(); return
+
     try:                                   # the Brain ingests before the desk decides
         from trading_brain import learn
         n = learn()
@@ -1318,26 +1525,52 @@ def main():
                    for b in BOTS}
     except Exception:
         beliefs = {}
-    plan = DESK.allocate(BOTS, opp_by_symbol, lambda b: risk_for(b, st_), st_,
-                         beliefs=beliefs)
-    print(f"\n  CIO: {sum(1 for d in plan['decisions'].values() if d['allow'])} "
-          f"of {len(BOTS)} funded, {plan['total_risk']:.3%} total risk")
-
     import desk_events as EV
+
+    # ---- EXPOSURE. What is genuinely at risk right now, per playbook. Faults block new
+    # ENTRIES only: time_exits() already ran above and open positions keep their broker stops.
+    known = {b.strategy_id: b for b in BOTS}
+    expo = desk_exposure(mt5, trades, known)
+    if expo["ledger_ahead_of_broker"]:
+        # Recorded, never silently normalised. reconcile() runs earlier in this same cycle, so
+        # a ticket still listed here is a ledger row whose position did not close as expected.
+        print(f"  LEDGER_AHEAD_OF_BROKER: {expo['ledger_ahead_of_broker']} "
+              f"(ledger open, broker has none; reconcile ran earlier this cycle)")
+        EV.emit("challenge_controller", "LEDGER_AHEAD_OF_BROKER",
+                tickets=expo["ledger_ahead_of_broker"], counted_as_exposure=False,
+                note="reconcile() precedes this gate; treated as zero exposure, not as agreement")
+    if expo["faults"]:
+        for f in expo["faults"]:
+            print(f"  !! {f['code']}: {f}")
+            EV.emit("challenge_controller", "EXPOSURE_FAULT", **f)
+        print("  NO NEW ORDERS THIS CYCLE -- open exposure could not be attributed to this "
+              "desk's strategies, so no cap can be proven. Existing positions are untouched.")
+        mt5.shutdown(); return
+    if expo["per_group"]:
+        print(f"  OPEN EXPOSURE {expo['per_group']} (total {expo['total']:.3%})")
+
+    # ---- PASS 1: OBSERVATION. Every regime-eligible bot evaluates its setup. No capacity
+    # test may happen here -- denying a bot the chance to LOOK was the defect: on 2026-08-14
+    # BOT_C and BOT_E were refused funding before either had produced a signal, so the desk
+    # cannot say what it would have seen.
+    candidates, ctxs = {}, {}
     for bot in BOTS:
-        d = plan["decisions"].get(bot.strategy_id, {})
-        if not d.get("allow"):
-            print(f"  {bot.strategy_id}: NOT FUNDED -- {d.get('reason','no decision')}")
-            EV.no_trade(bot, desk_now, d.get("reason", "no decision"), funded=False,
-                        utility=d.get("utility"),
-                        opportunities=opp_by_symbol.get(bot.symbol, {}).get("opportunities"))
+        opp = opp_by_symbol.get(bot.symbol, {}).get("opportunities", [])
+        ok, why = DESK.eligibility(bot, opp)
+        if not ok:
+            print(f"  {bot.strategy_id}: NOT ELIGIBLE -- {why}")
+            EV.no_trade(bot, desk_now, why, funded=False, opportunities=opp)
             continue
         if not mt5.symbol_select(bot.symbol, True):
-            print(f"  {bot.strategy_id}: symbol_select failed"); continue
+            print(f"  {bot.strategy_id}: symbol_select failed")
+            EV.no_trade(bot, desk_now, "symbol_select failed", funded=True, opportunities=opp)
+            continue
         tick = mt5.symbol_info_tick(bot.symbol)
         r = mt5.copy_rates_from_pos(bot.symbol, mt5.TIMEFRAME_M1, 0, 600)
-        if r is None or not len(r):
-            print(f"  {bot.strategy_id}: no M1 data"); continue
+        if tick is None or r is None or not len(r):
+            print(f"  {bot.strategy_id}: no M1 data")
+            EV.no_trade(bot, desk_now, "no M1 data", funded=True, opportunities=opp)
+            continue
         m1 = pd.DataFrame(r)
         import market_state as _MS
         m1.index = _MS.to_london(m1["time"], _MS.broker_utc_offset(mt5, bot.symbol))
@@ -1345,31 +1578,75 @@ def main():
         # ONE clock for the whole desk: the broker's. Using m1.index[-1] gave each symbol its
         # own "now", so a closed market evaluated its window against an hour-old timestamp.
         ctx = {"now_london": desk_now, "m1": m1,
-               "bid": tick.bid, "ask": tick.ask, "traded_today": traded_today, "d1": d1}
+               "bid": tick.bid, "ask": tick.ask, "traded_today": traded_today, "d1": d1,
+               "state": states.get(bot.symbol, {})}
 
-        blackout = in_event_blackout(ctx["now_london"])
+        # TASK-0005, carried into TASK-0004's PASS 1. The GLOBAL clock is the freshest tick
+        # across five symbols, so it stays FEED_FRESH while ONE instrument's own feed is
+        # frozen -- and this bot would evaluate stale bars and reach order_send. Placed here,
+        # inside observation and before generate_signal, so a stale symbol produces NO
+        # CANDIDATE at all: it cannot be observed, ranked, funded or sent. Per-bot, never
+        # desk-wide, so every other specialist stays independently evaluable.
+        _sym_ok, _sym_why = MS.symbol_feed_fresh(mt5, bot.symbol)
+        if not _sym_ok:
+            print(f"  {bot.strategy_id}: SYMBOL_FEED_STALE -- {_sym_why}")
+            EV.emit("challenge_controller", "SYMBOL_FEED_STALE", bot=bot.strategy_id,
+                    symbol=bot.symbol, detail=_sym_why)
+            EV.no_trade(bot, desk_now, f"SYMBOL_FEED_STALE: {_sym_why}", funded=True,
+                        opportunities=opp)
+            continue
+
+        # desk_now, not ctx["now_london"] -- TASK-0004's form. They are the same object here;
+        # the direct name is kept so pass 1 reads from ONE clock variable throughout.
+        blackout = in_event_blackout(desk_now)
         if blackout:
-            print(f"  {bot.strategy_id}: no trade -- {blackout}"); continue
+            print(f"  {bot.strategy_id}: no trade -- {blackout}")
+            EV.no_trade(bot, desk_now, blackout, funded=True, opportunities=opp)
+            continue
 
-        ctx["state"] = states.get(bot.symbol, {})
         sig = bot.generate_signal(ctx)
         if sig is None:
             why = getattr(bot, "no_signal_reason", "unspecified")
             print(f"  {bot.strategy_id}: no trade -- {why}")
             # beyond_level is THE field 2026-08-14 lacked: was price actually observed past
             # the trigger during an evaluation? Without it a refusal and a miss are identical.
-            st_ = states.get(bot.symbol, {})
-            lvl_hi, lvl_lo = st_.get("_probe_hi"), st_.get("_probe_lo")
+            bstate = states.get(bot.symbol, {})
             EV.no_trade(bot, desk_now, why, funded=True,
                         bid=tick.bid, ask=tick.ask,
                         spread=round(tick.ask - tick.bid, 6),
-                        d1_regime=st_.get("d1_regime"), h4_regime=st_.get("h4_regime"),
-                        atr20_d1=st_.get("atr20_d1"),
-                        opportunities=opp_by_symbol.get(bot.symbol, {}).get("opportunities"),
-                        cycle_gap_s=_cycle_gap_s(), utility=d.get("utility"),
-                        risk_pct=d.get("risk"))
+                        d1_regime=bstate.get("d1_regime"), h4_regime=bstate.get("h4_regime"),
+                        atr20_d1=bstate.get("atr20_d1"),
+                        opportunities=opp, cycle_gap_s=_cycle_gap_s())
             continue
+        candidates[bot.strategy_id] = sig
+        ctxs[bot.strategy_id] = ctx
 
+    # ---- PASS 2: ALLOCATION. Only bots that actually produced a signal compete for capacity,
+    # and they compete against exposure that is REAL, not against each other's hypotheticals.
+    plan = DESK.allocate(BOTS, opp_by_symbol, lambda b: risk_for(b, st_), st_,
+                         beliefs=beliefs, open_group_risk=expo["per_group"],
+                         candidates=set(candidates))
+    print(f"\n  CIO: {len(candidates)} candidate(s); "
+          f"{sum(1 for d in plan['decisions'].values() if d['allow'])} funded, "
+          f"{plan['total_risk']:.3%} total risk")
+
+    # Allocation is FROZEN for the cycle. A rejected order does NOT promote a capped candidate:
+    # that is same-cycle failover, a separate execution policy, deliberately not implemented.
+    sent_group, sent_total = dict(expo["per_group"]), expo["total"]
+
+    for bot in BOTS:
+        if bot.strategy_id not in candidates:
+            continue                                  # already recorded in pass 1
+        d = plan["decisions"].get(bot.strategy_id, {})
+        if not d.get("allow"):
+            print(f"  {bot.strategy_id}: CANDIDATE NOT FUNDED -- {d.get('reason','no decision')}")
+            EV.no_trade(bot, desk_now, d.get("reason", "no decision"), funded=False,
+                        had_candidate=True, utility=d.get("utility"),
+                        opportunities=opp_by_symbol.get(bot.symbol, {}).get("opportunities"))
+            continue
+        sig = candidates[bot.strategy_id]
+        ctx = ctxs[bot.strategy_id]
+        d1 = ctx["d1"]
         import market_state as MS, macro_context as MC, shadows as SH
         sess = ctx["now_london"].normalize() + pd.Timedelta(
             hours=getattr(bot, "ENTRY_H", getattr(bot, "SESSION_H", 8)),
@@ -1401,21 +1678,25 @@ def main():
             print(f"  {bot.strategy_id}: SIGNAL but VETOED -- {veto}"); continue
 
         info = mt5.symbol_info(bot.symbol)
-        money = st.equity * risk
-        per_lot = sig.risk_distance() * (info.trade_tick_value / info.trade_tick_size)
-        vol = max(info.volume_min,
-                  round(money / per_lot / info.volume_step) * info.volume_step)
-        contract = info.trade_contract_size or 1
-        notional = vol * contract * sig.entry_price
-        if notional > MAX_NOTIONAL_MULT * st.equity:
-            capped = (MAX_NOTIONAL_MULT * st.equity) / (contract * sig.entry_price)
-            capped = int(capped / info.volume_step) * info.volume_step
-            print(f"  {bot.strategy_id}: notional {notional:,.0f} > "
-                  f"{MAX_NOTIONAL_MULT}x equity -- volume {vol} -> {capped}")
-            vol = capped
-        if vol < info.volume_min:
-            print(f"  {bot.strategy_id}: SIGNAL but volume {vol} below min "
-                  f"{info.volume_min} after caps -- skipped"); continue
+        sized = size_position(st.equity, risk, sig.risk_distance(), info, sig.entry_price)
+        if not sized["ok"]:
+            print(f"  {bot.strategy_id}: SIGNAL but NOT SIZEABLE -- {sized['reason']}")
+            EV.emit("challenge_controller", "SIZE_SKIPPED", bot=bot.strategy_id,
+                    symbol=bot.symbol, intended_risk_pct=risk,
+                    raw_volume=sized.get("raw_volume"), volume_min=getattr(info, "volume_min", None),
+                    reason=sized["reason"])
+            EV.no_trade(bot, desk_now, f"not sizeable: {sized['reason']}", funded=False,
+                        had_candidate=True)
+            continue
+        vol = sized["volume"]
+        realised_pct = sized["realised_risk_pct"]
+        if sized.get("notional_capped"):
+            print(f"  {bot.strategy_id}: notional > {MAX_NOTIONAL_MULT}x equity -- volume reduced")
+        if realised_pct < risk:
+            print(f"  {bot.strategy_id}: volume floored to {vol} -- realised risk "
+                  f"{realised_pct:.4%} of an intended {risk:.4%} "
+                  f"(one {info.volume_step} step is worth "
+                  f"{sized['per_lot'] * info.volume_step / st.equity:.4%})")
         iid = intent_id(acct.login, bot.strategy_id, bot.symbol, sig.side, vol, sig.timestamp)
         print(f"  {bot.strategy_id}: SIGNAL side={sig.side:+d} entry={sig.entry_price:.2f} "
               f"sl={sig.stop_price:.2f} tp={sig.target_price:.2f} risk={risk:.3%} "
@@ -1435,7 +1716,12 @@ def main():
                "market_state": state, "shadows": shadow_verdicts,
                "strategy_version": bot.strategy_version, "timestamp": sig.timestamp,
                "symbol": bot.symbol, "side": sig.side, "entry": sig.entry_price,
-               "stop": sig.stop_price, "target": sig.target_price, "risk_pct": risk,
+               "stop": sig.stop_price, "target": sig.target_price,
+               "risk_pct": risk,                       # legacy field == intended, kept for readers
+               "intended_risk_pct": risk,
+               "realised_risk_pct": realised_pct,
+               "realised_risk_dollars": sized["realised_risk_dollars"],
+               "risk_per_lot": sized["per_lot"],
                "volume": vol, "account_equity": st.equity,
                "daily_loss_headroom": st.daily_headroom, "total_loss_headroom": st.total_headroom,
                "spread": ctx["ask"] - ctx["bid"], "reason_codes": sig.reason_codes,
@@ -1453,6 +1739,22 @@ def main():
         if a.dry_run:
             print(f"     DRY RUN -- not sent"); continue
 
+        # ---- PRE-SEND EXPOSURE GATE. The last thing before the only order_send on this desk.
+        # It proves, per order: already live + already sent this cycle + this one <= caps.
+        # The allocator computed the same arithmetic, but the allocator reasons about a plan
+        # while this reasons about what the broker will actually be holding one call from now.
+        grp = DESK.correlation_group(bot)
+        okgate, why = exposure_gate(sent_group, sent_total, grp, realised_pct)
+        if not okgate:
+            print(f"  {bot.strategy_id}: BLOCKED -- {why}")
+            EV.emit("challenge_controller", "EXPOSURE_GATE_BLOCK", bot=bot.strategy_id,
+                    playbook=grp, intent_id=iid, open_group=expo["per_group"].get(grp, 0.0),
+                    sent_group=sent_group.get(grp, 0.0), this_order=risk,
+                    total_before=sent_total, group_cap=DESK.GROUP_CAP,
+                    total_cap=DESK.TOTAL_CAP, reason=why)
+            EV.no_trade(bot, desk_now, why, funded=False, had_candidate=True)
+            continue
+
         req = {"action": mt5.TRADE_ACTION_DEAL, "symbol": bot.symbol, "volume": float(vol),
                "type": mt5.ORDER_TYPE_BUY if sig.side > 0 else mt5.ORDER_TYPE_SELL,
                "price": ctx["ask"] if sig.side > 0 else ctx["bid"],
@@ -1467,6 +1769,9 @@ def main():
                 requested_price=req["price"], fill=getattr(res, "price", None),
                 requested_volume=float(vol), filled_volume=getattr(res, "volume", None),
                 sl=req["sl"], tp=req["tp"], risk_pct=risk, ts_london=str(desk_now))
+        if rc == mt5.TRADE_RETCODE_DONE:
+            sent_group[grp] = sent_group.get(grp, 0.0) + realised_pct
+            sent_total += realised_pct
         pre["retcode"] = rc
         pre["fill"] = getattr(res, "price", None)
         pre["actual_slippage"] = (abs(pre["fill"] - sig.entry_price)
