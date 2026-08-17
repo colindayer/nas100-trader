@@ -1,17 +1,17 @@
-﻿# SYSTEM HEALTH — 2026-08-17 23:15 UTC
+﻿# SYSTEM HEALTH — 2026-08-17 23:30 UTC
 
 ```json
 {
- "last_cycle_age_s": 59.2,
+ "last_cycle_age_s": 59.5,
  "trade_ledger_writable": true,
  "brain_ledger_writable": true,
- "disk_free_gb": 23.7,
+ "disk_free_gb": 22.5,
  "account": 1514166963,
  "is_demo": true,
  "trade_allowed": true,
  "mt5_connected": true,
- "desk_clock": "2026-08-18 00:15:02+01:00",
- "host_broker_gap_s": 1,
+ "desk_clock": "2026-08-18 00:30:03+01:00",
+ "host_broker_gap_s": 0,
  "faults": [],
  "warnings": [],
  "status": "GREEN"
