@@ -11,9 +11,9 @@ _none_
 
 ## Execution
 
-- controller cycles logged today: **1096**
+- controller cycles logged today: **1111**
 - cycle spacing: median 60s, max 74s (within schedule)
-- last cycle: 59s ago
+- last cycle: 60s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
@@ -30,14 +30,14 @@ _none_
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 6992
-- `OUTSIDE_WINDOW` × 4377
+- `REGIME_MISMATCH` × 7052
+- `OUTSIDE_WINDOW` × 4410
 - `CORRELATION_CAP` × 1926
-- `FIRST_BREAK_ALREADY_OCCURRED` × 1255
+- `FIRST_BREAK_ALREADY_OCCURRED` × 1266
 - `NO_BREAKOUT` × 1026
 - `OUTRANKED` × 963
+- `EVENT_BLACKOUT` × 403
 - `NO_SETUP` × 396
-- `EVENT_BLACKOUT` × 387
 - `UNMAPPED` × 232
 
 **UNMAPPED reasons exist** — a decision the validator cannot count. Add the pattern to `desk_events.REASON_PATTERNS`.
