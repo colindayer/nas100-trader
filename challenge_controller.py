@@ -89,9 +89,19 @@ def _cycle_gap_s():
 
 
 def _start_logging():
+    """Both streams to the same file.
+
+    Only stdout was teed. Every early exit in main() is sys.exit("HALT: ...") and every
+    uncaught exception writes a traceback -- BOTH go to stderr, which the Windows scheduled
+    task discards. On 2026-08-17/18 that cost the diagnosis of six funded candidates that
+    vanished between allocation and the broker: the log showed a healthy cycle ending
+    mid-sentence and nothing else. A desk that cannot record why it stopped is not audited.
+    """
     from datetime import datetime as _dt, timezone as _tz
     day = _dt.now(_tz.utc).date().isoformat()
-    sys.stdout = _Tee(sys.stdout, LOGS / f"controller-{day}.log")
+    path = LOGS / f"controller-{day}.log"
+    sys.stdout = _Tee(sys.stdout, path)
+    sys.stderr = _Tee(sys.stderr, path)
     print(f"\n===== cycle {_dt.now(_tz.utc):%Y-%m-%d %H:%M:%S} UTC "
           f"(host local {_dt.now():%Y-%m-%d %H:%M:%S}) =====")
 TRADES = DATA / "trades.jsonl"
@@ -675,6 +685,18 @@ def time_exits(mt5, acct, bots, dry_run=False, magic=990001) -> int:
 
 # mandatory context. A trade whose state is missing cannot teach the desk anything, so it is
 # not worth 0.05% -- and a NULL regime must never be silently read as "neutral".
+# Post-allocation stages. Recorded ON FAILURE ONLY -- a per-cycle stage log for eight bots a
+# minute would bury the one line that matters under 11,000 that do not.
+STAGE_CONTEXT      = "POST_ALLOCATION_CONTEXT"
+STAGE_MARKET_STATE = "MARKET_STATE"
+STAGE_MACRO        = "MACRO_MERGE"
+STAGE_FEATURES     = "FEATURE_SNAPSHOT"
+STAGE_STOP_GEOM    = "STOP_GEOMETRY"
+STAGE_SIZING       = "SIZING"
+STAGE_PRE_SEND     = "PRE_SEND_EXPOSURE"
+STAGE_SUBMIT       = "ORDER_SUBMISSION"
+
+
 MANDATORY_STATE = ("d1_regime", "h4_regime", "h1_regime", "atr20_d1", "ms_labels")
 
 
@@ -1644,153 +1666,176 @@ def main():
                         had_candidate=True, utility=d.get("utility"),
                         opportunities=opp_by_symbol.get(bot.symbol, {}).get("opportunities"))
             continue
-        sig = candidates[bot.strategy_id]
-        ctx = ctxs[bot.strategy_id]
-        d1 = ctx["d1"]
-        import market_state as MS, macro_context as MC, shadows as SH
-        sess = ctx["now_london"].normalize() + pd.Timedelta(
-            hours=getattr(bot, "ENTRY_H", getattr(bot, "SESSION_H", 8)),
-            minutes=getattr(bot, "ENTRY_M", getattr(bot, "SESSION_M", 0)))
-        lvl = next((float(r.split("=")[1]) for r in (sig.reason_codes or [])
-                    if r.startswith("level=")), None)
-        state = MS.compute(mt5, bot.symbol, ctx["now_london"], sig.entry_price,
-                           ctx["ask"] - ctx["bid"], session_start=sess,
-                           level=lvl, side=sig.side,
-                           vwap=sig.feature_snapshot.get("vwap"),
-                           sigma=sig.feature_snapshot.get("sigma"))
-        state.update(MC.compute(mt5, bot.symbol, ctx["now_london"]))
-        sig.feature_snapshot.update({f"d1_{k}": v for k, v in d1.items()})
+        _stage = STAGE_CONTEXT
+        _cand_id = f"{bot.strategy_id}@{desk_now:%Y-%m-%dT%H:%M}"
+        try:
+            sig = candidates[bot.strategy_id]
+            ctx = ctxs[bot.strategy_id]
+            d1 = ctx["d1"]
+            import market_state as MS, macro_context as MC, shadows as SH
+            sess = ctx["now_london"].normalize() + pd.Timedelta(
+                hours=getattr(bot, "ENTRY_H", getattr(bot, "SESSION_H", 8)),
+                minutes=getattr(bot, "ENTRY_M", getattr(bot, "SESSION_M", 0)))
+            lvl = next((float(r.split("=")[1]) for r in (sig.reason_codes or [])
+                        if r.startswith("level=")), None)
+            _stage = STAGE_MARKET_STATE
+            state = MS.compute(mt5, bot.symbol, ctx["now_london"], sig.entry_price,
+                               ctx["ask"] - ctx["bid"], session_start=sess,
+                               level=lvl, side=sig.side,
+                               vwap=sig.feature_snapshot.get("vwap"),
+                               sigma=sig.feature_snapshot.get("sigma"))
+            _stage = STAGE_MACRO
+            state.update(MC.compute(mt5, bot.symbol, ctx["now_london"]))
+            _stage = STAGE_FEATURES
+            sig.feature_snapshot.update({f"d1_{k}": v for k, v in d1.items()})
 
-        geo = stop_geometry(sig, state, info=None, spread=ctx["ask"] - ctx["bid"])
-        sig.feature_snapshot["stop_geometry"] = geo
-        if not geo["ok"]:
-            print(f"  {bot.strategy_id}: SIGNAL but stop rejected -- {geo['reason']}")
-            continue
-        if geo.get("widened_to"):
-            print(f"  {bot.strategy_id}: stop widened {sig.risk_distance():.2f} -> "
-                  f"{geo['widened_to']:.2f} ({geo['reason']}); volume reduced to hold "
-                  f"dollar risk constant")
-            sig.stop_price = sig.entry_price - sig.side * geo["widened_to"]
+            _stage = STAGE_STOP_GEOM
+            geo = stop_geometry(sig, state, info=None, spread=ctx["ask"] - ctx["bid"])
+            sig.feature_snapshot["stop_geometry"] = geo
+            if not geo["ok"]:
+                print(f"  {bot.strategy_id}: SIGNAL but stop rejected -- {geo['reason']}")
+                continue
+            if geo.get("widened_to"):
+                print(f"  {bot.strategy_id}: stop widened {sig.risk_distance():.2f} -> "
+                      f"{geo['widened_to']:.2f} ({geo['reason']}); volume reduced to hold "
+                      f"dollar risk constant")
+                sig.stop_price = sig.entry_price - sig.side * geo["widened_to"]
 
-        risk = plan["decisions"][bot.strategy_id]["risk"]
-        veto = st.veto(risk)
-        if veto:
-            print(f"  {bot.strategy_id}: SIGNAL but VETOED -- {veto}"); continue
+            _stage = STAGE_SIZING
+            risk = plan["decisions"][bot.strategy_id]["risk"]
+            veto = st.veto(risk)
+            if veto:
+                print(f"  {bot.strategy_id}: SIGNAL but VETOED -- {veto}"); continue
 
-        info = mt5.symbol_info(bot.symbol)
-        sized = size_position(st.equity, risk, sig.risk_distance(), info, sig.entry_price)
-        if not sized["ok"]:
-            print(f"  {bot.strategy_id}: SIGNAL but NOT SIZEABLE -- {sized['reason']}")
-            EV.emit("challenge_controller", "SIZE_SKIPPED", bot=bot.strategy_id,
-                    symbol=bot.symbol, intended_risk_pct=risk,
-                    raw_volume=sized.get("raw_volume"), volume_min=getattr(info, "volume_min", None),
-                    reason=sized["reason"])
-            EV.no_trade(bot, desk_now, f"not sizeable: {sized['reason']}", funded=False,
-                        had_candidate=True)
-            continue
-        vol = sized["volume"]
-        realised_pct = sized["realised_risk_pct"]
-        if sized.get("notional_capped"):
-            print(f"  {bot.strategy_id}: notional > {MAX_NOTIONAL_MULT}x equity -- volume reduced")
-        if realised_pct < risk:
-            print(f"  {bot.strategy_id}: volume floored to {vol} -- realised risk "
-                  f"{realised_pct:.4%} of an intended {risk:.4%} "
-                  f"(one {info.volume_step} step is worth "
-                  f"{sized['per_lot'] * info.volume_step / st.equity:.4%})")
-        iid = intent_id(acct.login, bot.strategy_id, bot.symbol, sig.side, vol, sig.timestamp)
-        print(f"  {bot.strategy_id}: SIGNAL side={sig.side:+d} entry={sig.entry_price:.2f} "
-              f"sl={sig.stop_price:.2f} tp={sig.target_price:.2f} risk={risk:.3%} "
-              f"vol={vol} intent={iid}")
+            info = mt5.symbol_info(bot.symbol)
+            sized = size_position(st.equity, risk, sig.risk_distance(), info, sig.entry_price)
+            if not sized["ok"]:
+                print(f"  {bot.strategy_id}: SIGNAL but NOT SIZEABLE -- {sized['reason']}")
+                EV.emit("challenge_controller", "SIZE_SKIPPED", bot=bot.strategy_id,
+                        symbol=bot.symbol, intended_risk_pct=risk,
+                        raw_volume=sized.get("raw_volume"), volume_min=getattr(info, "volume_min", None),
+                        reason=sized["reason"])
+                EV.no_trade(bot, desk_now, f"not sizeable: {sized['reason']}", funded=False,
+                            had_candidate=True)
+                continue
+            vol = sized["volume"]
+            realised_pct = sized["realised_risk_pct"]
+            if sized.get("notional_capped"):
+                print(f"  {bot.strategy_id}: notional > {MAX_NOTIONAL_MULT}x equity -- volume reduced")
+            if realised_pct < risk:
+                print(f"  {bot.strategy_id}: volume floored to {vol} -- realised risk "
+                      f"{realised_pct:.4%} of an intended {risk:.4%} "
+                      f"(one {info.volume_step} step is worth "
+                      f"{sized['per_lot'] * info.volume_step / st.equity:.4%})")
+            iid = intent_id(acct.login, bot.strategy_id, bot.symbol, sig.side, vol, sig.timestamp)
+            print(f"  {bot.strategy_id}: SIGNAL side={sig.side:+d} entry={sig.entry_price:.2f} "
+                  f"sl={sig.stop_price:.2f} tp={sig.target_price:.2f} risk={risk:.3%} "
+                  f"vol={vol} intent={iid}")
 
-        missing = [k for k in MANDATORY_STATE if state.get(k) in (None, "")]
-        if missing:
-            print(f"  {bot.strategy_id}: DATA_INTEGRITY -- not sending. Missing "
-                  f"{', '.join(missing)} (d1_bars={state.get('d1_bars')}, "
-                  f"ms_error={state.get('ms_error')}). A NULL regime is not 'neutral', and a "
-                  f"trade the desk cannot learn from is not worth the risk.")
-            continue
+            missing = [k for k in MANDATORY_STATE if state.get(k) in (None, "")]
+            if missing:
+                print(f"  {bot.strategy_id}: DATA_INTEGRITY -- not sending. Missing "
+                      f"{', '.join(missing)} (d1_bars={state.get('d1_bars')}, "
+                      f"ms_error={state.get('ms_error')}). A NULL regime is not 'neutral', and a "
+                      f"trade the desk cannot learn from is not worth the risk.")
+                continue
 
-        shadow_verdicts = SH.evaluate(bot.strategy_id, state, sig.side, sig.risk_distance())
+            shadow_verdicts = SH.evaluate(bot.strategy_id, state, sig.side, sig.risk_distance())
 
-        pre = {"intent_id": iid, "strategy_id": bot.strategy_id,
-               "market_state": state, "shadows": shadow_verdicts,
-               "strategy_version": bot.strategy_version, "timestamp": sig.timestamp,
-               "symbol": bot.symbol, "side": sig.side, "entry": sig.entry_price,
-               "stop": sig.stop_price, "target": sig.target_price,
-               "risk_pct": risk,                       # legacy field == intended, kept for readers
-               "intended_risk_pct": risk,
-               "realised_risk_pct": realised_pct,
-               "realised_risk_dollars": sized["realised_risk_dollars"],
-               "risk_per_lot": sized["per_lot"],
-               "volume": vol, "account_equity": st.equity,
-               "daily_loss_headroom": st.daily_headroom, "total_loss_headroom": st.total_headroom,
-               "spread": ctx["ask"] - ctx["bid"], "reason_codes": sig.reason_codes,
-               "feature_snapshot": sig.feature_snapshot, "R": None, "outcome": None}
+            pre = {"intent_id": iid, "strategy_id": bot.strategy_id,
+                   "market_state": state, "shadows": shadow_verdicts,
+                   "strategy_version": bot.strategy_version, "timestamp": sig.timestamp,
+                   "symbol": bot.symbol, "side": sig.side, "entry": sig.entry_price,
+                   "stop": sig.stop_price, "target": sig.target_price,
+                   "risk_pct": risk,                       # legacy field == intended, kept for readers
+                   "intended_risk_pct": risk,
+                   "realised_risk_pct": realised_pct,
+                   "realised_risk_dollars": sized["realised_risk_dollars"],
+                   "risk_per_lot": sized["per_lot"],
+                   "volume": vol, "account_equity": st.equity,
+                   "daily_loss_headroom": st.daily_headroom, "total_loss_headroom": st.total_headroom,
+                   "spread": ctx["ask"] - ctx["bid"], "reason_codes": sig.reason_codes,
+                   "feature_snapshot": sig.feature_snapshot, "R": None, "outcome": None}
 
-        if bot.shadow:
-            pre["shadow_only"] = True
-            pre["retcode"] = None
-            pre["ticket"] = None
+            if bot.shadow:
+                pre["shadow_only"] = True
+                pre["retcode"] = None
+                pre["ticket"] = None
+                append_trade(pre)
+                print(f"     SHADOW ONLY -- recorded, no order sent "
+                      f"(promote the bot to trade it)")
+                continue
+
+            if a.dry_run:
+                print(f"     DRY RUN -- not sent"); continue
+
+            # ---- PRE-SEND EXPOSURE GATE. The last thing before the only order_send on this desk.
+            # It proves, per order: already live + already sent this cycle + this one <= caps.
+            # The allocator computed the same arithmetic, but the allocator reasons about a plan
+            # while this reasons about what the broker will actually be holding one call from now.
+            _stage = STAGE_PRE_SEND
+            grp = DESK.correlation_group(bot)
+            okgate, why = exposure_gate(sent_group, sent_total, grp, realised_pct)
+            if not okgate:
+                print(f"  {bot.strategy_id}: BLOCKED -- {why}")
+                EV.emit("challenge_controller", "EXPOSURE_GATE_BLOCK", bot=bot.strategy_id,
+                        playbook=grp, intent_id=iid, open_group=expo["per_group"].get(grp, 0.0),
+                        sent_group=sent_group.get(grp, 0.0), this_order=risk,
+                        total_before=sent_total, group_cap=DESK.GROUP_CAP,
+                        total_cap=DESK.TOTAL_CAP, reason=why)
+                EV.no_trade(bot, desk_now, why, funded=False, had_candidate=True)
+                continue
+
+            _stage = STAGE_SUBMIT
+            req = {"action": mt5.TRADE_ACTION_DEAL, "symbol": bot.symbol, "volume": float(vol),
+                   "type": mt5.ORDER_TYPE_BUY if sig.side > 0 else mt5.ORDER_TYPE_SELL,
+                   "price": ctx["ask"] if sig.side > 0 else ctx["bid"],
+                   "sl": float(sig.stop_price), "tp": float(sig.target_price),
+                   "deviation": 20, "magic": 990001, "comment": iid[:16],
+                   "type_time": mt5.ORDER_TIME_GTC, "type_filling": mt5.ORDER_FILLING_IOC}
+            res = mt5.order_send(req)
+            rc = getattr(res, "retcode", None)
+            EV.emit("challenge_controller",
+                    "ORDER_FILLED" if rc == mt5.TRADE_RETCODE_DONE else "ORDER_REJECTED",
+                    bot=bot.strategy_id, symbol=bot.symbol, intent_id=iid, retcode=rc,
+                    requested_price=req["price"], fill=getattr(res, "price", None),
+                    requested_volume=float(vol), filled_volume=getattr(res, "volume", None),
+                    sl=req["sl"], tp=req["tp"], risk_pct=risk, ts_london=str(desk_now))
+            if rc == mt5.TRADE_RETCODE_DONE:
+                sent_group[grp] = sent_group.get(grp, 0.0) + realised_pct
+                sent_total += realised_pct
+            pre["retcode"] = rc
+            pre["fill"] = getattr(res, "price", None)
+            pre["actual_slippage"] = (abs(pre["fill"] - sig.entry_price)
+                                      if pre.get("fill") else None)
+            pre["ticket"] = getattr(res, "order", None) or getattr(res, "deal", None)
+            if rc == mt5.TRADE_RETCODE_DONE and not pre["ticket"]:
+                match = [p for p in (mt5.positions_get(symbol=bot.symbol) or [])
+                         if p.magic == 990001 and p.comment == iid[:16]]
+                pre["ticket"] = match[0].ticket if match else None
             append_trade(pre)
-            print(f"     SHADOW ONLY -- recorded, no order sent "
-                  f"(promote the bot to trade it)")
+            print(f"     order_send -> {rc} fill={pre['fill']}")
+            if rc == mt5.TRADE_RETCODE_DONE:
+                pos = [p for p in (mt5.positions_get(symbol=bot.symbol) or []) if p.magic == 990001]
+                ok = any(abs(p.sl - sig.stop_price) < 1e-6 for p in pos)
+                print(f"     broker stop verified: {ok}")
+                if not ok:
+                    print("     !! STOP NOT ON BROKER -- manual review required")
+        except Exception as _exc:
+            # CONTAIN, RECORD, NEVER GUESS. Six funded candidates vanished on 2026-08-17/18
+            # because an exception here killed the whole cycle before a single line printed.
+            # No order was sent then and none is sent now -- the difference is that the desk
+            # can say so. The traceback is preserved verbatim, never summarised away.
+            import traceback as _tb
+            EV.emit("challenge_controller", "FUNDED_CANDIDATE_ERROR",
+                    bot=bot.strategy_id, symbol=bot.symbol, candidate_id=_cand_id,
+                    stage=_stage, exc_type=type(_exc).__name__, exc_message=str(_exc),
+                    ts_london=str(desk_now), intended_risk_pct=d.get("risk"))
+            EV.no_trade(bot, desk_now, f"FUNDED_CANDIDATE_ERROR at {_stage}: "
+                        f"{type(_exc).__name__}: {_exc}", funded=False, had_candidate=True)
+            print(f"  {bot.strategy_id}: FUNDED_CANDIDATE_ERROR at {_stage} -- "
+                  f"{type(_exc).__name__}: {_exc}", file=sys.stderr)
+            _tb.print_exc(file=sys.stderr)
+            print(f"  {bot.strategy_id}: NO ORDER SENT, no ledger row written; "
+                  f"continuing to the next funded candidate")
             continue
-
-        if a.dry_run:
-            print(f"     DRY RUN -- not sent"); continue
-
-        # ---- PRE-SEND EXPOSURE GATE. The last thing before the only order_send on this desk.
-        # It proves, per order: already live + already sent this cycle + this one <= caps.
-        # The allocator computed the same arithmetic, but the allocator reasons about a plan
-        # while this reasons about what the broker will actually be holding one call from now.
-        grp = DESK.correlation_group(bot)
-        okgate, why = exposure_gate(sent_group, sent_total, grp, realised_pct)
-        if not okgate:
-            print(f"  {bot.strategy_id}: BLOCKED -- {why}")
-            EV.emit("challenge_controller", "EXPOSURE_GATE_BLOCK", bot=bot.strategy_id,
-                    playbook=grp, intent_id=iid, open_group=expo["per_group"].get(grp, 0.0),
-                    sent_group=sent_group.get(grp, 0.0), this_order=risk,
-                    total_before=sent_total, group_cap=DESK.GROUP_CAP,
-                    total_cap=DESK.TOTAL_CAP, reason=why)
-            EV.no_trade(bot, desk_now, why, funded=False, had_candidate=True)
-            continue
-
-        req = {"action": mt5.TRADE_ACTION_DEAL, "symbol": bot.symbol, "volume": float(vol),
-               "type": mt5.ORDER_TYPE_BUY if sig.side > 0 else mt5.ORDER_TYPE_SELL,
-               "price": ctx["ask"] if sig.side > 0 else ctx["bid"],
-               "sl": float(sig.stop_price), "tp": float(sig.target_price),
-               "deviation": 20, "magic": 990001, "comment": iid[:16],
-               "type_time": mt5.ORDER_TIME_GTC, "type_filling": mt5.ORDER_FILLING_IOC}
-        res = mt5.order_send(req)
-        rc = getattr(res, "retcode", None)
-        EV.emit("challenge_controller",
-                "ORDER_FILLED" if rc == mt5.TRADE_RETCODE_DONE else "ORDER_REJECTED",
-                bot=bot.strategy_id, symbol=bot.symbol, intent_id=iid, retcode=rc,
-                requested_price=req["price"], fill=getattr(res, "price", None),
-                requested_volume=float(vol), filled_volume=getattr(res, "volume", None),
-                sl=req["sl"], tp=req["tp"], risk_pct=risk, ts_london=str(desk_now))
-        if rc == mt5.TRADE_RETCODE_DONE:
-            sent_group[grp] = sent_group.get(grp, 0.0) + realised_pct
-            sent_total += realised_pct
-        pre["retcode"] = rc
-        pre["fill"] = getattr(res, "price", None)
-        pre["actual_slippage"] = (abs(pre["fill"] - sig.entry_price)
-                                  if pre.get("fill") else None)
-        pre["ticket"] = getattr(res, "order", None) or getattr(res, "deal", None)
-        if rc == mt5.TRADE_RETCODE_DONE and not pre["ticket"]:
-            match = [p for p in (mt5.positions_get(symbol=bot.symbol) or [])
-                     if p.magic == 990001 and p.comment == iid[:16]]
-            pre["ticket"] = match[0].ticket if match else None
-        append_trade(pre)
-        print(f"     order_send -> {rc} fill={pre['fill']}")
-        if rc == mt5.TRADE_RETCODE_DONE:
-            pos = [p for p in (mt5.positions_get(symbol=bot.symbol) or []) if p.magic == 990001]
-            ok = any(abs(p.sl - sig.stop_price) < 1e-6 for p in pos)
-            print(f"     broker stop verified: {ok}")
-            if not ok:
-                print("     !! STOP NOT ON BROKER -- manual review required")
-    mt5.shutdown()
-
-
-if __name__ == "__main__":
-    main()
