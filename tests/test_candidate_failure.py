@@ -142,25 +142,21 @@ def run_cycle(inject_at=None, exc=None, live=True, heal_st=False):
 
 print("="*78); print("TASK-0007 -- funded-candidate failure containment"); print("="*78)
 
-# ---- E. HEALTHY PATH.
-# The deployed release cannot execute ANY funded candidate: line 1516 rebinds `st` from the
-# ChallengeState to a market_state dict inside the per-symbol loop, so line 1676's st.veto()
-# raises AttributeError for every bot. That is root cause 2, and TASK-0007 does not fix it.
-# To prove the CONTAINMENT does not break a working candidate, MS.compute returns a dict
-# subclass that still answers veto/equity/headroom -- i.e. the desk as it will behave once the
-# rebinding is corrected. Nothing in production is changed to make this pass.
-h=run_cycle(heal_st=True)
+# ---- E. HEALTHY PATH, against the REAL code with no test double.
+# Under TASK-0007 this required heal_st=True, because line 1516 rebound `st` from the
+# ChallengeState to a market_state dict and st.veto() raised for every candidate. TASK-0008
+# renamed that loop variable, so a funded candidate must now reach the broker unaided. If this
+# ever needs a double again, the veto is dead again.
+h=run_cycle()
 ck("E healthy candidate still reaches order_send", len(h["orders"])==1, h["orders"])
 ck("E healthy candidate writes exactly one ledger row", len(h["trades"])==1, len(h["trades"]))
 ck("E healthy path emits no FUNDED_CANDIDATE_ERROR",
    not [e for e in h["events"] if e.get("event")=="FUNDED_CANDIDATE_ERROR"])
 
 # ---- A/B/C. inject at three different stages
-# heal_st on the SIZING case only: the real st.veto defect fires BEFORE sizing, so without
-# healing it the recorded exception would be the production bug rather than the injected one.
 CASES=[("compute", ValueError("could not convert string to float: 'lvl_asia_high'"), "MARKET_STATE", False),
        ("stop_geometry", AttributeError("stop geometry exploded"), "STOP_GEOMETRY", False),
-       ("size_position", RuntimeError("boom during sizing"), "SIZING", True)]
+       ("size_position", RuntimeError("boom during sizing"), "SIZING", False)]
 for fn, exc, expect_stage, heal in CASES:
     r=run_cycle(inject_at=fn, exc=exc, heal_st=heal)
     err=[e for e in r["events"] if e.get("event")=="FUNDED_CANDIDATE_ERROR"]

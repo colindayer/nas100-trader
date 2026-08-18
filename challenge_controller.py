@@ -1535,10 +1535,14 @@ def main():
         tk = mt5.symbol_info_tick(sym)
         if tk is None:
             continue
-        st = MS.compute(mt5, sym, desk_now, tk.ask, tk.ask - tk.bid)
-        st.update(MC.compute(mt5, sym, desk_now))
-        states[sym] = st
-        opp_by_symbol[sym] = DESK.classify_opportunity(st)
+        # sym_state, NOT st. This loop used to rebind `st` from the ChallengeState to a
+        # market_state dict, so every later st.veto()/st.equity raised AttributeError and no
+        # funded candidate could ever reach the broker. The risk veto has been dead since this
+        # loop was introduced; restoring the name restores the veto.
+        sym_state = MS.compute(mt5, sym, desk_now, tk.ask, tk.ask - tk.bid)
+        sym_state.update(MC.compute(mt5, sym, desk_now))
+        states[sym] = sym_state
+        opp_by_symbol[sym] = DESK.classify_opportunity(sym_state)
         print(f"  MARKET {sym:<12}{','.join(opp_by_symbol[sym]['opportunities'])}")
 
     try:
@@ -1676,8 +1680,19 @@ def main():
             sess = ctx["now_london"].normalize() + pd.Timedelta(
                 hours=getattr(bot, "ENTRY_H", getattr(bot, "SESSION_H", 8)),
                 minutes=getattr(bot, "ENTRY_M", getattr(bot, "SESSION_M", 0)))
-            lvl = next((float(r.split("=")[1]) for r in (sig.reason_codes or [])
-                        if r.startswith("level=")), None)
+            # A level= reason code is not always a PRICE. BOT_H reports which level was swept
+            # by NAME ("level=lvl_asia_high"), and float() on that raised ValueError, killing
+            # the cycle before a single line printed -- 4 of the 6 candidates lost on
+            # 2026-08-17/18. MS.compute wants a price or None, and the swept price is already
+            # carried in feature_snapshot["swept_level"], so None is the correct value here.
+            lvl = None
+            for _rc in (sig.reason_codes or []):
+                if _rc.startswith("level="):
+                    try:
+                        lvl = float(_rc.split("=", 1)[1])
+                    except ValueError:
+                        lvl = None          # a NAME, not a price -- not an error
+                    break
             _stage = STAGE_MARKET_STATE
             state = MS.compute(mt5, bot.symbol, ctx["now_london"], sig.entry_price,
                                ctx["ask"] - ctx["bid"], session_start=sess,
