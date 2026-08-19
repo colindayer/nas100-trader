@@ -1,4 +1,4 @@
-﻿# DAILY VALIDATION — 2026-08-18
+﻿# DAILY VALIDATION — 2026-08-19
 
 ## DESK STATUS: **AMBER**
 
@@ -11,8 +11,8 @@ _none_
 
 ## Execution
 
-- controller cycles logged today: **1425**
-- cycle spacing: median 60s, max 120s (blind spot risk)
+- controller cycles logged today: **1**
+- cycle spacing: median 60s, max 60s (within schedule)
 - last cycle: 59s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
@@ -30,8 +30,8 @@ _none_
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 12412
-- `OUTSIDE_WINDOW` × 9592
+- `REGIME_MISMATCH` × 12457
+- `OUTSIDE_WINDOW` × 9667
 - `FIRST_BREAK_ALREADY_OCCURRED` × 2249
 - `CORRELATION_CAP` × 1926
 - `NO_BREAKOUT` × 1781
