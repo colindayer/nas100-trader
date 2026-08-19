@@ -7,13 +7,13 @@
 
 ## Faults
 
-- AMBER controller last cycle 7.0 min ago (expected ~1)
+_none_
 
 ## Execution
 
-- controller cycles logged today: **1211**
-- cycle spacing: median 60s, max 63s (within schedule)
-- last cycle: 419s ago
+- controller cycles logged today: **1224**
+- cycle spacing: median 60s, max 600s (blind spot risk)
+- last cycle: 59s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
@@ -30,8 +30,8 @@
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 16278
-- `OUTSIDE_WINDOW` × 12796
+- `REGIME_MISMATCH` × 16330
+- `OUTSIDE_WINDOW` × 12848
 - `FIRST_BREAK_ALREADY_OCCURRED` × 3623
 - `NO_BREAKOUT` × 2116
 - `CORRELATION_CAP` × 1926
@@ -50,7 +50,7 @@
 
 ## Code updates
 
-- 0 commit(s) available -- NOT applied
+- up to date
 
 ## Recommendation
 
