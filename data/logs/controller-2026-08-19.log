@@ -13821,3 +13821,348 @@ profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
   BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
 
   CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:01:02 UTC (host local 2026-08-19 03:01:02) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 2s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:01 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_ON
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_ON
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (155m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7692.45/7693.05 inside [7677.90, 7694.40], needs +1.35 up or -14.55 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:01 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (115m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:02:01 UTC (host local 2026-08-19 03:02:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 1s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:02 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_ON
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_ON
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (156m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7692.15/7692.75 inside [7677.90, 7694.40], needs +1.65 up or -14.25 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:02 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (116m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:03:01 UTC (host local 2026-08-19 03:03:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 1s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:03 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_ON
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_ON
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (157m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7692.15/7692.75 inside [7677.90, 7694.40], needs +1.65 up or -14.25 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:03 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (117m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:04:01 UTC (host local 2026-08-19 03:04:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 1s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:04 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (158m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7691.25/7691.85 inside [7677.90, 7694.40], needs +2.55 up or -13.35 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:04 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (118m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:05:01 UTC (host local 2026-08-19 03:05:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 1s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:05 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (159m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7690.95/7691.55 inside [7677.90, 7694.40], needs +2.85 up or -13.05 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:05 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (119m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:06:01 UTC (host local 2026-08-19 03:06:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 1s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:06 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (160m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7690.65/7691.25 inside [7677.90, 7694.40], needs +3.15 up or -12.75 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:06 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (120m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:07:01 UTC (host local 2026-08-19 03:07:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 1s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:07 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (161m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7690.65/7691.25 inside [7677.90, 7694.40], needs +3.15 up or -12.75 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:07 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (121m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:08:01 UTC (host local 2026-08-19 03:08:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 2s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:08 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (162m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7690.65/7691.25 inside [7677.90, 7694.40], needs +3.15 up or -12.75 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:08 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (122m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:09:01 UTC (host local 2026-08-19 03:09:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 1s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:09 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (163m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7690.65/7691.25 inside [7677.90, 7694.40], needs +3.15 up or -12.75 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:09 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (123m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:10:01 UTC (host local 2026-08-19 03:10:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 1s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:10 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_OFF
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (164m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7690.65/7691.25 inside [7677.90, 7694.40], needs +3.15 up or -12.75 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:10 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (124m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:11:01 UTC (host local 2026-08-19 03:11:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 1s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:11 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_ON
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_ON
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (165m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7692.20/7692.80 inside [7677.90, 7694.40], needs +1.60 up or -14.30 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:11 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (125m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:12:01 UTC (host local 2026-08-19 03:12:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 1s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:12 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_ON
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_ON
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (166m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7691.90/7692.50 inside [7677.90, 7694.40], needs +1.90 up or -14.00 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:12 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (126m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:13:01 UTC (host local 2026-08-19 03:13:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 2s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:13 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_ON
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_ON
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (167m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7692.65/7693.25 inside [7677.90, 7694.40], needs +1.15 up or -14.75 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:13 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (127m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:14:01 UTC (host local 2026-08-19 03:14:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 2s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:14 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_ON
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_ON
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (168m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7693.15/7693.75 inside [7677.90, 7694.40], needs +0.65 up or -15.25 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:14 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (128m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
+
+===== cycle 2026-08-19 10:15:01 UTC (host local 2026-08-19 03:15:01) =====
+DEMO GATE OK -> 1514166963 FTMO-Demo equity 99430.84
+  bar-vs-tick gap 2s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK FEED_FRESH: feed advancing, age in band, host within tolerance
+profit -0.51%  daily headroom 5.00%  total headroom 9.49%  trading days 2
+
+  DESK CLOCK 2026-08-19 11:15 London (broker)
+  MARKET EURUSD      STRONG_TREND,EXTENDED,AT_HTF_LEVEL,RISK_ON
+  MARKET US100.cash  TRANSITION,COMPRESSION,AT_HTF_LEVEL,RISK_ON
+  MARKET US500.cash  WEAK_TREND,COMPRESSION,AT_HTF_LEVEL,RISK_OFF
+  MARKET XAUUSD      WEAK_TREND,AT_HTF_LEVEL,RISK_OFF
+  BOT_A_gold_0630_breakout: no trade -- first break already happened at 08:26 (169m ago) -- not chasing a re-test
+  BOT_B_nas100_usopen_breakout: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_C_sp500_london_breakout: no trade -- no break: bid/ask 7692.65/7693.25 inside [7677.90, 7694.40], needs +1.15 up or -14.75 down
+  BOT_D_gold_ny_breakout: no trade -- outside window: 11:15 London, opens 14:30 closes 20:00
+  BOT_E_eurusd_london_breakout: no trade -- first break already happened at 09:06 (129m ago) -- not chasing a re-test
+  BOT_F_nas100_vwap_reversion: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_G_nas100_h4_pullback: NOT ELIGIBLE -- regime TRANSITION is structurally wrong for this bot
+  BOT_H_gold_sweep_reclaim: no trade -- no level swept and reclaimed in the last 15 minutes
+
+  CIO: 0 candidate(s); 0 funded, 0.000% total risk
