@@ -1,4 +1,4 @@
-﻿# SYSTEM HEALTH — 2026-08-19 11:45 UTC
+﻿# SYSTEM HEALTH — 2026-08-19 12:00 UTC
 
 ```json
 {
@@ -10,7 +10,7 @@
  "is_demo": true,
  "trade_allowed": true,
  "mt5_connected": true,
- "desk_clock": "2026-08-19 12:45:02+01:00",
+ "desk_clock": "2026-08-19 13:00:02+01:00",
  "host_broker_gap_s": 0,
  "faults": [],
  "warnings": [],
