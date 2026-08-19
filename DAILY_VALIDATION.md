@@ -11,7 +11,7 @@ _none_
 
 ## Execution
 
-- controller cycles logged today: **1329**
+- controller cycles logged today: **1344**
 - cycle spacing: median 60s, max 600s (blind spot risk)
 - last cycle: 59s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
@@ -30,8 +30,8 @@ _none_
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 16718
-- `OUTSIDE_WINDOW` × 13053
+- `REGIME_MISMATCH` × 16778
+- `OUTSIDE_WINDOW` × 13113
 - `FIRST_BREAK_ALREADY_OCCURRED` × 3623
 - `NO_BREAKOUT` × 2116
 - `CORRELATION_CAP` × 1926
