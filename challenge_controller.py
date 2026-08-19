@@ -1854,3 +1854,8 @@ def main():
             print(f"  {bot.strategy_id}: NO ORDER SENT, no ledger row written; "
                   f"continuing to the next funded candidate")
             continue
+    mt5.shutdown()
+
+
+if __name__ == "__main__":
+    main()
