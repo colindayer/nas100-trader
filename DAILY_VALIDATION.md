@@ -7,13 +7,13 @@
 
 ## Faults
 
-- AMBER host clock 155 min from broker
+- AMBER host clock 170 min from broker
 
 ## Execution
 
-- controller cycles logged today: **1411**
+- controller cycles logged today: **1426**
 - cycle spacing: median 60s, max 63s (within schedule)
-- last cycle: 0s ago
+- last cycle: 60s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
