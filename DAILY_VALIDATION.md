@@ -1,19 +1,19 @@
 ﻿# DAILY VALIDATION — 2026-08-22
 
-## DESK STATUS: **AMBER**
+## DESK STATUS: **RED**
 
 **VALID TRADES: 0 / 30**
 
 
 ## Faults
 
-- AMBER MT5 not reachable from this host
+- **RED** controller last cycle 18 min ago -- not firing
 
 ## Execution
 
 - controller cycles logged today: **1302**
 - cycle spacing: median 60s, max 120s (blind spot risk)
-- last cycle: 180s ago
+- last cycle: 1080s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
@@ -54,4 +54,4 @@
 
 ## Recommendation
 
-**FIX PROVEN DEFECT** — market_state_attached_pct at 0.0%. Infrastructure before strategy.
+**FIX PROVEN DEFECT** — controller last cycle 18 min ago -- not firing
