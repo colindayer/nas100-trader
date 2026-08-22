@@ -1,8 +1,8 @@
-﻿# SYSTEM HEALTH — 2026-08-22 01:45 UTC
+﻿# SYSTEM HEALTH — 2026-08-22 02:00 UTC
 
 ```json
 {
- "last_cycle_age_s": 58.9,
+ "last_cycle_age_s": 58.8,
  "trade_ledger_writable": true,
  "brain_ledger_writable": true,
  "disk_free_gb": 22.5,
@@ -11,10 +11,10 @@
  "trade_allowed": true,
  "mt5_connected": true,
  "desk_clock": "2026-08-21 21:54:59+01:00",
- "host_broker_gap_s": 17403,
+ "host_broker_gap_s": 18303,
  "faults": [],
  "warnings": [
-  "host clock 290 min from broker"
+  "host clock 305 min from broker"
  ],
  "status": "AMBER"
 }
