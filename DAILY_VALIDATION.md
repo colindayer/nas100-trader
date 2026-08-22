@@ -7,13 +7,13 @@
 
 ## Faults
 
-- AMBER host clock 1295 min from broker
+- AMBER MT5 not reachable from this host
 
 ## Execution
 
-- controller cycles logged today: **1290**
+- controller cycles logged today: **1302**
 - cycle spacing: median 60s, max 120s (blind spot risk)
-- last cycle: 60s ago
+- last cycle: 180s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
