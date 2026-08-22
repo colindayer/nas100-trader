@@ -1,4 +1,4 @@
-﻿# DAILY VALIDATION — 2026-08-21
+﻿# DAILY VALIDATION — 2026-08-22
 
 ## DESK STATUS: **AMBER**
 
@@ -7,12 +7,12 @@
 
 ## Faults
 
-- AMBER host clock 170 min from broker
+- AMBER host clock 185 min from broker
 
 ## Execution
 
-- controller cycles logged today: **1426**
-- cycle spacing: median 60s, max 63s (within schedule)
+- controller cycles logged today: **1**
+- cycle spacing: median 60s, max 60s (within schedule)
 - last cycle: 60s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
