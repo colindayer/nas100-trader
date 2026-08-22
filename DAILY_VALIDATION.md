@@ -7,12 +7,12 @@
 
 ## Faults
 
-- AMBER host clock 485 min from broker
+- AMBER host clock 500 min from broker
 
 ## Execution
 
-- controller cycles logged today: **301**
-- cycle spacing: median 60s, max 60s (within schedule)
+- controller cycles logged today: **315**
+- cycle spacing: median 60s, max 120s (blind spot risk)
 - last cycle: 59s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
