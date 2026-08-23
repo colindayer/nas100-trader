@@ -1,45 +1,15 @@
-﻿# DAILY HEAD TRADER REVIEW — 2026-08-22
+﻿# DAILY HEAD TRADER REVIEW — 2026-08-23
 
-_generated 2026-08-22 20:00 UTC on the trading host_
+_generated 2026-08-23 20:00 UTC on the trading host_
 
 
 ## Account
 
-- equity **99,430.84** vs anchor **99,944.11** (-0.51%)
-- total headroom **9.49%** of 10%
-- daily headroom **5.00%** of 5%
-- target: **+10.51%** remaining to +10%
-- terminal: trade_allowed **True**, connected True, ping 21485
+- account unavailable (MT5 not reachable from this run)
 
 ## What the market offered
 
-
-**EURUSD** — STRONG_TREND, EXTENDED, AT_HTF_LEVEL, RISK_ON
-  - STRONG_TREND: d1 and h4 both up
-  - EXTENDED: +2.50 ATR from the d1 mean
-  - AT_HTF_LEVEL: 0.01 ATR to a level
-  - RISK_ON: macro_risk
-  - regimes d1/h4/h1: up/up/transition, ATR20 0.0053695000000000045, range position 120d 0.671940526115136
-
-**US100.cash** — TRANSITION, COMPRESSION, AT_HTF_LEVEL, RISK_ON
-  - TRANSITION: d1 unconfirmed, h4 down
-  - COMPRESSION: 5d range 0.75x the 20d
-  - AT_HTF_LEVEL: 0.00 ATR to a level
-  - RISK_ON: macro_risk
-  - regimes d1/h4/h1: transition/down/transition, ATR20 553.7284999999999, range position 120d 0.8165034817789407
-
-**US500.cash** — WEAK_TREND, AT_HTF_LEVEL, RISK_ON
-  - WEAK_TREND: d1 up, h4 down
-  - AT_HTF_LEVEL: 0.01 ATR to a level
-  - RISK_ON: macro_risk
-  - regimes d1/h4/h1: up/down/transition, ATR20 80.71349999999993, range position 120d 0.9033553121344249
-
-**XAUUSD** — STRONG_TREND, EXTENDED, AT_HTF_LEVEL, RISK_ON
-  - STRONG_TREND: d1 and h4 both up
-  - EXTENDED: +3.31 ATR from the d1 mean
-  - AT_HTF_LEVEL: 0.00 ATR to a level
-  - RISK_ON: macro_risk
-  - regimes d1/h4/h1: up/up/up, ATR20 99.26549999999995, range position 120d 0.5128218971009015
+_market engine unavailable this run_
 
 ## Today's trades (0)
 
@@ -77,9 +47,6 @@ _A shadow needs many observations before a delta means anything. Promotion requi
 
 ## Coverage — work orders for the Bot Factory
 
-- **STRONG_TREND**: BOT_A_gold_0630_breakout, BOT_B_nas100_usopen_breakout, BOT_C_sp500_london_breakout, BOT_D_gold_ny_breakout, BOT_E_eurusd_london_breakout, BOT_G_nas100_h4_pullback
-- **TRANSITION**: BOT_H_gold_sweep_reclaim
-- **WEAK_TREND**: BOT_A_gold_0630_breakout, BOT_B_nas100_usopen_breakout, BOT_C_sp500_london_breakout, BOT_D_gold_ny_breakout, BOT_E_eurusd_london_breakout, BOT_G_nas100_h4_pullback
 
 _Every regime observed today has a specialist._
 
