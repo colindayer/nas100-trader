@@ -1,14 +1,14 @@
-﻿# SYSTEM HEALTH — 2026-08-24 22:45 UTC
+﻿# SYSTEM HEALTH — 2026-08-24 23:00 UTC
 
 ```json
 {
- "last_cycle_age_s": 176579.4,
+ "last_cycle_age_s": 177479.4,
  "trade_ledger_writable": true,
  "brain_ledger_writable": true,
- "disk_free_gb": 23.1,
+ "disk_free_gb": 22.5,
  "mt5": "initialize failed",
  "faults": [
-  "controller last cycle 2943 min ago -- not firing"
+  "controller last cycle 2958 min ago -- not firing"
  ],
  "warnings": [
   "MT5 not reachable from this host"
