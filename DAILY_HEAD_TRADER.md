@@ -1,6 +1,6 @@
-﻿# DAILY HEAD TRADER REVIEW — 2026-08-24
+﻿# DAILY HEAD TRADER REVIEW — 2026-08-25
 
-_generated 2026-08-24 20:00 UTC on the trading host_
+_generated 2026-08-25 20:00 UTC on the trading host_
 
 
 ## Account
