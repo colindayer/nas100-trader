@@ -1,4 +1,4 @@
-﻿# PATCHES — 2026-08-30 20:00 UTC
+﻿# PATCHES — 2026-08-31 20:00 UTC
 
 Recommendations only. Nothing here has been applied.
 
