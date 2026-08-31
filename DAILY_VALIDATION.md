@@ -7,12 +7,12 @@
 
 ## Faults
 
-- **RED** controller last cycle 12453 min ago -- not firing
+- **RED** controller last cycle 12468 min ago -- not firing
 
 ## Execution
 
 - controller cycles logged today: **0**
-- last cycle: 747179s ago
+- last cycle: 748079s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
@@ -53,4 +53,4 @@
 
 ## Recommendation
 
-**FIX PROVEN DEFECT** — controller last cycle 12453 min ago -- not firing
+**FIX PROVEN DEFECT** — controller last cycle 12468 min ago -- not firing
