@@ -7,13 +7,13 @@
 
 ## Faults
 
-- **RED** controller last cycle 14043 min ago -- not firing
 - **RED** WRONG ACCOUNT 1514487471
 
 ## Execution
 
-- controller cycles logged today: **0**
-- last cycle: 842579s ago
+- controller cycles logged today: **28**
+- cycle spacing: median 41s, max 842694s (blind spot risk)
+- last cycle: 2s ago
 - signals 11, attempts 11, fills 6, rejections 5, closes 6
 
 ## Instrumentation completeness (target 100%)
@@ -30,13 +30,13 @@
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 27894
-- `OUTSIDE_WINDOW` × 19897
-- `FIRST_BREAK_ALREADY_OCCURRED` × 6207
-- `NO_BREAKOUT` × 2952
+- `REGIME_MISMATCH` × 27972
+- `OUTSIDE_WINDOW` × 19950
+- `FIRST_BREAK_ALREADY_OCCURRED` × 6232
+- `NO_BREAKOUT` × 2978
 - `EVENT_BLACKOUT` × 1993
 - `CORRELATION_CAP` × 1926
-- `NO_SETUP` × 1640
+- `NO_SETUP` × 1666
 - `UNMAPPED` × 1090
 - `OUTRANKED` × 963
 - `STOP_TOO_TIGHT` × 2
@@ -54,4 +54,4 @@
 
 ## Recommendation
 
-**FIX PROVEN DEFECT** — controller last cycle 14043 min ago -- not firing
+**FIX PROVEN DEFECT** — WRONG ACCOUNT 1514487471
