@@ -1,13 +1,13 @@
-﻿# FIRST VALID EVIDENCE REPORT — 2026-08-31
+﻿# FIRST VALID EVIDENCE REPORT — 2026-09-01
 
 _Was every part of 'I observed this market, allocated to this specialist, entered at this time, risked this amount, and earned this R' actually true?_
 
 
 ## Was the desk operational?
 
-- account: **None** None
-- AlgoTrading: **None**, connected None
-- market engine returned state for **0** symbols
+- account: **1514487471** FTMO-Demo
+- AlgoTrading: **True**, connected True
+- market engine returned state for **4** symbols
 
 ## Attempts
 

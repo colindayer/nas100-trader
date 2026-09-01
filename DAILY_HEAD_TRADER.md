@@ -1,15 +1,43 @@
-﻿# DAILY HEAD TRADER REVIEW — 2026-08-31
+﻿# DAILY HEAD TRADER REVIEW — 2026-09-01
 
-_generated 2026-08-31 20:00 UTC on the trading host_
+_generated 2026-09-01 20:00 UTC on the trading host_
 
 
 ## Account
 
-- account unavailable (MT5 not reachable from this run)
+- equity **100,000.00** vs anchor **99,944.11** (+0.06%)
+- total headroom **10.06%** of 10%
+- daily headroom **5.00%** of 5%
+- target: **+9.94%** remaining to +10%
+- terminal: trade_allowed **True**, connected True, ping 21591
 
 ## What the market offered
 
-_market engine unavailable this run_
+
+**EURUSD** — TRANSITION, AT_HTF_LEVEL, RISK_OFF
+  - TRANSITION: d1 unconfirmed, h4 down
+  - AT_HTF_LEVEL: 0.04 ATR to a level
+  - RISK_OFF: macro_risk
+  - regimes d1/h4/h1: transition/down/down, ATR20 0.004326499999999988, range position 120d 0.5060998856271464
+
+**US100.cash** — TRANSITION, COMPRESSION, AT_HTF_LEVEL, RISK_OFF
+  - TRANSITION: d1 unconfirmed, h4 transition
+  - COMPRESSION: 5d range 0.77x the 20d
+  - AT_HTF_LEVEL: 0.26 ATR to a level
+  - RISK_OFF: macro_risk
+  - regimes d1/h4/h1: transition/transition/down, ATR20 424.46199999999953, range position 120d 0.7916998801806816
+
+**US500.cash** — TRANSITION, AT_HTF_LEVEL, RISK_OFF
+  - TRANSITION: d1 unconfirmed, h4 transition
+  - AT_HTF_LEVEL: 0.14 ATR to a level
+  - RISK_OFF: macro_risk
+  - regimes d1/h4/h1: transition/transition/down, ATR20 60.48499999999999, range position 120d 0.880363979580985
+
+**XAUUSD** — TRANSITION, AT_HTF_LEVEL, RISK_OFF
+  - TRANSITION: d1 unconfirmed, h4 down
+  - AT_HTF_LEVEL: 0.01 ATR to a level
+  - RISK_OFF: macro_risk
+  - regimes d1/h4/h1: transition/down/down, ATR20 105.37949999999992, range position 120d 0.3495968144257893
 
 ## Today's trades (0)
 
@@ -47,6 +75,7 @@ _A shadow needs many observations before a delta means anything. Promotion requi
 
 ## Coverage — work orders for the Bot Factory
 
+- **TRANSITION**: BOT_H_gold_sweep_reclaim
 
 _Every regime observed today has a specialist._
 
