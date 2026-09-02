@@ -11,9 +11,9 @@
 
 ## Execution
 
-- controller cycles logged today: **2584**
+- controller cycles logged today: **2613**
 - cycle spacing: median 30s, max 60s (within schedule)
-- last cycle: 1s ago
+- last cycle: 43s ago
 - signals 12, attempts 12, fills 7, rejections 5, closes 7
 
 ## Instrumentation completeness (target 100%)
@@ -26,19 +26,19 @@
 | lessons_stored_pct | 100.0% |
 | market_state_attached_pct | 8.3%  **<- FIX INFRASTRUCTURE** |
 | net_economics_pct | 100.0% |
-| no_trade_reasons_coded_pct | 98.0%  **<- FIX INFRASTRUCTURE** |
+| no_trade_reasons_coded_pct | 97.8%  **<- FIX INFRASTRUCTURE** |
 | rejections_explained_pct | 100.0% |
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 38448
-- `OUTSIDE_WINDOW` × 30085
+- `REGIME_MISMATCH` × 38535
+- `OUTSIDE_WINDOW` × 30114
 - `FIRST_BREAK_ALREADY_OCCURRED` × 8436
 - `NO_BREAKOUT` × 4453
 - `EVENT_BLACKOUT` × 3183
+- `UNMAPPED` × 2001
 - `NO_SETUP` × 1997
 - `CORRELATION_CAP` × 1926
-- `UNMAPPED` × 1885
 - `ALREADY_TRADED_TODAY` × 1329
 - `OUTRANKED` × 963
 - `STOP_TOO_TIGHT` × 2
