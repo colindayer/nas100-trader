@@ -1,4 +1,4 @@
-﻿# FIRST VALID EVIDENCE REPORT — 2026-09-01
+﻿# FIRST VALID EVIDENCE REPORT — 2026-09-02
 
 _Was every part of 'I observed this market, allocated to this specialist, entered at this time, risked this amount, and earned this R' actually true?_
 
@@ -11,7 +11,7 @@ _Was every part of 'I observed this market, allocated to this specialist, entere
 
 ## Attempts
 
-- signals recorded **0**, filled **0**, rejected **0**
+- signals recorded **1**, filled **1**, rejected **0**
 
 ## Validity
 
@@ -53,16 +53,20 @@ _Was every part of 'I observed this market, allocated to this specialist, entere
   - state carried: d1 None, h4 None, h1 None, labels ['TREND_UP', 'RANGE', 'MID_VOL', 'VOL_CONTRACTING', 'NEAR_HTF_RESISTANCE', 'NEAR_HTF_SUPPORT']
   - VOID because: missing mandatory state: d1_regime, h4_regime, h1_regime
 
+**BOT_H_gold_sweep_reclaim** — 2026-09-02T07:18:02+01:00 → **VALID**
+  - R -1.009, planned risk $50.00, realised $46.34
+  - exit **stop**, holding 424 min
+  - state carried: d1 transition, h4 down, h1 down, labels ['TRANSITION', 'MID_VOL', 'NEAR_HTF_RESISTANCE', 'NEAR_HTF_SUPPORT']
+
 ## Verdict
 
-- **0** valid observation(s) today, 6 void.
-- The desk has still not produced a trustworthy observation.
+- **1** valid observation(s) today, 6 void.
 
 ### What the desk learned about EXECUTION
-- nothing: no fills.
+- 1 fill(s), mean slippage 0.000
 
 ### What the desk learned about MARKET BEHAVIOUR
-- nothing that generalises — n=0 is not a sample. Recorded, not interpreted.
+- nothing that generalises — n=1 is not a sample. Recorded, not interpreted.
 
 ### What remains unknown
 - whether any specialist has an edge. No bot has the observations to say.
