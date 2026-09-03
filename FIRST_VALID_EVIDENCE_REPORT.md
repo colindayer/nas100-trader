@@ -1,4 +1,4 @@
-﻿# FIRST VALID EVIDENCE REPORT — 2026-09-02
+﻿# FIRST VALID EVIDENCE REPORT — 2026-09-03
 
 _Was every part of 'I observed this market, allocated to this specialist, entered at this time, risked this amount, and earned this R' actually true?_
 
@@ -11,7 +11,7 @@ _Was every part of 'I observed this market, allocated to this specialist, entere
 
 ## Attempts
 
-- signals recorded **1**, filled **1**, rejected **0**
+- signals recorded **0**, filled **0**, rejected **0**
 
 ## Validity
 
@@ -63,7 +63,7 @@ _Was every part of 'I observed this market, allocated to this specialist, entere
 - **1** valid observation(s) today, 6 void.
 
 ### What the desk learned about EXECUTION
-- 1 fill(s), mean slippage 0.000
+- nothing: no fills.
 
 ### What the desk learned about MARKET BEHAVIOUR
 - nothing that generalises — n=1 is not a sample. Recorded, not interpreted.

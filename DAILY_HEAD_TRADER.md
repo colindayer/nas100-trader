@@ -1,62 +1,46 @@
-﻿# DAILY HEAD TRADER REVIEW — 2026-09-02
+﻿# DAILY HEAD TRADER REVIEW — 2026-09-03
 
-_generated 2026-09-02 20:00 UTC on the trading host_
+_generated 2026-09-03 20:00 UTC on the trading host_
 
 
 ## Account
 
 - equity **99,953.66** vs anchor **99,944.11** (+0.01%)
 - total headroom **10.01%** of 10%
-- daily headroom **4.95%** of 5%
+- daily headroom **5.00%** of 5%
 - target: **+9.99%** remaining to +10%
-- terminal: trade_allowed **True**, connected True, ping 35494
+- terminal: trade_allowed **True**, connected True, ping 21064
 
 ## What the market offered
 
 
-**EURUSD** — TRANSITION, AT_HTF_LEVEL, RISK_ON
-  - TRANSITION: d1 unconfirmed, h4 down
-  - AT_HTF_LEVEL: 0.01 ATR to a level
+**EURUSD** — WEAK_TREND, AT_HTF_LEVEL, RISK_ON
+  - WEAK_TREND: d1 up, h4 transition
+  - AT_HTF_LEVEL: 0.26 ATR to a level
   - RISK_ON: macro_risk
-  - regimes d1/h4/h1: transition/down/transition, ATR20 0.004365999999999992, range position 120d 0.5017155928326371
+  - regimes d1/h4/h1: up/transition/up, ATR20 0.00441649999999999, range position 120d 0.5813953488372093
 
-**US100.cash** — TRANSITION, AT_HTF_LEVEL, RISK_ON
-  - TRANSITION: d1 unconfirmed, h4 down
-  - AT_HTF_LEVEL: 0.03 ATR to a level
+**US100.cash** — WEAK_TREND, AT_HTF_LEVEL, RISK_ON
+  - WEAK_TREND: d1 up, h4 transition
+  - AT_HTF_LEVEL: 0.13 ATR to a level
   - RISK_ON: macro_risk
-  - regimes d1/h4/h1: transition/down/transition, ATR20 396.58699999999953, range position 120d 0.7985932510139523
+  - regimes d1/h4/h1: up/transition/up, ATR20 383.53799999999956, range position 120d 0.840555079286298
 
-**US500.cash** — TRANSITION, AT_HTF_LEVEL, RISK_ON
-  - TRANSITION: d1 unconfirmed, h4 transition
-  - AT_HTF_LEVEL: 0.17 ATR to a level
+**US500.cash** — WEAK_TREND, AT_HTF_LEVEL, RISK_ON
+  - WEAK_TREND: d1 up, h4 transition
+  - AT_HTF_LEVEL: 0.04 ATR to a level
   - RISK_ON: macro_risk
-  - regimes d1/h4/h1: transition/transition/transition, ATR20 57.057500000000026, range position 120d 0.9024978730192489
+  - regimes d1/h4/h1: up/transition/up, ATR20 56.9, range position 120d 0.9538112836328833
 
-**XAUUSD** — TRANSITION, AT_HTF_LEVEL, RISK_ON
-  - TRANSITION: d1 unconfirmed, h4 down
-  - AT_HTF_LEVEL: 0.05 ATR to a level
+**XAUUSD** — WEAK_TREND, AT_HTF_LEVEL, RISK_ON
+  - WEAK_TREND: d1 up, h4 transition
+  - AT_HTF_LEVEL: 0.33 ATR to a level
   - RISK_ON: macro_risk
-  - regimes d1/h4/h1: transition/down/transition, ATR20 109.10949999999991, range position 120d 0.40794760855170653
+  - regimes d1/h4/h1: up/transition/up, ATR20 104.7514999999999, range position 120d 0.4971657808762348
 
-## Today's trades (1)
+## Today's trades (0)
 
-
-### BOT_H_gold_sweep_reclaim — 2026-09-02T07:18:02+01:00
-| | |
-|---|---|
-| side | SHORT |
-| entry / stop / target | 4322.56 / 4345.516425 / 4213.450500000001 |
-| exit / outcome | 4345.7 / stop |
-| gross / swap / comm / net | -46.22 / 0.0 / -0.12 / **-46.34** |
-| R | **-1.009** |
-| MFE / MAE | 0.8738294399062975 / -0.9801177665947807 R |
-| holding | 424 min |
-| spread / slippage | 0.4499999999998181 / None |
-| regime at entry | transition d1, down h4 |
-| macro | RISK_OFF, None |
-| shadows | {"v2_trend_align": true, "v3_htf_room": false, "v4_vol_expansion": true, "v5_clean_break": null, "v6_wide_stop": false, "v7_not_extended": true} |
-
-**Diagnosis: TARGET_TOO_FAR** — reached +0.87R before stopping out
+_no trades closed today_
 
 ## Risk overruns (0)
 
@@ -96,7 +80,7 @@ _A shadow needs many observations before a delta means anything. Promotion requi
 
 ## Coverage — work orders for the Bot Factory
 
-- **TRANSITION**: BOT_H_gold_sweep_reclaim
+- **WEAK_TREND**: BOT_A_gold_0630_breakout, BOT_B_nas100_usopen_breakout, BOT_C_sp500_london_breakout, BOT_D_gold_ny_breakout, BOT_E_eurusd_london_breakout, BOT_G_nas100_h4_pullback
 
 _Every regime observed today has a specialist._
 
