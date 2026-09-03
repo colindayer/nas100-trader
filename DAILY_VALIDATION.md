@@ -1,4 +1,4 @@
-﻿# DAILY VALIDATION — 2026-09-02
+﻿# DAILY VALIDATION — 2026-09-03
 
 ## DESK STATUS: **RED**
 
@@ -11,9 +11,9 @@
 
 ## Execution
 
-- controller cycles logged today: **2821**
-- cycle spacing: median 30s, max 60s (within schedule)
-- last cycle: 21s ago
+- controller cycles logged today: **2**
+- cycle spacing: median 58s, max 58s (within schedule)
+- last cycle: 1s ago
 - signals 12, attempts 12, fills 7, rejections 5, closes 7
 
 ## Instrumentation completeness (target 100%)
@@ -26,13 +26,13 @@
 | lessons_stored_pct | 100.0% |
 | market_state_attached_pct | 8.3%  **<- FIX INFRASTRUCTURE** |
 | net_economics_pct | 100.0% |
-| no_trade_reasons_coded_pct | 97.8%  **<- FIX INFRASTRUCTURE** |
+| no_trade_reasons_coded_pct | 97.9%  **<- FIX INFRASTRUCTURE** |
 | rejections_explained_pct | 100.0% |
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 39159
-- `OUTSIDE_WINDOW` × 31117
+- `REGIME_MISMATCH` × 39249
+- `OUTSIDE_WINDOW` × 31267
 - `FIRST_BREAK_ALREADY_OCCURRED` × 8436
 - `NO_BREAKOUT` × 4453
 - `EVENT_BLACKOUT` × 3183
