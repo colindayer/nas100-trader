@@ -11,9 +11,9 @@
 
 ## Execution
 
-- controller cycles logged today: **1514**
+- controller cycles logged today: **1544**
 - cycle spacing: median 30s, max 60s (within schedule)
-- last cycle: 49s ago
+- last cycle: 30s ago
 - signals 12, attempts 12, fills 7, rejections 5, closes 7
 
 ## Instrumentation completeness (target 100%)
@@ -31,13 +31,13 @@
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 49254
-- `OUTSIDE_WINDOW` × 45788
-- `FIRST_BREAK_ALREADY_OCCURRED` × 10833
+- `REGIME_MISMATCH` × 49332
+- `OUTSIDE_WINDOW` × 45814
+- `FIRST_BREAK_ALREADY_OCCURRED` × 10896
 - `NO_BREAKOUT` × 7606
-- `EVENT_BLACKOUT` × 4535
-- `NO_SETUP` × 4114
-- `UNMAPPED` × 3268
+- `EVENT_BLACKOUT` × 4582
+- `NO_SETUP` × 4135
+- `UNMAPPED` × 3273
 - `CORRELATION_CAP` × 1926
 - `ALREADY_TRADED_TODAY` × 1329
 - `OUTRANKED` × 963
