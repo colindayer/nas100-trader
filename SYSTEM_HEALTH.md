@@ -1,8 +1,8 @@
-﻿# SYSTEM HEALTH — 2026-09-05 19:30 UTC
+﻿# SYSTEM HEALTH — 2026-09-05 19:45 UTC
 
 ```json
 {
- "last_cycle_age_s": 25.2,
+ "last_cycle_age_s": 8.6,
  "trade_ledger_writable": true,
  "brain_ledger_writable": true,
  "disk_free_gb": 20.2,
@@ -11,12 +11,12 @@
  "trade_allowed": true,
  "mt5_connected": true,
  "desk_clock": "2026-09-04 21:54:59+01:00",
- "host_broker_gap_s": 81304,
+ "host_broker_gap_s": 82204,
  "faults": [
   "WRONG ACCOUNT 1514487471"
  ],
  "warnings": [
-  "host clock 1355 min from broker"
+  "host clock 1370 min from broker"
  ],
  "status": "RED"
 }
