@@ -11,9 +11,9 @@
 
 ## Execution
 
-- controller cycles logged today: **2350**
+- controller cycles logged today: **2379**
 - cycle spacing: median 30s, max 60s (within schedule)
-- last cycle: 9s ago
+- last cycle: 53s ago
 - signals 13, attempts 13, fills 8, rejections 5, closes 8
 
 ## Instrumentation completeness (target 100%)
