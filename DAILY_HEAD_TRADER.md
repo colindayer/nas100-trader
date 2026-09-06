@@ -1,6 +1,6 @@
-﻿# DAILY HEAD TRADER REVIEW — 2026-09-05
+﻿# DAILY HEAD TRADER REVIEW — 2026-09-06
 
-_generated 2026-09-05 20:00 UTC on the trading host_
+_generated 2026-09-06 20:00 UTC on the trading host_
 
 
 ## Account
@@ -9,7 +9,7 @@ _generated 2026-09-05 20:00 UTC on the trading host_
 - total headroom **10.05%** of 10%
 - daily headroom **5.00%** of 5%
 - target: **+9.95%** remaining to +10%
-- terminal: trade_allowed **True**, connected True, ping 22040
+- terminal: trade_allowed **True**, connected True, ping 26782
 
 ## What the market offered
 
