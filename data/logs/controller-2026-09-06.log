@@ -1,0 +1,8 @@
+
+===== cycle 2026-09-06 00:00:01 UTC (host local 2026-09-05 17:00:01) =====
+DEMO GATE OK -> 1514487471 FTMO-Demo equity 99995.90
+  bar-vs-tick gap 359s (diagnostic only; freshness is decided by clock_state after exits and reconciliation)
+  ! HOST CLOCK is 1445.1 min from the broker's. Session windows are UNAFFECTED (offset is hour-rounded), but fix it: the hypervisor time provider usually needs disabling before w32time will hold.
+PREFLIGHT OK -- account, clock, data, state, ledgers all verified
+  CLOCK BOOTSTRAPPING: awaiting advancement proof
+  NO NEW ENTRIES THIS CYCLE -- a trustworthy current market clock could not be established. Open positions keep their broker stops; exits and reconciliation have already run.
