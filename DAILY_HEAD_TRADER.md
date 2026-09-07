@@ -1,6 +1,6 @@
-﻿# DAILY HEAD TRADER REVIEW — 2026-09-06
+﻿# DAILY HEAD TRADER REVIEW — 2026-09-07
 
-_generated 2026-09-06 20:00 UTC on the trading host_
+_generated 2026-09-07 20:00 UTC on the trading host_
 
 
 ## Account
@@ -9,34 +9,34 @@ _generated 2026-09-06 20:00 UTC on the trading host_
 - total headroom **10.05%** of 10%
 - daily headroom **5.00%** of 5%
 - target: **+9.95%** remaining to +10%
-- terminal: trade_allowed **True**, connected True, ping 26782
+- terminal: trade_allowed **True**, connected True, ping 35179
 
 ## What the market offered
 
 
 **EURUSD** — WEAK_TREND, AT_HTF_LEVEL, RISK_OFF
   - WEAK_TREND: d1 up, h4 transition
-  - AT_HTF_LEVEL: 0.01 ATR to a level
+  - AT_HTF_LEVEL: 0.04 ATR to a level
   - RISK_OFF: macro_risk
-  - regimes d1/h4/h1: up/transition/transition, ATR20 0.004405999999999977, range position 120d 0.5507052992756407
+  - regimes d1/h4/h1: up/transition/range, ATR20 0.004405999999999977, range position 120d 0.5669081204727435
 
 **US100.cash** — TRANSITION, AT_HTF_LEVEL, RISK_OFF
-  - TRANSITION: d1 unconfirmed, h4 transition
-  - AT_HTF_LEVEL: 0.00 ATR to a level
+  - TRANSITION: d1 unconfirmed, h4 up
+  - AT_HTF_LEVEL: 0.04 ATR to a level
   - RISK_OFF: macro_risk
-  - regimes d1/h4/h1: transition/transition/transition, ATR20 376.79749999999933, range position 120d 0.8416956188241662
+  - regimes d1/h4/h1: transition/up/up, ATR20 376.79749999999933, range position 120d 0.8516107927627126
 
 **US500.cash** — TRANSITION, AT_HTF_LEVEL, RISK_ON
   - TRANSITION: d1 unconfirmed, h4 transition
   - AT_HTF_LEVEL: 0.01 ATR to a level
   - RISK_ON: macro_risk
-  - regimes d1/h4/h1: transition/transition/transition, ATR20 59.21499999999996, range position 120d 0.9287461448473893
+  - regimes d1/h4/h1: transition/transition/transition, ATR20 59.21499999999996, range position 120d 0.9250903966819102
 
-**XAUUSD** — TRANSITION, AT_HTF_LEVEL, RISK_OFF
+**XAUUSD** — TRANSITION, AT_HTF_LEVEL, RISK_ON
   - TRANSITION: d1 unconfirmed, h4 transition
-  - AT_HTF_LEVEL: 0.00 ATR to a level
-  - RISK_OFF: macro_risk
-  - regimes d1/h4/h1: transition/transition/transition, ATR20 106.35099999999989, range position 120d 0.5133412689216382
+  - AT_HTF_LEVEL: 0.12 ATR to a level
+  - RISK_ON: macro_risk
+  - regimes d1/h4/h1: transition/transition/down, ATR20 106.35099999999989, range position 120d 0.48958717384205397
 
 ## Today's trades (0)
 
