@@ -1,4 +1,4 @@
-﻿# DAILY VALIDATION — 2026-09-07
+﻿# DAILY VALIDATION — 2026-09-08
 
 ## DESK STATUS: **RED**
 
@@ -11,9 +11,9 @@
 
 ## Execution
 
-- controller cycles logged today: **2826**
-- cycle spacing: median 30s, max 60s (within schedule)
-- last cycle: 14s ago
+- controller cycles logged today: **2**
+- cycle spacing: median 60s, max 60s (within schedule)
+- last cycle: 59s ago
 - signals 13, attempts 13, fills 8, rejections 5, closes 8
 
 ## Instrumentation completeness (target 100%)
