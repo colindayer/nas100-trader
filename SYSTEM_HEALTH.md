@@ -1,4 +1,4 @@
-﻿# SYSTEM HEALTH — 2026-09-08 21:30 UTC
+﻿# SYSTEM HEALTH — 2026-09-08 21:45 UTC
 
 ```json
 {
@@ -10,8 +10,8 @@
  "is_demo": true,
  "trade_allowed": true,
  "mt5_connected": true,
- "desk_clock": "2026-09-08 22:29:11+01:00",
- "host_broker_gap_s": 52,
+ "desk_clock": "2026-09-08 22:45:01+01:00",
+ "host_broker_gap_s": 1,
  "faults": [
   "WRONG ACCOUNT 1514487471"
  ],
