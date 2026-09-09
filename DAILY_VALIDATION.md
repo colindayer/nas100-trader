@@ -2,7 +2,7 @@
 
 ## DESK STATUS: **RED**
 
-**VALID TRADES: 2 / 30**
+**VALID TRADES: 3 / 30**
 
 
 ## Faults
@@ -11,17 +11,17 @@
 
 ## Execution
 
-- controller cycles logged today: **1126**
+- controller cycles logged today: **1141**
 - cycle spacing: median 60s, max 63s (within schedule)
 - last cycle: 59s ago
-- signals 14, attempts 14, fills 9, rejections 5, closes 8
+- signals 14, attempts 14, fills 9, rejections 5, closes 9
 
 ## Instrumentation completeness (target 100%)
 
 | metric | % |
 |---|---|
 | exits_reconstructed_pct | 100.0% |
-| fills_reconciled_pct | 88.9%  **<- FIX INFRASTRUCTURE** |
+| fills_reconciled_pct | 100.0% |
 | fills_with_intent_pct | 100.0% |
 | lessons_stored_pct | 100.0% |
 | market_state_attached_pct | 21.4%  **<- FIX INFRASTRUCTURE** |
@@ -31,14 +31,14 @@
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 54961
-- `OUTSIDE_WINDOW` × 51995
+- `REGIME_MISMATCH` × 55006
+- `OUTSIDE_WINDOW` × 52042
 - `FIRST_BREAK_ALREADY_OCCURRED` × 12787
-- `NO_BREAKOUT` × 8943
+- `NO_BREAKOUT` × 8957
 - `EVENT_BLACKOUT` × 5740
 - `NO_SETUP` × 4635
 - `UNMAPPED` × 3862
-- `ALREADY_TRADED_TODAY` × 2097
+- `ALREADY_TRADED_TODAY` × 2111
 - `CORRELATION_CAP` × 1926
 - `OUTRANKED` × 963
 - `STOP_TOO_TIGHT` × 4
