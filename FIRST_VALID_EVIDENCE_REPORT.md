@@ -1,4 +1,4 @@
-﻿# FIRST VALID EVIDENCE REPORT — 2026-09-10
+﻿# FIRST VALID EVIDENCE REPORT — 2026-09-11
 
 _Was every part of 'I observed this market, allocated to this specialist, entered at this time, risked this amount, and earned this R' actually true?_
 
@@ -73,15 +73,20 @@ _Was every part of 'I observed this market, allocated to this specialist, entere
   - exit **stop**, holding 104 min
   - state carried: d1 transition, h4 down, h1 transition, labels ['TRANSITION', 'MID_VOL', 'NEAR_HTF_RESISTANCE', 'NEAR_HTF_SUPPORT']
 
+**BOT_H_gold_sweep_reclaim** — 2026-09-11T10:02:02+01:00 → **VALID**
+  - R -1.009, planned risk $49.87, realised $48.24
+  - exit **stop**, holding 182 min
+  - state carried: d1 transition, h4 down, h1 transition, labels ['TRANSITION', 'MID_VOL', 'NEAR_HTF_RESISTANCE', 'NEAR_HTF_SUPPORT']
+
 ## Verdict
 
-- **4** valid observation(s) today, 6 void.
+- **5** valid observation(s) today, 6 void.
 
 ### What the desk learned about EXECUTION
 - 1 fill(s), mean slippage 0.000
 
 ### What the desk learned about MARKET BEHAVIOUR
-- nothing that generalises — n=4 is not a sample. Recorded, not interpreted.
+- n=5 is not a sample. Recorded, not interpreted.
 
 ### What remains unknown
 - whether any specialist has an edge. No bot has the observations to say.
