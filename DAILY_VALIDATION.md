@@ -1,4 +1,4 @@
-﻿# DAILY VALIDATION — 2026-09-10
+﻿# DAILY VALIDATION — 2026-09-11
 
 ## DESK STATUS: **RED**
 
@@ -11,8 +11,8 @@
 
 ## Execution
 
-- controller cycles logged today: **1426**
-- cycle spacing: median 60s, max 64s (within schedule)
+- controller cycles logged today: **1**
+- cycle spacing: median 60s, max 60s (within schedule)
 - last cycle: 59s ago
 - signals 15, attempts 15, fills 10, rejections 5, closes 10
 
@@ -31,8 +31,8 @@
 
 ## No-trade summary
 
-- `REGIME_MISMATCH` × 60133
-- `OUTSIDE_WINDOW` × 57244
+- `REGIME_MISMATCH` × 60178
+- `OUTSIDE_WINDOW` × 57319
 - `FIRST_BREAK_ALREADY_OCCURRED` × 13929
 - `NO_BREAKOUT` × 9525
 - `EVENT_BLACKOUT` × 6190
